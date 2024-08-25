@@ -1,0 +1,9 @@
+.maplibregl-popup-tip,
+.mapboxgl-popup-tip {
+  display: none !important;
+}
+
+.maplibregl-popup-content,
+.mapboxgl-popup-content {
+  padding: 0 !important;
+}

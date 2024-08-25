@@ -1,0 +1,45 @@
+{
+  "name": "draw-libre",
+  "version": "0.1.0",
+  "description": "Draw a line/polygon on a maplibre or mapbox map",
+  "private": false,
+  "main": "./dist/index.js",
+  "module": "./dist/index.mjs",
+  "types": "./dist/index.d.ts",
+  "scripts": {
+    "build": "tsup",
+    "build:w": "tsup --watch",
+    "dev": "tsc -w",
+    "lint": "tsc",
+    "prettier": "prettier --write .",
+    "ci": "npm run lint && npm run build",
+    "release": "npm run ci && changeset publish"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/HusikyanLevon/draw-libre.git"
+  },
+  "keywords": [
+    "maplibre",
+    "mapbox",
+    "draw"
+  ],
+  "author": "Usikian Levon <levonhusikyan@gmail.com>",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/HusikyanLevon/draw-libre/issues"
+  },
+  "homepage": "https://github.com/HusikyanLevon/draw-libre#readme",
+  "peerDependencies": {
+    "mapbox-gl": "^3",
+    "maplibre-gl": "^3"
+  },
+  "devDependencies": {
+    "@changesets/cli": "2.27.1",
+    "@types/mapbox-gl": "3.1.0",
+    "@types/node": "20.12.8",
+    "prettier": "3.2.5",
+    "tsup": "8.2.2",
+    "typescript": "5.4.5"
+  }
+}

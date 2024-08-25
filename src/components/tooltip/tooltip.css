@@ -1,0 +1,35 @@
+.popup-container {
+  display: block;
+  position: absolute;
+  z-index: 1000;
+  top: 0;
+  left: 0;
+  height: 50px;
+}
+
+.popup-text {
+  display: inline-block;
+  padding: 4px 16px;
+  background-color: #4d4d4d;
+  border-radius: 18px;
+  color: #fff;
+  font-size: 14px;
+}
+
+.popup-text-bottom {
+  opacity: 0;
+  transform: translateY(16px);
+  transition: all 0.2s ease-out;
+  transition-delay: 0.25s;
+}
+
+.popup-text-left {
+  opacity: 0;
+  transform: translateX(16px);
+  transition: all 0.3s ease-out;
+}
+
+.popup-text-active {
+  transform: translate(0px);
+  opacity: 1;
+}

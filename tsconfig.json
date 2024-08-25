@@ -1,0 +1,26 @@
+{
+  "display": "Maplibre Draw",
+  "_version": "20.1.0",
+  "compilerOptions": {
+    "baseUrl": ".",
+    "outDir": "./build/",
+    "lib": ["DOM", "es2023"],
+    "target": "ESNext",
+    "noUncheckedIndexedAccess": true,
+    "strict": true,
+    "esModuleInterop": true,
+    "declaration": true,
+    "skipLibCheck": true,
+    "noEmit": false,
+    "module": "esnext",
+    "noImplicitAny": true,
+    "moduleResolution": "bundler",
+    "paths": {
+      "#components/*": ["src/components/*"],
+      "#store/*": ["src/store/*"],
+      "#utils/*": ["src/utils/*"],
+      "#types/*": ["src/types/*"]
+    }
+  },
+  "include": ["src"]
+}

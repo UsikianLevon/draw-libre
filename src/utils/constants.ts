@@ -20,7 +20,6 @@ export const EVENTS = {
   BREAK: "mdl:break",
   LINE: "mdl:line",
   POLYGON: "mdl:polygon",
-  MODECHANGE: "mdl:modechange",
 } as const;
 
 export const MOBILE_WIDTH = 768;

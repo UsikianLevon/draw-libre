@@ -95,16 +95,6 @@ export class FireEvents {
       },
     });
   }
-  static onModeChange(context: Pick<EventsProps, "map" | "mode">) {
-    const { map, mode } = context;
-    map.fire(EVENTS.MODECHANGE, {
-      timestamp: Date.now(),
-      mode: {
-        geometry: mode.getMode(),
-        closedGeometry: mode.getClosedGeometry(),
-      },
-    });
-  }
   static onLineBreak(map: Map) {
     map.fire(EVENTS.BREAK);
   }

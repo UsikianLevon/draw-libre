@@ -58,6 +58,7 @@ export class Options {
     if (!options) {
       return DEFAULT_OPTIONS;
     }
+    console.log("options", options);
 
     return {
       panel: generatePanelOptions(options),
@@ -92,17 +93,19 @@ function generateModeOptions(options: DrawOptions): RequiredDrawOptions["modes"]
   return {
     line: {
       visible:
-        options?.modes?.line?.visible || options?.initial?.geometry === "line" || DEFAULT_OPTIONS.modes.line.visible,
+        options?.modes?.line?.visible !== undefined
+          ? options.modes.line.visible
+          : options?.initial?.geometry === "line" || DEFAULT_OPTIONS.modes.line.visible,
       closeGeometry:
-        options?.modes?.line?.closeGeometry ||
-        options?.initial?.closeGeometry ||
+        options?.modes?.line?.closeGeometry ??
+        options?.initial?.closeGeometry ??
         DEFAULT_OPTIONS.modes.line.closeGeometry,
     },
     polygon: {
       visible:
-        options?.modes?.polygon?.visible ||
-        options?.initial?.geometry === "polygon" ||
-        DEFAULT_OPTIONS.modes.polygon.visible,
+        options?.modes?.polygon?.visible !== undefined
+          ? options.modes.polygon.visible
+          : options?.initial?.geometry === "polygon" || DEFAULT_OPTIONS.modes.polygon.visible,
     },
     breakGeometry: {
       visible: options?.modes?.breakGeometry?.visible ?? DEFAULT_OPTIONS.modes.breakGeometry.visible,

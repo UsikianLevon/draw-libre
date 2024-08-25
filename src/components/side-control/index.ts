@@ -46,7 +46,6 @@ export class Control {
 
   #createLineButton = (context: ControlProps) => {
     const { mode, options } = context;
-
     const lineVisible = this.#defaultOptions.modes.line.visible;
     const lineTitle = options.locale.line;
     if (lineVisible) {
@@ -61,7 +60,7 @@ export class Control {
     const polygonVisible = this.#defaultOptions.modes.polygon.visible;
     const polygonTitle = options.locale.polygon;
     if (polygonVisible) {
-      this._polygon = this.createControlButton("polygon", polygonTitle, mode.isPolygon());
+      this._polygon = this.createControlButton("polygon", polygonTitle, mode.getMode() === "polygon");
     }
   };
 

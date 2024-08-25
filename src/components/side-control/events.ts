@@ -88,12 +88,13 @@ export class ControlEvents {
     const type = event.target.getAttribute("data-type") as ControlType;
     if (type) {
       const label = getButtonLabel(type, options);
+      const placement = "left";
       this.#tooltip
         .create({
           label,
-          placement: "left",
+          placement,
         })
-        .setPosition(this.#tooltip.getPosition(event, "left"));
+        .setPosition(this.#tooltip.getPosition(event, placement));
     }
   };
 
@@ -101,15 +102,27 @@ export class ControlEvents {
     this.#tooltip.remove();
   };
 
+  #removeActiveClass = () => {
+    const { control } = this.#props;
+
+    control._line?.classList.remove("control-button-active");
+    control._polygon?.classList.remove("control-button-active");
+    control._break?.classList.remove("control-button-active");
+  };
+
   onLineClick = () => {
-    const { mode, tiles } = this.#props;
+    const { mode, tiles, control } = this.#props;
+    this.#removeActiveClass();
+    control._line?.classList.add("control-button-active");
     mode.setMode("line");
     tiles.resetGeometries();
     tiles.render();
   };
 
   onPolygonClick = () => {
-    const { map, mode, tiles } = this.#props;
+    const { map, mode, tiles, control } = this.#props;
+    this.#removeActiveClass();
+    control._polygon?.classList.add("control-button-active");
     mode.setMode("polygon");
     if (mode.isPolygon()) {
       map.setLayoutProperty(ELAYERS.PolygonLayer, "visibility", "visible");
@@ -119,8 +132,9 @@ export class ControlEvents {
   };
 
   onBreakClick = () => {
-    const { map, mode } = this.#props;
-
+    const { map, mode, control } = this.#props;
+    this.#removeActiveClass();
+    control._break?.classList.add("control-button-active");
     mode.setBreak(true);
     map.getCanvasContainer().style.cursor = CURSORS.POINTER;
   };

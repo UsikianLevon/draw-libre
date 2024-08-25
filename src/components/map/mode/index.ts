@@ -3,6 +3,18 @@ import { Observable } from "#utils/observable";
 
 import type { DrawingModeChangeEvent, Mode } from "./types";
 
+function getInitialMode(options: RequiredDrawOptions): Mode {
+  if (options.initial?.geometry) {
+    return options.initial?.geometry;
+  }
+
+  if (!options.modes.line.visible) {
+    return "polygon";
+  }
+
+  return "line";
+}
+
 export class DrawingMode extends Observable<DrawingModeChangeEvent> {
   #mode: Mode;
   #break: boolean;
@@ -10,7 +22,7 @@ export class DrawingMode extends Observable<DrawingModeChangeEvent> {
 
   constructor(options: RequiredDrawOptions) {
     super();
-    this.#mode = options.initial?.geometry ?? "line";
+    this.#mode = getInitialMode(options);
     this.#break = false;
     this.#closedGeometry = options.initial?.closeGeometry ?? false;
   }

@@ -53,5 +53,5 @@ export interface PointLeaveEvent extends BaseEvent {
 }
 
 export interface ModeChangeEvent {
-  mode: ModeEvent;
+  mode: Mode | "break";
 }

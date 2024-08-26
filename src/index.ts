@@ -12,7 +12,7 @@ import { uuidv4 } from "#utils/helpers";
 import { DOM } from "#utils/dom";
 import { Store, StoreHelpers } from "#store/index";
 import { Options } from "#utils/options";
-import { EVENTS } from "#utils/constants";
+
 import type {
   UndoEvent,
   PointAddEvent,

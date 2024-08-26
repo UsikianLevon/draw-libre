@@ -104,9 +104,9 @@ const draw = DrawLibre.getInstance({
 Import events from the library:
 
 ```javascript
-import DrawLibre, { DRAW_LIBRE_EVENTS, type PointAddEvent } from "draw-libre";
+import DrawLibre, { type PointAddEvent } from "draw-libre";
 
-map.on(DRAW_LIBRE_EVENTS.ADD, (event: PointAddEvent) => {
+map.on(mdl:add, (event: PointAddEvent) => {
   console.log("Add event", event);
 });
 ```

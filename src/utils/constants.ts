@@ -18,8 +18,7 @@ export const EVENTS = {
   REMOVEALL: "mdl:removeall",
   SAVE: "mdl:save",
   BREAK: "mdl:break",
-  LINE: "mdl:line",
-  POLYGON: "mdl:polygon",
+  MODECHANGED: "mdl:modechanged",
 } as const;
 
 export const MOBILE_WIDTH = 768;

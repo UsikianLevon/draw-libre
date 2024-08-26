@@ -113,14 +113,15 @@ map.on(DRAW_LIBRE_EVENTS.ADD, (event: PointAddEvent) => {
 
 Available events:
 
-- `DOUBLECLICK`: "mdl:doubleclick" (PointDoubleClickEvent)
-- `POINTENTER`: "mdl:pointenter" (PointEnterEvent)
-- `POINTLEAVE`: "mdl:pointleave" (PointLeaveEvent)
-- `MOVEEND`: "mdl:moveend" (PointMoveEvent)
-- `ADD`: "mdl:add" (PointAddEvent)
-- `UNDO`: "mdl:undo" (UndoEvent)
-- `REMOVEALL`: "mdl:removeall" (RemoveAllEvent)
-- `SAVE`: "mdl:save" (SaveEvent)
+- `mdl:doubleclick` (PointDoubleClickEvent)
+- `mdl:pointenter` (PointEnterEvent)
+- `mdl:pointleave` (PointLeaveEvent)
+- `mdl:moveend` (PointMoveEvent)
+- `mdl:add` (PointAddEvent)
+- `mdl:undo` (UndoEvent)
+- `mdl:removeall` (RemoveAllEvent)
+- `mdl:save` (SaveEvent)
+- `mdl:mdl:modechanged` (ModeChangeEvent)
 
 ### Methods
 

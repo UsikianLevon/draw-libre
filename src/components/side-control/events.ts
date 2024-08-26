@@ -122,7 +122,7 @@ export class ControlEvents {
     const { map, mode, tiles, control } = this.#props;
     this.#initialize();
     this.#removeActiveClass();
-    if (mode.getMode() === "line") {
+    if (mode.getMode() === "line" && !mode.getBreak()) {
       mode.setMode(null);
       map.fire("mode:remove");
       tiles.resetGeometries();
@@ -137,7 +137,7 @@ export class ControlEvents {
     const { map, mode, tiles, control } = this.#props;
     this.#initialize();
     this.#removeActiveClass();
-    if (mode.getMode() === "polygon") {
+    if (mode.getMode() === "polygon" && !mode.getBreak()) {
       mode.setMode(null);
       map.fire("mode:remove");
       map.setLayoutProperty(ELAYERS.PolygonLayer, "visibility", "visible");

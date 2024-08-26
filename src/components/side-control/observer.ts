@@ -1,15 +1,10 @@
-import { DrawingMode } from "#components/map/mode";
-import { DrawingModeChangeEvent } from "#components/map/mode/types";
-import { Control } from "./index";
-
-interface Props {
-  mode: DrawingMode;
-  control: Control;
-}
+import { FireEvents } from "#components/map/helpers";
+import { DrawingModeChangeEvent, Mode } from "#components/map/mode/types";
+import { EventsProps } from "#types/index";
 
 export class ControlObserver {
-  #props: Props;
-  constructor(props: Props) {
+  #props: EventsProps;
+  constructor(props: EventsProps) {
     this.#props = props;
     this.#initConsumers();
   }
@@ -39,6 +34,7 @@ export class ControlObserver {
     const { data } = event;
     const { _line, _polygon, _break } = this.#props.control;
     const { mode } = this.#props;
+    FireEvents.modeChanged(this.#props.map, data as Mode);
 
     if (!_line || !_polygon || !_break) return;
 
@@ -73,7 +69,7 @@ export class ControlObserver {
   };
 
   #observeGeometryChange = (event: DrawingModeChangeEvent) => {
-    const { data, type } = event;
+    const { data } = event;
     const { _break, _line, _polygon } = this.#props.control;
     const { mode } = this.#props;
 
@@ -120,6 +116,7 @@ export class ControlObserver {
     if (type === "BREAK_CHANGED" && data) {
       const { _break } = this.#props.control;
       this.#checkActive(_break as HTMLElement);
+      FireEvents.modeChanged(this.#props.map, "break");
     }
   };
 }

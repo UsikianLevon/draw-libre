@@ -210,4 +210,3 @@ export type {
   UndoEvent,
   ModeChangeEvent,
 };
-export { EVENTS as DRAW_LIBRE_EVENTS };

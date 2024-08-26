@@ -2,6 +2,7 @@ import type { Map } from "#types/map";
 import type { LatLng, StepId, Step, EventsProps } from "#types/index";
 import { EVENTS } from "#utils/constants";
 import { DrawingMode } from "./mode";
+import { Mode } from "./mode/types";
 
 export class FireEvents {
   static addPoint(step: Step & { total: number }, map: Map, mode: DrawingMode) {
@@ -77,6 +78,11 @@ export class FireEvents {
       },
       total: step.total,
       timestamp: Date.now(),
+    });
+  }
+  static modeChanged(map: Map, mode: Mode | "break") {
+    map.fire(EVENTS.MODECHANGED, {
+      mode,
     });
   }
   static removeAllPoints(map: Map, originalEvent: Event) {

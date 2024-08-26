@@ -53,6 +53,5 @@ export interface PointLeaveEvent extends BaseEvent {
 }
 
 export interface ModeChangeEvent {
-  timestamp: number;
   mode: ModeEvent;
 }

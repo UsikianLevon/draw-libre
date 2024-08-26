@@ -8,11 +8,11 @@ function getInitialMode(options: RequiredDrawOptions): Mode {
     return options.initial?.geometry;
   }
 
-  if (!options.modes.line.visible) {
-    return "polygon";
+  if (options.modes.initial) {
+    return options.modes.initial;
   }
 
-  return "line";
+  return null;
 }
 
 export class DrawingMode extends Observable<DrawingModeChangeEvent> {
@@ -65,7 +65,7 @@ export class DrawingMode extends Observable<DrawingModeChangeEvent> {
   };
 
   isPolygon = () => {
-    return this.#mode.includes("polygon") && this.#closedGeometry;
+    return this.#mode === "polygon" && this.#closedGeometry;
   };
 
   reset = () => {

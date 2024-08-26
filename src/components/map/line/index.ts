@@ -17,14 +17,16 @@ export class LineEvents {
     this.#break = new LineBreakEvents(props);
     this.#transparent = new TransparentLineEvents(props);
     this.#dynamic = null;
-
     this.#type = "default";
-    this.#init();
+  }
+
+  init() {
+    this.#initDynamicLine();
     this.#initEvents();
     this.#initConsumers();
   }
 
-  #init = () => {
+  #initDynamicLine = () => {
     if (window.innerWidth <= 768) return;
     if (this.props.options.dynamicLine) {
       this.#dynamic = new DynamicLineEvents(this.props);
@@ -64,6 +66,7 @@ export class LineEvents {
     this.#transparent.removeEvents();
     if (this.props.options.dynamicLine) {
       this.#dynamic?.removeEvents();
+      this.#dynamic?.removeLine();
     }
   }
 

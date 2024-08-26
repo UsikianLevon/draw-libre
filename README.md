@@ -42,6 +42,7 @@ map.on("load", (event) => {
 ```javascript
 const draw = DrawLibre.getInstance({
   modes: {
+    initial: null, // default value; can be "line" or "polygon". Initial mode for drawing
     breakGeometry: { visible: true }, // Controls visibility of the break geometry button
     line: {
       closeGeometry: true, // Enables/disables ability to close a LineString

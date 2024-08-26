@@ -1,6 +1,6 @@
 import { ChangeEvent } from "#utils/observable";
 
-export type Mode = "line" | "polygon";
+export type Mode = "line" | "polygon" | null;
 interface EventData {
   MODE_CHANGED: Mode;
   BREAK_CHANGED: boolean;

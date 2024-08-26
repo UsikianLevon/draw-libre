@@ -19,13 +19,20 @@ export class Events extends Tiles {
     this.#controlEvents = new ControlEvents(props);
     this.#pointEvents = new PointEvents(props);
     this.#lineEvents = new LineEvents(props);
-    props.map.on("panel:ready", this.#initEvents);
+    props.map.on("mode:initialize", this.#initEvents);
+    props.map.on("mode:remove", this.#removeDrawEvents);
   }
 
   #initEvents = () => {
+    this.#lineEvents.init();
     this.#panelEvents?.initEvents();
-    this.#controlEvents?.initEvents();
     this.#pointEvents?.initEvents();
+  };
+
+  #removeDrawEvents = () => {
+    this.#panelEvents?.removeEvents();
+    this.#pointEvents?.removeEvents();
+    this.#lineEvents?.remove();
   };
 
   removeMapEventsAndConsumers = () => {
@@ -33,6 +40,6 @@ export class Events extends Tiles {
     this.#pointEvents?.removeEvents();
     this.#controlEvents?.remove();
     this.#lineEvents?.remove();
-    this.#props.map.off("panel:ready", this.#initEvents);
+    this.#props.map.off("mode:initialize", this.#initEvents);
   };
 }

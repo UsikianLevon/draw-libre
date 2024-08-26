@@ -87,8 +87,8 @@ export default class DrawLibre implements IControl {
    */
   onAdd(map: Map) {
     this.#store = new Store(this.#defaultOptions);
-    this.#panel = new Panel({ map, options: this.#defaultOptions, store: this.#store });
     this.#mode = new DrawingMode(this.#defaultOptions);
+    this.#panel = new Panel({ map, mode: this.#mode, options: this.#defaultOptions, store: this.#store });
     this.#tiles = new Tiles({ map, store: this.#store, options: this.#defaultOptions, mode: this.#mode });
     const control = new Control({ options: this.#defaultOptions, mode: this.#mode });
     this.#mouseEvents = new MouseEvents();
@@ -103,7 +103,9 @@ export default class DrawLibre implements IControl {
       tiles: this.#tiles,
       mouseEvents: this.#mouseEvents,
     });
-
+    if (this.#mode.getMode()) {
+      map.fire("mode:initialize");
+    }
     this.#mode.pingConsumers();
     this.#container = control.getContainer();
 

@@ -35,6 +35,10 @@ export class DynamicLineEvents {
     this.#props.mouseEvents.addObserver(this.#mouseEventsConsumer);
   }
 
+  removeLine = () => {
+    this.hideDynamicLine();
+  };
+
   removeConsumers = () => {
     this.#props.store.removeObserver(this.#storeEventsConsumer);
     this.#props.mode.removeObserver(this.#mapModeConsumer);

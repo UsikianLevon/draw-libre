@@ -4,9 +4,12 @@ import { DOM } from "#utils/dom";
 import { Store } from "#store/index";
 import { Popup } from "#components/map/popup/index";
 import "./panel.css";
+import { DrawingMode } from "#components/map/mode";
+import { DrawingModeChangeEvent } from "#components/map/mode/types";
 
 interface IProps {
   map: Map;
+  mode: DrawingMode;
   options: RequiredDrawOptions;
   store: Store;
 }
@@ -27,12 +30,31 @@ export class Panel {
     this.#isHidden = false;
     this.#importPopup().then(() => {
       this.#initPopup();
-      props.map.fire("panel:ready");
+      this.#initConsumers();
     });
   }
 
+  #initConsumers() {
+    this.#props.mode?.addObserver(this.#mapModeConsumer);
+  }
+
+  #mapModeConsumer = (event: DrawingModeChangeEvent) => {
+    const { store } = this.#props;
+    const { type, data } = event;
+    if (type === "MODE_CHANGED" && !data) {
+      this.hidePanel();
+    }
+    if (type === "MODE_CHANGED" && data) {
+      if (store.tail?.val) {
+        this.setPanelLocation({
+          lat: store.tail?.val?.lat,
+          lng: store.tail?.val?.lng,
+        });
+      }
+    }
+  };
+
   #importPopup = async () => {
-    const { map } = this.#props;
     try {
       this.#panelPopup = new Popup({
         offset: 16,

@@ -58,7 +58,6 @@ export class Options {
     if (!options) {
       return DEFAULT_OPTIONS;
     }
-    console.log("options", options);
 
     return {
       panel: generatePanelOptions(options),
@@ -91,6 +90,7 @@ function generatePanelOptions(options: DrawOptions): RequiredDrawOptions["panel"
 
 function generateModeOptions(options: DrawOptions): RequiredDrawOptions["modes"] {
   return {
+    initial: options.modes?.initial || DEFAULT_OPTIONS.modes.initial,
     line: {
       visible:
         options?.modes?.line?.visible !== undefined

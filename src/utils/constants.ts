@@ -34,6 +34,7 @@ export const DEFAULT_OPTIONS: RequiredDrawOptions = {
     },
   },
   modes: {
+    initial: null,
     line: {
       visible: true,
       closeGeometry: true,

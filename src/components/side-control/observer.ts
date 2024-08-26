@@ -38,6 +38,7 @@ export class ControlObserver {
   #observeModeChange = (event: DrawingModeChangeEvent) => {
     const { data } = event;
     const { _line, _polygon, _break } = this.#props.control;
+    const { mode } = this.#props;
 
     if (!_line || !_polygon || !_break) return;
 
@@ -51,18 +52,59 @@ export class ControlObserver {
       default:
         break;
     }
+
+    if (!data) {
+      this.#disableButton(_break);
+    } else {
+      if (mode.getClosedGeometry()) {
+        this.#enableButton(_break);
+      }
+    }
+  };
+
+  #disableButton = (button: HTMLButtonElement) => {
+    button.setAttribute("disabled", "true");
+    button.setAttribute("aria-disabled", "true");
+  };
+
+  #enableButton = (button: HTMLButtonElement) => {
+    button.removeAttribute("disabled");
+    button.removeAttribute("aria-disabled");
   };
 
   #observeGeometryChange = (event: DrawingModeChangeEvent) => {
-    const { data } = event;
-    const { _break } = this.#props.control;
+    const { data, type } = event;
+    const { _break, _line, _polygon } = this.#props.control;
+    const { mode } = this.#props;
 
     if (data) {
-      _break?.removeAttribute("disabled");
-      _break?.removeAttribute("aria-disabled");
+      if (_break) {
+        this.#enableButton(_break);
+      }
+      if (mode.getMode() === "polygon") {
+        if (_line) {
+          this.#disableButton(_line);
+        }
+      }
+      if (mode.getMode() === "line") {
+        if (_polygon) {
+          this.#disableButton(_polygon);
+        }
+      }
     } else {
-      _break?.setAttribute("disabled", "true");
-      _break?.setAttribute("aria-disabled", "true");
+      if (_break) {
+        this.#disableButton(_break);
+      }
+      if (mode.getMode() === "polygon") {
+        if (_line) {
+          this.#enableButton(_line);
+        }
+      }
+      if (mode.getMode() === "line") {
+        if (_polygon) {
+          this.#enableButton(_polygon);
+        }
+      }
     }
   };
 

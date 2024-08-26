@@ -49,8 +49,7 @@ export class Control {
     const lineVisible = this.#defaultOptions.modes.line.visible;
     const lineTitle = options.locale.line;
     if (lineVisible) {
-      const isLine = mode.getMode() === "line";
-      this._line = this.createControlButton("line", lineTitle, isLine);
+      this._line = this.createControlButton("line", lineTitle, mode.getMode() === "line");
     }
   };
 

@@ -1,7 +1,6 @@
 import { ListNode } from "./index";
 import { ChangeEvent } from "#utils/observable";
 
-export type Mode = "line" | "polygon";
 interface EventData {
   STORE_CHANGED: {
     head: ListNode | null;

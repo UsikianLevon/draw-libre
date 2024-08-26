@@ -23,7 +23,7 @@ export class Cursor {
   constructor(props: CursorProps) {
     this.#props = props;
     this.#canvas = this.#props.map.getCanvasContainer();
-    this.#canvas.style.cursor = CURSORS.CROSSHAIR;
+    this.#canvas.style.cursor = props.mode.getMode() ? CURSORS.CROSSHAIR : CURSORS.AUTO;
     this.#initConsumers();
   }
 
@@ -36,7 +36,10 @@ export class Cursor {
   handleMouseLeave = () => {
     const { mouseEvents, mode } = this.#props;
     if (mouseEvents.pointMouseDown) return;
-
+    if (!mode.getMode()) {
+      this.set(CURSORS.AUTO);
+      return;
+    }
     if (mode.getClosedGeometry()) {
       this.set(CURSORS.AUTO);
     } else {

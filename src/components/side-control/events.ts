@@ -16,9 +16,10 @@ export class ControlEvents {
     this.#props = props;
     this.#observer = new ControlObserver(props);
     this.#tooltip = new Tooltip();
+    this.#initEvents();
   }
 
-  initEvents() {
+  #initEvents() {
     const { control } = this.#props;
     if (control) {
       const events = {
@@ -110,29 +111,50 @@ export class ControlEvents {
     control._break?.classList.remove("control-button-active");
   };
 
+  #initialize = () => {
+    const { map, mode } = this.#props;
+    if (!mode.getMode()) {
+      map.fire("mode:initialize");
+    }
+  };
+
   onLineClick = () => {
-    const { mode, tiles, control } = this.#props;
+    const { map, mode, tiles, control } = this.#props;
+    this.#initialize();
     this.#removeActiveClass();
-    control._line?.classList.add("control-button-active");
-    mode.setMode("line");
-    tiles.resetGeometries();
-    tiles.render();
+    if (mode.getMode() === "line") {
+      mode.setMode(null);
+      map.fire("mode:remove");
+      tiles.resetGeometries();
+    } else {
+      control._line?.classList.add("control-button-active");
+      mode.setMode("line");
+      tiles.render();
+    }
   };
 
   onPolygonClick = () => {
     const { map, mode, tiles, control } = this.#props;
+    this.#initialize();
     this.#removeActiveClass();
-    control._polygon?.classList.add("control-button-active");
-    mode.setMode("polygon");
-    if (mode.isPolygon()) {
+    if (mode.getMode() === "polygon") {
+      mode.setMode(null);
+      map.fire("mode:remove");
       map.setLayoutProperty(ELAYERS.PolygonLayer, "visibility", "visible");
+      tiles.resetGeometries();
+    } else {
+      control._polygon?.classList.add("control-button-active");
+      mode.setMode("polygon");
+      tiles.render();
     }
-    tiles.resetGeometries();
-    tiles.render();
   };
 
   onBreakClick = () => {
     const { map, mode, control } = this.#props;
+    if (mode.getBreak()) {
+      mode.setMode(null);
+      map.fire("mode:remove");
+    }
     this.#removeActiveClass();
     control._break?.classList.add("control-button-active");
     mode.setBreak(true);

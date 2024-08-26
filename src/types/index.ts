@@ -10,6 +10,7 @@ import { Store } from "#store/index";
 
 import { DrawingMode } from "#components/map/mode";
 import { DeepRequired } from "./helpers";
+import { Mode } from "#components/map/mode/types";
 
 export type LatLng = {
   lat: number;
@@ -85,6 +86,7 @@ export interface DrawOptions {
     buttons?: PanelImpl["buttons"];
   };
   modes?: {
+    initial?: Mode;
     line?: {
       visible?: boolean;
       closeGeometry?: boolean;

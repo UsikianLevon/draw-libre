@@ -6,14 +6,18 @@
   "main": "./dist/index.js",
   "module": "./dist/index.mjs",
   "types": "./dist/index.d.ts",
+  "type": "module",
   "scripts": {
     "build": "tsup",
     "build:w": "tsup --watch",
     "dev": "tsc -w",
     "lint": "tsc",
     "prettier": "prettier --write .",
-    "ci": "npm run lint && npm run build",
-    "release": "npm run ci && changeset publish"
+    "exports": "attw --pack .",
+    "ci": "npm run lint && npm run prettier && npm run exports && npm run build",
+    "release": "npm run ci && changeset publish",
+    "local-release": "changeset version && changeset publish",
+    "prepublishOnly": "npm run ci"
   },
   "repository": {
     "type": "git",
@@ -30,6 +34,9 @@
     "url": "https://github.com/HusikyanLevon/draw-libre/issues"
   },
   "homepage": "https://github.com/HusikyanLevon/draw-libre#readme",
+  "files": [
+    "dist"
+  ],
   "peerDependencies": {
     "mapbox-gl": "^3",
     "maplibre-gl": "^3"

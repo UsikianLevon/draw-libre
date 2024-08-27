@@ -2,7 +2,7 @@ import { defineConfig } from "tsup";
 
 export default defineConfig({
   entry: ["src/index.ts"],
-  format: ["esm", "cjs", "iife"],
+  format: ["esm", "iife"],
   treeshake: true,
   globalName: "DrawLibre",
   minify: true,

@@ -1,6 +1,6 @@
 {
   "name": "draw-libre",
-  "version": "0.2.2",
+  "version": "0.2.3",
   "description": "Draw a line/polygon on a maplibre or mapbox map",
   "private": false,
   "main": "./dist/index.js",

@@ -44,13 +44,16 @@
     "tsup": "8.2.2",
     "typescript": "5.4.5"
   },
+  "main": "dist/index.js",
+  "browser": "dist/index.js",
+  "style": "dist/index.css",
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
       "import": "./dist/index.js",
       "default": "./dist/index.js"
-    }
+    },
+    "./dist/index.css": "./dist/index.css"
   },
-  "sideEffects": false,
-  "browser": "./dist/index.js"
+  "sideEffects": false
 }

@@ -1,11 +1,10 @@
 import type { Map } from "#types/map";
-import type { LatLng, PanelImpl, RequiredDrawOptions, Step } from "#types/index";
+import type { LatLng, PanelImpl, Point, RequiredDrawOptions, Step } from "#types/index";
 import { DOM } from "#utils/dom";
 import { Store } from "#store/index";
-import { Popup } from "#components/map/popup/index";
-import "./panel.css";
 import { DrawingMode } from "#components/map/mode";
 import { DrawingModeChangeEvent } from "#components/map/mode/types";
+import "./panel.css";
 
 interface IProps {
   map: Map;
@@ -16,22 +15,21 @@ interface IProps {
 
 export class Panel {
   #props: IProps;
-  #panelPopup: Popup | undefined;
   #isHidden: boolean;
+  #panelPopup: HTMLElement | undefined;
   _undoButton: HTMLElement | undefined;
-  // used outside in events
   _deleteButton: HTMLElement | undefined;
   _saveButton: HTMLElement | undefined;
   _container: HTMLElement | undefined;
+  _updatePositionCallback: (() => void) | undefined;
 
   constructor(props: IProps) {
     this.#props = props;
     this._container = undefined;
-    this.#isHidden = false;
-    this.#importPopup().then(() => {
-      this.#initPopup();
-      this.#initConsumers();
-    });
+    this.#isHidden = true;
+    this.#panelPopup = undefined;
+    this.#initPanel();
+    this.#initConsumers();
   }
 
   #initConsumers() {
@@ -54,24 +52,30 @@ export class Panel {
     }
   };
 
-  #importPopup = async () => {
-    try {
-      this.#panelPopup = new Popup({
-        offset: 16,
-        closeButton: false,
-        closeOnClick: false,
-        closeOnMove: false,
-        anchor: "bottom",
-      });
-    } catch (error) {
-      console.error("POPUP LOAD ERROR", error);
-    }
-  };
+  #applyPanelStyles() {
+    if (!this.#panelPopup) return;
+    
+    this.#panelPopup.className = 'dashboard-container';
+    this.#panelPopup.style.position = 'absolute';
+    this.#panelPopup.style.zIndex = '1000000';
+    this.#panelPopup.style.pointerEvents = 'auto';
+    this.#panelPopup.style.display = this.#isHidden ? 'none' : 'block';
+  }
 
-  #initPopup = () => {
+  #initPanel = () => {
     const { store } = this.#props;
 
     this.createPanel();
+    
+    this.#panelPopup = document.createElement('div');
+    this.#applyPanelStyles();
+
+    if (this._container) {
+      this.#panelPopup.appendChild(this._container);
+    }
+    
+    document.body.appendChild(this.#panelPopup);
+    
     if (store.tail?.val) {
       this.setPanelLocation({
         lat: store.tail?.val?.lat,
@@ -81,28 +85,67 @@ export class Panel {
   };
 
   setPanelLocation = (coordinates: LatLng) => {
-    const { map } = this.#props;
-
+    if (!this.#panelPopup) return;
+    
     if (this.#isHidden) {
-      this.#isHidden = false;
       this.showPanel();
     }
-    if (this._container && this.#panelPopup) {
-      this.#panelPopup.setLngLat(coordinates).setDOMContent(this._container).addTo(map);
+    
+    const point = this.#props.map.project(coordinates);
+    
+    this.#pointPositionUpdate(point);
+    this.#updatePanelPositionOnMapMove(coordinates);
+  };
+
+  #pointPositionUpdate = (point: Point) => {
+    if (this.#isHidden || !this.#panelPopup) return;
+
+    const mapContainer = this.#props.map.getContainer();
+    const mapRect = mapContainer.getBoundingClientRect();
+    
+    const x = mapRect.left + point.x;
+    const y = mapRect.top + point.y;
+    const offset = 36;
+    
+    this.#panelPopup.style.left = `${x - offset}px`;
+    this.#panelPopup.style.top = `${y - offset}px`;
+  }
+
+  #updatePanelPositionOnMapMove(coordinates: LatLng) {
+    this.#removeMapEventListeners();
+    
+    this._updatePositionCallback = () => {
+      if (this.#isHidden || !this.#panelPopup) return;
+      this.#pointPositionUpdate(this.#props.map.project(coordinates));
+    };
+    
+    this.#props.map.on('move', this._updatePositionCallback);
+    this.#props.map.on('zoom', this._updatePositionCallback);
+  }
+  
+  #removeMapEventListeners() {
+    if (this._updatePositionCallback) {
+      this.#props.map.off('move', this._updatePositionCallback);
+      this.#props.map.off('zoom', this._updatePositionCallback);
+      this._updatePositionCallback = undefined;
+    }
+  }
+  
+  showPanel = () => {
+    if (this.#isHidden && this.#panelPopup) {
+      this.#isHidden = false;
+      this.#panelPopup.style.display = 'block';
+      
+      this.#panelPopup.style.transition = 'opacity 0.2s';
+      this.#panelPopup.style.opacity = '1';
     }
   };
 
   hidePanel = () => {
-    const notHidden = !this.#isHidden;
-    if (notHidden) {
-      this.#panelPopup?.addClassName("hide-panel");
+    if (!this.#isHidden && this.#panelPopup) {
       this.#isHidden = true;
+      this.#panelPopup.style.display = 'none';
     }
-  };
-
-  showPanel = () => {
-    this.#panelPopup?.removeClassName("hide-panel");
-    this.#isHidden = false;
   };
 
   onPointRemove = (head: Step) => {
@@ -114,10 +157,21 @@ export class Panel {
   };
 
   removePanel = () => {
+    if (this._updatePositionCallback) {
+      this.#props.map.off('move', this._updatePositionCallback);
+      this.#props.map.off('zoom', this._updatePositionCallback);
+      this._updatePositionCallback = undefined;
+    }
+    
+    if (this.#panelPopup) {
+      document.body.removeChild(this.#panelPopup);
+      this.#panelPopup = undefined;
+    }
+    
     if (this._container) {
       DOM.remove(this._container);
+      this._container = undefined;
     }
-    this.#panelPopup?.remove();
   };
 
   createButton = (type: "undo" | "save" | "delete", title: string, size: PanelImpl["size"], container: HTMLElement) => {
@@ -134,8 +188,7 @@ export class Panel {
     const { undo, delete: deleteButton, save } = options.panel.buttons;
     const panelSize = options.panel.size;
 
-    const popupContent = document.querySelector(".maplibregl-popup-content") as HTMLElement;
-    const container = DOM.create("div", "dashboard", popupContent);
+    const container = DOM.create("div", "dashboard");
 
     if (undo.visible) {
       this._undoButton = this.createButton("undo", locale.undo, panelSize, container);

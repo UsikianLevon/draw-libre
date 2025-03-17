@@ -292,3 +292,15 @@ export const throttle = (fn: (...args: any) => void, delay: number) => {
     execute();
   };
 };
+
+
+export const debounce = (fn: (...args: any) => void, delay: number) => {
+  let timeout: number;
+
+  return function (...args: any) {
+    clearTimeout(timeout);
+    timeout = window.setTimeout(() => {
+      fn(...args);
+    }, delay);
+  };
+}

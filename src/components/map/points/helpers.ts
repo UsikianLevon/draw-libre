@@ -36,22 +36,22 @@ export class PointHelpers {
   }
 
   static triggerPostPointAddition(event: MapLayerMouseEvent, props: EventsProps) {
-    const { panel, tiles, store, map } = props;
+    const { panel, store, map } = props;
 
     if (Spatial.canCloseGeometry(store)) {
       TilesHelpers.togglePointCircleRadius(map, "large");
     }
     panel?.setPanelLocation(event.lngLat);
-    tiles.render();
   }
-
+  
   static addPointToMap = (event: MapLayerMouseEvent, props: EventsProps) => {
-    const { store, map, mode } = props;
-
+    const { store, tiles, map, mode } = props;
+    
     const step = { ...event.lngLat, id: uuidv4() };
     store.push(step);
     FireEvents.addPoint({ ...step, total: store.size }, map, mode);
     this.triggerPostPointAddition(event, props);
+    requestAnimationFrame(tiles.render);
   };
 
   static updateSelectedStepLatLng = (event: MapLayerMouseEvent, selectedStep: Step) => {

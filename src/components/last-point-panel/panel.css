@@ -17,6 +17,8 @@
 .dashboard {
   display: flex;
   align-items: center;
+  background-color: white;
+  border-radius: 4px;
 }
 
 .panel-button {

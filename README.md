@@ -121,7 +121,7 @@ Available events:
 - `mdl:undo` (UndoEvent)
 - `mdl:removeall` (RemoveAllEvent)
 - `mdl:save` (SaveEvent)
-- `mdl:mdl:modechanged` (ModeChangeEvent)
+- `mdl:modechanged` (ModeChangeEvent)
 
 ### Methods
 

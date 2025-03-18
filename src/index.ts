@@ -61,7 +61,7 @@ export default class DrawLibre implements IControl {
     this.#cursor = undefined;
   }
 
-  public static getInstance(options?: DrawOptions): IControl {
+  public static getInstance(options?: DrawOptions): DrawLibre {
     if (!DrawLibre.#instance) {
       DrawLibre.#instance = new DrawLibre(options);
     }

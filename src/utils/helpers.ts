@@ -293,7 +293,6 @@ export const throttle = (fn: (...args: any) => void, delay: number) => {
   };
 };
 
-
 export const debounce = (fn: (...args: any) => void, delay: number) => {
   let timeout: number;
 
@@ -303,4 +302,4 @@ export const debounce = (fn: (...args: any) => void, delay: number) => {
       fn(...args);
     }, delay);
   };
-}
+};

@@ -175,7 +175,7 @@ export class DynamicLineEvents {
       this.#firstPoint = store.tail?.val as LatLng;
       this.showDynamicLine();
     }
-    if(store.size === 0) {
+    if (store.size === 0) {
       this.hideDynamicLine();
     }
   };
@@ -187,7 +187,7 @@ export class DynamicLineEvents {
       this.#firstPoint = store.tail?.val as LatLng;
       this.showDynamicLine();
     }
-    if(store.size === 0) {
+    if (store.size === 0) {
       this.hideDynamicLine();
     }
   };

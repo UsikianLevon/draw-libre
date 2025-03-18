@@ -133,7 +133,6 @@ export class PanelEvents {
     const tailVal = store.tail?.val as Step;
     store.removeStepById(tailVal.id);
     console.log("removeStepById", tailVal);
-    
 
     const step = { ...tailVal, total: store.size };
     FireEvents.undoPoint(step, map, event);

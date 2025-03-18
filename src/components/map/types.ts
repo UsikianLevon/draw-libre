@@ -51,7 +51,7 @@ export interface PointAddEvent {
   type: "mdl:add";
 }
 
-export interface PointMoveEvent  {
+export interface PointMoveEvent {
   start_coordinates: LatLng;
   end_coordinates: LatLng;
   id: Uuid;

@@ -43,10 +43,10 @@ export class PointHelpers {
     }
     panel?.setPanelLocation(event.lngLat);
   }
-  
+
   static addPointToMap = (event: MapLayerMouseEvent, props: EventsProps) => {
     const { store, tiles, map, mode } = props;
-    
+
     const step = { ...event.lngLat, id: uuidv4() };
     store.push(step);
     FireEvents.addPoint({ ...step, total: store.size }, map, mode);

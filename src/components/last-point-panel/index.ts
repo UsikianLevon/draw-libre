@@ -54,28 +54,28 @@ export class Panel {
 
   #applyPanelStyles() {
     if (!this.#panelPopup) return;
-    
-    this.#panelPopup.className = 'dashboard-container';
-    this.#panelPopup.style.position = 'absolute';
-    this.#panelPopup.style.zIndex = '1000000';
-    this.#panelPopup.style.pointerEvents = 'auto';
-    this.#panelPopup.style.display = this.#isHidden ? 'none' : 'block';
+
+    this.#panelPopup.className = "dashboard-container";
+    this.#panelPopup.style.position = "absolute";
+    this.#panelPopup.style.zIndex = "1000000";
+    this.#panelPopup.style.pointerEvents = "auto";
+    this.#panelPopup.style.display = this.#isHidden ? "none" : "block";
   }
 
   #initPanel = () => {
     const { store } = this.#props;
 
     this.createPanel();
-    
-    this.#panelPopup = document.createElement('div');
+
+    this.#panelPopup = document.createElement("div");
     this.#applyPanelStyles();
 
     if (this._container) {
       this.#panelPopup.appendChild(this._container);
     }
-    
+
     document.body.appendChild(this.#panelPopup);
-    
+
     if (store.tail?.val) {
       this.setPanelLocation({
         lat: store.tail?.val?.lat,
@@ -86,13 +86,13 @@ export class Panel {
 
   setPanelLocation = (coordinates: LatLng) => {
     if (!this.#panelPopup) return;
-    
+
     if (this.#isHidden) {
       this.showPanel();
     }
-    
+
     const point = this.#props.map.project(coordinates);
-    
+
     this.#pointPositionUpdate(point);
     this.#updatePanelPositionOnMapMove(coordinates);
   };
@@ -102,49 +102,49 @@ export class Panel {
 
     const mapContainer = this.#props.map.getContainer();
     const mapRect = mapContainer.getBoundingClientRect();
-    
+
     const x = mapRect.left + point.x;
     const y = mapRect.top + point.y;
     const offset = 36;
-    
+
     this.#panelPopup.style.left = `${x - offset}px`;
     this.#panelPopup.style.top = `${y - offset}px`;
-  }
+  };
 
   #updatePanelPositionOnMapMove(coordinates: LatLng) {
     this.#removeMapEventListeners();
-    
+
     this._updatePositionCallback = () => {
       if (this.#isHidden || !this.#panelPopup) return;
       this.#pointPositionUpdate(this.#props.map.project(coordinates));
     };
-    
-    this.#props.map.on('move', this._updatePositionCallback);
-    this.#props.map.on('zoom', this._updatePositionCallback);
+
+    this.#props.map.on("move", this._updatePositionCallback);
+    this.#props.map.on("zoom", this._updatePositionCallback);
   }
-  
+
   #removeMapEventListeners() {
     if (this._updatePositionCallback) {
-      this.#props.map.off('move', this._updatePositionCallback);
-      this.#props.map.off('zoom', this._updatePositionCallback);
+      this.#props.map.off("move", this._updatePositionCallback);
+      this.#props.map.off("zoom", this._updatePositionCallback);
       this._updatePositionCallback = undefined;
     }
   }
-  
+
   showPanel = () => {
     if (this.#isHidden && this.#panelPopup) {
       this.#isHidden = false;
-      this.#panelPopup.style.display = 'block';
-      
-      this.#panelPopup.style.transition = 'opacity 0.2s';
-      this.#panelPopup.style.opacity = '1';
+      this.#panelPopup.style.display = "block";
+
+      this.#panelPopup.style.transition = "opacity 0.2s";
+      this.#panelPopup.style.opacity = "1";
     }
   };
 
   hidePanel = () => {
     if (!this.#isHidden && this.#panelPopup) {
       this.#isHidden = true;
-      this.#panelPopup.style.display = 'none';
+      this.#panelPopup.style.display = "none";
     }
   };
 
@@ -158,16 +158,16 @@ export class Panel {
 
   removePanel = () => {
     if (this._updatePositionCallback) {
-      this.#props.map.off('move', this._updatePositionCallback);
-      this.#props.map.off('zoom', this._updatePositionCallback);
+      this.#props.map.off("move", this._updatePositionCallback);
+      this.#props.map.off("zoom", this._updatePositionCallback);
       this._updatePositionCallback = undefined;
     }
-    
+
     if (this.#panelPopup) {
       document.body.removeChild(this.#panelPopup);
       this.#panelPopup = undefined;
     }
-    
+
     if (this._container) {
       DOM.remove(this._container);
       this._container = undefined;

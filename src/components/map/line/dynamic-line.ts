@@ -175,6 +175,9 @@ export class DynamicLineEvents {
       this.#firstPoint = store.tail?.val as LatLng;
       this.showDynamicLine();
     }
+    if(store.size === 0) {
+      this.hideDynamicLine();
+    }
   };
 
   #onDoubleClick = (event: PointDoubleClickEvent) => {
@@ -183,6 +186,9 @@ export class DynamicLineEvents {
       this.#secondPoint = { lng: event.coordinates.lng, lat: event.coordinates.lat };
       this.#firstPoint = store.tail?.val as LatLng;
       this.showDynamicLine();
+    }
+    if(store.size === 0) {
+      this.hideDynamicLine();
     }
   };
 }

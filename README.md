@@ -6,7 +6,7 @@
 ## Features
 
 - Draw linestrings (including closed ones) and polygons
-- Compatible with maplibre-gl.js and mapbox-gl.js (currently supports Mercator projection only)
+- Compatible with maplibre-gl.js(v3, v4, v5) and mapbox-gl.js (currently supports Mercator projection only)
 - Customizable UI and controls
 - Event-driven architecture for easy integration
 
@@ -113,15 +113,15 @@ map.on(mdl:add, (event: PointAddEvent) => {
 
 Available events:
 
-- `mdl:doubleclick` (PointDoubleClickEvent)
-- `mdl:pointenter` (PointEnterEvent)
-- `mdl:pointleave` (PointLeaveEvent)
-- `mdl:moveend` (PointMoveEvent)
-- `mdl:add` (PointAddEvent)
-- `mdl:undo` (UndoEvent)
-- `mdl:removeall` (RemoveAllEvent)
-- `mdl:save` (SaveEvent)
-- `mdl:modechanged` (ModeChangeEvent)
+- `mdl:doubleclick` (PointDoubleClickEvent) -- Fired when a point is double-clicked
+- `mdl:pointenter` (PointEnterEvent) -- Fired when the cursor enters a point
+- `mdl:pointleave` (PointLeaveEvent) -- Fired when the cursor leaves a point
+- `mdl:moveend` (PointMoveEvent) -- Fired when a point is moved
+- `mdl:add` (PointAddEvent) -- Fired when a point is added
+- `mdl:undo` (UndoEvent) -- Fired when the undo button is clicked
+- `mdl:removeall` (RemoveAllEvent) -- Fired when all points are removed by clicking the delete button
+- `mdl:save` (SaveEvent) -- Fired when the save button is clicked
+- `mdl:modechanged` (ModeChangeEvent) -- Fired when the drawing mode is changed
 
 ### Methods
 

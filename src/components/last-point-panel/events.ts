@@ -132,6 +132,8 @@ export class PanelEvents {
 
     const tailVal = store.tail?.val as Step;
     store.removeStepById(tailVal.id);
+    console.log("removeStepById", tailVal);
+    
 
     const step = { ...tailVal, total: store.size };
     FireEvents.undoPoint(step, map, event);
@@ -142,7 +144,6 @@ export class PanelEvents {
     // after removing the last point, we need to set the panel coordinates to the new last point
     panel?.onPointRemove(store.tail?.val as Step);
     this.#tooltip.remove();
-
     requestAnimationFrame(tiles.render);
   };
 

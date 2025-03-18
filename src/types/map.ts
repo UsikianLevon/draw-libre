@@ -1,8 +1,5 @@
-import type { Map as MapMaplibre } from "maplibre-gl";
-import type { Map as MapBox } from "mapbox-gl";
+import mapboxgl from "mapbox-gl";
+import maplibregl from "maplibre-gl";
 
-import type { IControl as IControlMaplibre } from "maplibre-gl";
-import type { IControl as IControlMapbox } from "mapbox-gl";
-
-export type Map = MapMaplibre & MapBox;
-export type IControl = IControlMaplibre & IControlMapbox;
+export type Map = maplibregl.Map & mapboxgl.Map;
+export type IControl = maplibregl.IControl & mapboxgl.IControl

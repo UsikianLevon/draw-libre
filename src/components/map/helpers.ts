@@ -1,11 +1,11 @@
-import type { Map } from "#types/map";
+import type { CustomMap } from "#types/map";
 import type { LatLng, StepId, Step, EventsProps } from "#types/index";
 import { EVENTS } from "#utils/constants";
-import { DrawingMode } from "./mode";
-import { Mode } from "./mode/types";
+import type { DrawingMode } from "./mode";
+import type { Mode } from "./mode/types";
 
 export class FireEvents {
-  static addPoint(step: Step & { total: number }, map: Map, mode: DrawingMode) {
+  static addPoint(step: Step & { total: number }, map: CustomMap, mode: DrawingMode) {
     map.fire(EVENTS.ADD, {
       id: step.id,
       coordinates: {
@@ -20,7 +20,7 @@ export class FireEvents {
       },
     });
   }
-  static movePoint(step: { end: LatLng; id: StepId; start: LatLng; total: number }, map: Map) {
+  static movePoint(step: { end: LatLng; id: StepId; start: LatLng; total: number }, map: CustomMap) {
     map.fire(EVENTS.MOVEEND, {
       id: step.id,
       start_coordinates: {
@@ -35,7 +35,7 @@ export class FireEvents {
       timestamp: Date.now(),
     });
   }
-  static pointDoubleClick(step: Step & { total: number }, map: Map) {
+  static pointDoubleClick(step: Step & { total: number }, map: CustomMap) {
     map.fire(EVENTS.DOUBLECLICK, {
       id: step.id,
       coordinates: {
@@ -46,7 +46,7 @@ export class FireEvents {
       timestamp: Date.now(),
     });
   }
-  static enterPoint(step: Step & { total: number }, map: Map) {
+  static enterPoint(step: Step & { total: number }, map: CustomMap) {
     map.fire(EVENTS.POINTENTER, {
       id: step.id,
       coordinates: {
@@ -57,7 +57,7 @@ export class FireEvents {
       timestamp: Date.now(),
     });
   }
-  static leavePoint(step: Step & { total: number }, map: Map) {
+  static leavePoint(step: Step & { total: number }, map: CustomMap) {
     map.fire(EVENTS.POINTLEAVE, {
       id: step.id,
       coordinates: {
@@ -68,7 +68,7 @@ export class FireEvents {
       timestamp: Date.now(),
     });
   }
-  static undoPoint(step: Step & { total: number }, map: Map, originalEvent?: Event) {
+  static undoPoint(step: Step & { total: number }, map: CustomMap, originalEvent?: Event) {
     map.fire(EVENTS.UNDO, {
       originalEvent,
       id: step.id,
@@ -80,12 +80,12 @@ export class FireEvents {
       timestamp: Date.now(),
     });
   }
-  static modeChanged(map: Map, mode: Mode | "break") {
+  static modeChanged(map: CustomMap, mode: Mode | "break") {
     map.fire(EVENTS.MODECHANGED, {
       mode,
     });
   }
-  static removeAllPoints(map: Map, originalEvent: Event) {
+  static removeAllPoints(map: CustomMap, originalEvent: Event) {
     map.fire(EVENTS.REMOVEALL, { originalEvent });
   }
   static onSaveClick(context: Pick<EventsProps, "map" | "mode">, steps: Step[], originalEvent: Event) {
@@ -101,7 +101,7 @@ export class FireEvents {
       },
     });
   }
-  static onLineBreak(map: Map) {
+  static onLineBreak(map: CustomMap) {
     map.fire(EVENTS.BREAK);
   }
 }

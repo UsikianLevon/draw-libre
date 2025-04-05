@@ -1,15 +1,15 @@
 import type { GeoJSONSource } from "maplibre-gl";
 
 import type { LatLng, RequiredDrawOptions } from "#types/index";
-import type { Map } from "#types/map";
-import { Store } from "#store/index";
+import type { CustomMap } from "#types/map";
+import type { Store } from "#store/index";
 import { ELAYERS, ESOURCES, generateLayersToRender } from "#utils/geo_constants";
 import { POINT_BASE, LINE_BASE, POLYGON_BASE } from "#utils/geo_constants";
 import { GeometryFactory } from "#utils/helpers";
-import { DrawingMode } from "#components/map/mode";
+import type { DrawingMode } from "#components/map/mode";
 
 interface IProps {
-  map: Map;
+  map: CustomMap;
   store: Store;
   options: RequiredDrawOptions;
   mode: DrawingMode;
@@ -39,7 +39,7 @@ export class Tiles {
 
   #addSources = () => {
     const { map } = this.#props;
-    Object.values(ESOURCES).forEach((source) => {
+    for (const source of Object.values(ESOURCES)) {
       if (!map.getSource(source)) {
         map.addSource(source, {
           type: "geojson",
@@ -50,7 +50,7 @@ export class Tiles {
           promoteId: "id",
         });
       }
-    });
+    }
   };
 
   #addLayers = () => {
@@ -58,11 +58,11 @@ export class Tiles {
 
     const LAYERS_TO_RENDER = generateLayersToRender(options);
 
-    LAYERS_TO_RENDER.forEach((layer) => {
+    for (const layer of LAYERS_TO_RENDER) {
       if (!map.getLayer(layer.id)) {
         map.addLayer(layer);
       }
-    });
+    }
 
     const polygonInvisible = map.getLayoutProperty(ELAYERS.PolygonLayer, "visibility") === "none";
     if (mode.getMode() === "polygon" && polygonInvisible) {
@@ -84,21 +84,21 @@ export class Tiles {
   #removeSources = () => {
     const { map } = this.#props;
 
-    Object.values(ESOURCES).forEach((source) => {
+    for (const source of Object.values(ESOURCES)) {
       if (map.getSource(source)) {
         map.removeSource(source);
       }
-    });
+    }
   };
 
   #removeLayers = () => {
     const { map } = this.#props;
 
-    Object.values(ELAYERS).forEach((layer) => {
+    for (const layer of Object.values(ELAYERS)) {
       if (map.getLayer(layer)) {
         map.removeLayer(layer);
       }
-    });
+    }
   };
 
   removeTiles = () => {

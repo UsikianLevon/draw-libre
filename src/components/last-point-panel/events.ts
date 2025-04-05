@@ -1,11 +1,11 @@
 import { StoreHelpers } from "#store/index";
 import type { ButtonType, EventsProps, Step } from "#types/index";
-import { HTMLEvent } from "#types/helpers";
+import type { HTMLEvent } from "#types/helpers";
 import { DOM } from "#utils/dom";
 import { Tooltip } from "#components/tooltip";
 import { FireEvents } from "#components/map/helpers";
 import { Spatial } from "#utils/helpers";
-import { TilesHelpers } from "#components/map/tiles/helpers";
+import { togglePointCircleRadius } from "#components/map/tiles/helpers";
 
 export class PanelEvents {
   #props: EventsProps;
@@ -54,7 +54,7 @@ export class PanelEvents {
   removeEvents() {
     const { panel } = this.#props;
 
-    if (panel && panel._undoButton) {
+    if (panel?._undoButton) {
       DOM.manageEventListener("remove", panel._undoButton, "click", this.#onUndoClick);
       DOM.manageEventListener(
         "remove",
@@ -64,7 +64,7 @@ export class PanelEvents {
       );
       DOM.manageEventListener("remove", panel._undoButton, "mouseleave", this.onMouseLeave);
     }
-    if (panel && panel._deleteButton) {
+    if (panel?._deleteButton) {
       DOM.manageEventListener("remove", panel._deleteButton, "click", this.#onRemoveAll);
       DOM.manageEventListener(
         "remove",
@@ -74,7 +74,7 @@ export class PanelEvents {
       );
       DOM.manageEventListener("remove", panel._deleteButton, "mouseleave", this.onMouseLeave);
     }
-    if (panel && panel._saveButton) {
+    if (panel?._saveButton) {
       DOM.manageEventListener("remove", panel._saveButton, "click", this.onSaveClick);
       DOM.manageEventListener(
         "remove",
@@ -121,7 +121,7 @@ export class PanelEvents {
     store.reset();
     panel.hidePanel();
     mode.reset();
-    TilesHelpers.togglePointCircleRadius(map, "default");
+    togglePointCircleRadius(map, "default");
     this.#tooltip.remove();
     tiles.resetGeometries();
     FireEvents.removeAllPoints(map, event);
@@ -132,7 +132,6 @@ export class PanelEvents {
 
     const tailVal = store.tail?.val as Step;
     store.removeStepById(tailVal.id);
-    console.log("removeStepById", tailVal);
 
     const step = { ...tailVal, total: store.size };
     FireEvents.undoPoint(step, map, event);
@@ -143,7 +142,7 @@ export class PanelEvents {
     // after removing the last point, we need to set the panel coordinates to the new last point
     panel?.onPointRemove(store.tail?.val as Step);
     this.#tooltip.remove();
-    requestAnimationFrame(tiles.render);
+    tiles.render();
   };
 
   onSaveClick = (event: Event) => {

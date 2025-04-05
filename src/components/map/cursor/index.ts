@@ -1,15 +1,15 @@
-import type { Map } from "#types/map";
+import type { CustomMap } from "#types/map";
 
 import { Spatial } from "#utils/helpers";
-import { DrawingMode } from "#components/map/mode";
-import { Store } from "#store/index";
+import type { DrawingMode } from "#components/map/mode";
+import type { Store } from "#store/index";
 
-import { MouseEvents } from "../mouse-events";
-import { MouseEventsChangeEvent } from "../mouse-events/types";
-import { CURSORS, TCursor } from "./constants";
+import type { MouseEvents } from "../mouse-events";
+import type { MouseEventsChangeEvent } from "../mouse-events/types";
+import { CURSORS, type TCursor } from "./constants";
 
 interface CursorProps {
-  map: Map;
+  map: CustomMap;
   mode: DrawingMode;
   mouseEvents: MouseEvents;
   store: Store;

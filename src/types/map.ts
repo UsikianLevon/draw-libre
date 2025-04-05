@@ -1,5 +1,5 @@
-import mapboxgl from "mapbox-gl";
-import maplibregl from "maplibre-gl";
+import type mapboxgl from "mapbox-gl";
+import type maplibregl from "maplibre-gl";
 
-export type Map = maplibregl.Map & mapboxgl.Map;
+export type CustomMap = maplibregl.Map & mapboxgl.Map;
 export type IControl = maplibregl.IControl & mapboxgl.IControl;

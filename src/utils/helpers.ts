@@ -1,11 +1,11 @@
 import type { MapLayerMouseEvent, MapMouseEvent } from "maplibre-gl";
 import type { LatLng, Point, Uuid, EventsProps } from "#types/index";
-import type { Map } from "#types/map";
+import type { CustomMap } from "#types/map";
 
-import { ListNode, Store } from "#store/index";
-import { TilesHelpers } from "#components/map/tiles/helpers";
+import type { ListNode, Store } from "#store/index";
+import { togglePointCircleRadius } from "#components/map/tiles/helpers";
 
-import { DrawingMode } from "#components/map/mode";
+import type { DrawingMode } from "#components/map/mode";
 import { ELAYERS, POLYGON_BASE } from "./geo_constants";
 
 export class MapUtils {
@@ -16,12 +16,12 @@ export class MapUtils {
     return layers.some((layer) => layerIds.includes(layer.layer.id));
   }
 
-  static getPixelCoordinates = (map: Map, coords: LatLng) => {
+  static getPixelCoordinates = (map: CustomMap, coords: LatLng) => {
     const { lat, lng } = coords;
     return map.project([lng, lat]);
   };
 
-  static queryPointId = (map: Map, point: MapMouseEvent["point"]) => {
+  static queryPointId = (map: CustomMap, point: MapMouseEvent["point"]) => {
     const query = map.queryRenderedFeatures(point, {
       layers: [ELAYERS.PointsLayer, ELAYERS.FirstPointLayer],
     });
@@ -225,7 +225,7 @@ export class Spatial {
         store.tail.next = null;
       }
       mode.reset();
-      TilesHelpers.togglePointCircleRadius(map, "default");
+      togglePointCircleRadius(map, "default");
       tiles.renderPolygon(POLYGON_BASE);
     }
   };

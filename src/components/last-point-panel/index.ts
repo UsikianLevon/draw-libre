@@ -1,13 +1,13 @@
-import type { Map } from "#types/map";
+import type { CustomMap } from "#types/map";
 import type { LatLng, PanelImpl, Point, RequiredDrawOptions, Step } from "#types/index";
 import { DOM } from "#utils/dom";
-import { Store } from "#store/index";
-import { DrawingMode } from "#components/map/mode";
-import { DrawingModeChangeEvent } from "#components/map/mode/types";
+import type { Store } from "#store/index";
+import type { DrawingMode } from "#components/map/mode";
+import type { DrawingModeChangeEvent } from "#components/map/mode/types";
 import "./panel.css";
 
 interface IProps {
-  map: Map;
+  map: CustomMap;
   mode: DrawingMode;
   options: RequiredDrawOptions;
   store: Store;

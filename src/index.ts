@@ -1,4 +1,4 @@
-import type { IControl, Map } from "#types/map";
+import type { IControl, CustomMap } from "#types/map";
 
 import type { DrawOptions, LatLng, RequiredDrawOptions, Step, StepId } from "#types/index";
 import { Panel } from "#components/last-point-panel";
@@ -85,7 +85,7 @@ export default class DrawLibre implements IControl {
    * to the DOM: the map will insert the control's element into the DOM
    * as necessary.
    */
-  onAdd(map: Map) {
+  onAdd(map: CustomMap) {
     this.#store = new Store(this.#defaultOptions);
     this.#mode = new DrawingMode(this.#defaultOptions);
     this.#panel = new Panel({ map, mode: this.#mode, options: this.#defaultOptions, store: this.#store });
@@ -145,10 +145,10 @@ export default class DrawLibre implements IControl {
    */
   setSteps = (value: Step[] | LatLng[]) => {
     if (Array.isArray(value)) {
-      value.forEach((step) => {
-        const newStep = { ...step, id: (step as Step)["id"] || uuidv4() };
+      for (const step of value) {
+        const newStep = { ...step, id: (step as Step).id || uuidv4() };
         this.#store?.push(newStep);
-      });
+      }
     } else {
       throw new Error("Invalid argument. Expected an array of steps.");
     }

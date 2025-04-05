@@ -4,10 +4,10 @@ import type { EventsProps } from "#types/index";
 import { uuidv4, Spatial } from "#utils/helpers";
 import { ELAYERS } from "#utils/geo_constants";
 import { Tooltip } from "#components/tooltip";
-import { TilesHelpers } from "#components/map/tiles/helpers";
+import { togglePointCircleRadius } from "#components/map/tiles/helpers";
 
 import { FireEvents } from "../helpers";
-import { DrawingModeChangeEvent } from "../mode/types";
+import type { DrawingModeChangeEvent } from "../mode/types";
 
 export class FirstPoint {
   #mouseDown: boolean;
@@ -51,7 +51,7 @@ export class FirstPoint {
         map.off("click", ELAYERS.FirstPointLayer, this.#onFirstPointClick);
       }
       if (Spatial.canCloseGeometry(store)) {
-        TilesHelpers.togglePointCircleRadius(map, "large");
+        togglePointCircleRadius(map, "large");
       }
     }
   };
@@ -70,7 +70,7 @@ export class FirstPoint {
         total: store.size,
       });
       FireEvents.addPoint(step, map, mode);
-      TilesHelpers.togglePointCircleRadius(map, "default");
+      togglePointCircleRadius(map, "default");
       tiles.render();
     }
   };

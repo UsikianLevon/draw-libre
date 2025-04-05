@@ -1,6 +1,5 @@
-import { TilesHelpers } from "#components/map/tiles/helpers";
-import type { MapLayerMouseEvent, MapTouchEvent } from "maplibre-gl";
 import type { EventsProps, LatLng, Step } from "#types/index";
+import type { MapLayerMouseEvent, MapTouchEvent } from "maplibre-gl";
 
 import { MapUtils, Spatial, throttle } from "#utils/helpers";
 import { ELAYERS } from "#utils/geo_constants";
@@ -9,6 +8,7 @@ import { StoreHelpers } from "#store/index";
 import { FireEvents } from "../helpers";
 import { PointHelpers } from "./helpers";
 import { FirstPoint } from "./first-point";
+import { isDoubleClick, removeTransparentLine, addTransparentLine } from "../tiles/helpers";
 
 export class PointEvents {
   #props: EventsProps;
@@ -97,7 +97,7 @@ export class PointEvents {
     const { store, tiles, panel, map, mouseEvents } = this.#props;
 
     // not using dblclick event because it's not working properly(fires if we add point and then move it fast)
-    if (TilesHelpers.isDoubleClick() && this.#selectedStep) {
+    if (isDoubleClick() && this.#selectedStep) {
       store.removeStepById(this.#selectedStep.id);
       panel.onPointRemove(store.tail?.val as Step);
       FireEvents.pointDoubleClick({ ...this.#selectedStep, total: store.size }, this.#props.map);
@@ -142,26 +142,22 @@ export class PointEvents {
     }
   };
 
-  #processMouseMove = (event: MapLayerMouseEvent) => {
-    const { tiles } = this.#props;
-    tiles.renderOnMouseMove(this.#selectedIdx as number, event.lngLat);
-  };
-
   #onMapMouseMove = throttle((event: MapLayerMouseEvent) => {
-    this.#lastEvent = event;
-
     if (!this.#isThrottled) {
+      this.#lastEvent = event;
       this.#isThrottled = true;
 
       requestAnimationFrame(() => {
         if (!this.#selectedStep || !this.#lastEvent) return;
-        PointHelpers.updateSelectedStepLatLng(this.#lastEvent, this.#selectedStep);
+        this.#selectedStep.lat = event.lngLat.lat;
+        this.#selectedStep.lng = event.lngLat.lng;
         this.#onMoveLeftClickUp(this.#lastEvent);
-        this.#processMouseMove(this.#lastEvent);
+        const { tiles } = this.#props;
+        tiles.renderOnMouseMove(this.#selectedIdx as number, event.lngLat);
         this.#isThrottled = false;
       });
     }
-  }, 15);
+  }, 22);
 
   #onPointMouseEnter = (event: MapLayerMouseEvent) => {
     const { mouseEvents, map, store } = this.#props;
@@ -228,7 +224,7 @@ export class PointEvents {
     event.preventDefault();
 
     const { mouseEvents, map, store } = this.#props;
-    TilesHelpers.removeTransparentLine(map);
+    removeTransparentLine(map);
     this.#setSelectedStep(event);
     this.#hideLastPointPanel();
     const id = MapUtils.queryPointId(map, event.point);
@@ -265,7 +261,7 @@ export class PointEvents {
     if (mouseEvents) {
       mouseEvents.pointMouseDown = false;
     }
-    TilesHelpers.addTransparentLine(map, options);
+    addTransparentLine(map, options);
     // if the event.originalEvent.buttons === 0 in mousemove didn't work, let's try on mouse up
     // but this is a fail safe, it should work on event.originalEvent.buttons
     map.off("mousemove", this.#onMapMouseMove);

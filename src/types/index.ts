@@ -1,16 +1,16 @@
 import type { CircleLayerSpecification, FillLayerSpecification, LineLayerSpecification } from "maplibre-gl";
 
-import type { Map } from "#types/map";
+import type { CustomMap } from "#types/map";
 
-import { Control } from "#components/side-control";
-import { Panel } from "#components/last-point-panel";
-import { Tiles } from "#components/map/tiles";
-import { MouseEvents } from "#components/map/mouse-events/index";
-import { Store } from "#store/index";
+import type { Control } from "#components/side-control";
+import type { Panel } from "#components/last-point-panel";
+import type { Tiles } from "#components/map/tiles";
+import type { MouseEvents } from "#components/map/mouse-events/index";
+import type { Store } from "#store/index";
 
-import { DrawingMode } from "#components/map/mode";
-import { DeepRequired } from "./helpers";
-import { Mode } from "#components/map/mode/types";
+import type { DrawingMode } from "#components/map/mode";
+import type { DeepRequired } from "./helpers";
+import type { Mode } from "#components/map/mode/types";
 
 export type LatLng = {
   lat: number;
@@ -116,7 +116,7 @@ export interface ControlOptions {
 }
 
 export type EventsProps = {
-  map: Map;
+  map: CustomMap;
   panel: Panel;
   store: Store;
   control: Control;

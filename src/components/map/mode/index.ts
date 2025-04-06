@@ -65,7 +65,7 @@ export class DrawingMode extends Observable<DrawingModeChangeEvent> {
   };
 
   isPolygon = () => {
-    return this.#mode === "polygon" && this.#closedGeometry;
+    return this.#mode === "polygon" && this.getClosedGeometry();
   };
 
   reset = () => {

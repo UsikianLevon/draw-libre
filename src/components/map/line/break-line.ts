@@ -75,7 +75,6 @@ export class LineBreakEvents {
     FireEvents.onLineBreak(map);
   };
 
-  // TODO
   #onLineEnterBreak = (event: MapLayerMouseEvent) => {
     const { map, store } = this.props;
 

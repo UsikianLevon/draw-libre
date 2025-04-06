@@ -31,6 +31,9 @@ export class MapUtils {
 }
 
 export class GeometryFactory {
+
+
+
   static #collectGeometryCoordinates(store: Store): number[][] {
     const coordinates = [];
     let current = store.head;
@@ -54,23 +57,6 @@ export class GeometryFactory {
     return coordinates;
   }
 
-  static getAllLines(store: Store) {
-    const coordinates = this.#collectGeometryCoordinates(store);
-    return {
-      type: "FeatureCollection",
-      features: [
-        {
-          type: "Feature",
-          properties: {},
-          geometry: {
-            type: "LineString",
-            coordinates: coordinates,
-          },
-        },
-      ],
-    };
-  }
-
   static getLine(current: [number, number], next: [number, number]) {
     return {
       type: "FeatureCollection",
@@ -87,8 +73,23 @@ export class GeometryFactory {
     };
   }
 
-  static getPolygon(store: Store) {
-    const coordinates = this.#collectGeometryCoordinates(store);
+  static getAllLines(coordinates: number[][]) {
+    return {
+      type: "FeatureCollection",
+      features: [
+        {
+          type: "Feature",
+          properties: {},
+          geometry: {
+            type: "LineString",
+            coordinates: coordinates,
+          },
+        },
+      ],
+    };
+  }
+
+  static getPolygon(coordinates: number[][]) {
     return {
       type: "FeatureCollection",
       features: [
@@ -133,6 +134,20 @@ export class GeometryFactory {
       type: "FeatureCollection",
       features: pointFeatures,
     };
+  }
+
+  // CAUTION: render is dependent on this function
+  static getUnifiedFeatures(store: Store): GeoJSON.FeatureCollection<GeoJSON.LineString | GeoJSON.Polygon | GeoJSON.Point> {
+    const points = this.getPoints(store).features;
+    const coordinates = this.#collectGeometryCoordinates(store);
+
+    const lines = this.getAllLines(coordinates).features;
+    const polygons = this.getPolygon(coordinates).features;
+
+    return {
+      type: "FeatureCollection",
+      features: [...points, ...lines, ...polygons],
+    } as GeoJSON.FeatureCollection<GeoJSON.LineString | GeoJSON.Polygon | GeoJSON.Point>;
   }
 }
 
@@ -224,9 +239,10 @@ export class Spatial {
       if (store.tail && store.tail.val) {
         store.tail.next = null;
       }
+      map.setLayoutProperty(ELAYERS.PolygonLayer, "visibility", "none");
       mode.reset();
       togglePointCircleRadius(map, "default");
-      tiles.renderPolygon(POLYGON_BASE);
+      tiles.render();
     }
   };
 }

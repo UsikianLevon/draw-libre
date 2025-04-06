@@ -229,6 +229,7 @@ export class PointEvents {
     this.#hideLastPointPanel();
     const id = MapUtils.queryPointId(map, event.point);
     this.#selectedIdx = Spatial.getGeometryIndex(store, id);
+
     if (mouseEvents) {
       mouseEvents.pointMouseDown = true;
     }

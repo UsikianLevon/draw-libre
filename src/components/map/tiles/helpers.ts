@@ -24,7 +24,9 @@ export const togglePointCircleRadius = (map: CustomMap, type: keyof typeof FIRST
 };
 
 export const removeTransparentLine = (map: CustomMap) => {
-  map.removeLayer(ELAYERS.LineLayerTransparent);
+  if (map.getLayer(ELAYERS.LineLayerTransparent)) {
+    map.removeLayer(ELAYERS.LineLayerTransparent);
+  }
 };
 
 export const addTransparentLine = (map: CustomMap, options: RequiredDrawOptions) => {

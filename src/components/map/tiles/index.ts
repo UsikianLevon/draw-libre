@@ -4,7 +4,6 @@ import type { LatLng, RequiredDrawOptions } from "#types/index";
 import type { CustomMap } from "#types/map";
 import type { Store } from "#store/index";
 import { ELAYERS, ESOURCES, generateLayersToRender } from "#utils/geo_constants";
-import { POINT_BASE, LINE_BASE, POLYGON_BASE } from "#utils/geo_constants";
 import { GeometryFactory } from "#utils/helpers";
 import type { DrawingMode } from "#components/map/mode";
 
@@ -17,12 +16,12 @@ interface IProps {
 
 export class Tiles {
   #props: IProps;
-  #pointsFeature: any;
-  #linesFeature: any;
-  #polygonFeature: any;
+  #unifiedGeoJSON: GeoJSON.FeatureCollection<GeoJSON.LineString | GeoJSON.Polygon | GeoJSON.Point>;
 
   constructor(props: IProps) {
     this.#props = props;
+    this.#unifiedGeoJSON = GeometryFactory.getUnifiedFeatures(this.#props.store);
+
     this.#init();
     this.render();
   }
@@ -101,100 +100,77 @@ export class Tiles {
     }
   };
 
+  private updateLine(featureIdx: number, newCoord: LatLng) {
+    const { mode } = this.#props;
+
+    // -2 because line is always the second to last feature. Check GeometryFactory.getUnifiedFeatures
+    const line = this.#unifiedGeoJSON.features.at(-2)?.geometry.coordinates;
+    if (!line) return;
+    line[featureIdx] = [newCoord.lng, newCoord.lat];
+
+    if (mode.getClosedGeometry() && featureIdx === 0) {
+      line[line.length - 1] = [newCoord.lng, newCoord.lat];
+    }
+  }
+
+  private updatePolygon(featureIdx: number, newCoord: LatLng) {
+    const { mode } = this.#props;
+
+    // -1 because line is always the last feature. Check GeometryFactory.getUnifiedFeatures
+    const polygon = this.#unifiedGeoJSON.features.at(-1)?.geometry.coordinates;
+    if (!polygon) return;
+    polygon[featureIdx] = [newCoord.lng, newCoord.lat];
+
+    if (mode.getClosedGeometry() && featureIdx === 0) {
+      polygon[polygon.length - 1] = [newCoord.lng, newCoord.lat];
+    }
+  }
+
   removeTiles = () => {
     // first remove the layers then all the sources
     this.#removeLayers();
     this.#removeSources();
   };
 
-  renderPoints = (points: any) => {
-    const { map } = this.#props;
+  render() {
+    this.#unifiedGeoJSON = GeometryFactory.getUnifiedFeatures(this.#props.store)
+    const unifiedSource = this.#props.map.getSource(ESOURCES.UnifiedSource) as GeoJSONSource;
 
-    const pointSource = map.getSource(ESOURCES.PointsSource) as GeoJSONSource;
-    if (pointSource) {
-      pointSource.setData(points);
+    if (unifiedSource) {
+      unifiedSource.setData(this.#unifiedGeoJSON);
     }
-  };
+  }
 
-  renderLines = (lines: any, source: string) => {
-    const { map } = this.#props;
-
-    const lineSource = map.getSource(source) as GeoJSONSource;
-
-    if (lineSource) {
-      lineSource.setData(lines);
-    }
-  };
-
-  renderPolygon = (polygon: any) => {
-    const { map } = this.#props;
-
-    const polygoneSource = map.getSource(ESOURCES.PolygonSource) as GeoJSONSource;
-
-    if (polygoneSource) {
-      polygoneSource.setData(polygon);
-    }
-  };
-
-  render = () => {
-    const { mode, options, store } = this.#props;
-
-    const points = GeometryFactory.getPoints(store);
-    const lines = GeometryFactory.getAllLines(store);
-    this.#pointsFeature = points;
-    this.#linesFeature = lines;
-
-    this.renderPoints(points);
-    this.renderLines(lines, ESOURCES.LineSource);
-
-    const polygonOptionChecked = options.modes.polygon.visible;
-    if (polygonOptionChecked && mode.isPolygon()) {
-      const polygon = GeometryFactory.getPolygon(store);
-      this.#polygonFeature = polygon;
-      this.renderPolygon(polygon);
-    }
-  };
-
-  #renderPolygonOnMouseMove = (featureIdx: number, newCoord: LatLng) => {
-    this.#polygonFeature.features[0].geometry.coordinates[0][featureIdx] = [newCoord.lng, newCoord.lat];
-    const firstElement = featureIdx === 0;
-    if (firstElement) {
-      const lastIdx = this.#polygonFeature.features[0].geometry.coordinates[0]?.length - 1;
-      this.#polygonFeature.features[0].geometry.coordinates[0][lastIdx] = [newCoord.lng, newCoord.lat];
-    }
-    this.renderPolygon(this.#polygonFeature);
-  };
-
-  #renderLineOnMouseMove = (featureIdx: number, newCoord: LatLng) => {
-    const { mode } = this.#props;
-
-    this.#linesFeature.features[0].geometry.coordinates[featureIdx] = [newCoord.lng, newCoord.lat];
-
-    const firstElement = featureIdx === 0;
-    const selectedFirstPointInClosedLine = this.#linesFeature && mode.getClosedGeometry() && firstElement;
-    if (selectedFirstPointInClosedLine) {
-      const lastIdx = this.#linesFeature.features[0].geometry.coordinates?.length - 1;
-      this.#linesFeature.features[0].geometry.coordinates[lastIdx] = [newCoord.lng, newCoord.lat];
-    }
-    this.renderLines(this.#linesFeature, ESOURCES.LineSource);
-  };
 
   renderOnMouseMove = (featureIdx: number, newCoord: LatLng) => {
     const { mode, options } = this.#props;
 
-    this.#pointsFeature.features[featureIdx].geometry.coordinates = [newCoord.lng, newCoord.lat];
-    this.renderPoints(this.#pointsFeature);
-    this.#renderLineOnMouseMove(featureIdx, newCoord);
+    // points are always the first feature. Check GeometryFactory.getUnifiedFeatures
+    if (this.#unifiedGeoJSON && this.#unifiedGeoJSON.features[featureIdx]) {
+      this.#unifiedGeoJSON.features[featureIdx].geometry.coordinates = [
+        newCoord.lng,
+        newCoord.lat,
+      ];
+    }
+
+    this.updateLine(featureIdx, newCoord);
 
     const polygonOptionChecked = options.modes.polygon.visible;
+
     if (polygonOptionChecked && mode.isPolygon()) {
-      this.#renderPolygonOnMouseMove(featureIdx, newCoord);
+      this.updatePolygon(featureIdx, newCoord);
     }
-  };
+
+    this.render();
+  }
 
   resetGeometries = () => {
-    this.renderPoints(POINT_BASE);
-    this.renderLines(LINE_BASE, ESOURCES.LineSource);
-    this.renderPolygon(POLYGON_BASE);
+    const unifiedSource = this.#props.map.getSource(ESOURCES.UnifiedSource) as GeoJSONSource;
+    if (unifiedSource) {
+      unifiedSource.setData({
+        type: "FeatureCollection",
+        features: [],
+      });
+    }
   };
 }

@@ -1,7 +1,7 @@
-import type { MapLayerMouseEvent } from "maplibre-gl";
+import type { GeoJSONSource, MapLayerMouseEvent } from "maplibre-gl";
 
 import type { EventsProps } from "#types/index";
-import { ELAYERS } from "#utils/geo_constants";
+import { ELAYERS, ESOURCES } from "#utils/geo_constants";
 import { MapUtils, throttle } from "#utils/helpers";
 import { FireEvents } from "../helpers";
 import { PointHelpers } from "../points/helpers";
@@ -50,11 +50,21 @@ export class TransparentLineEvents {
   #processMouseMove = (event: MapLayerMouseEvent) => {
     PointHelpers.setSinglePointVisible(event);
     if (event.target.getLayer(ELAYERS.SinglePointLayer)) {
-      PointHelpers.updatePointsData(event);
+      const map = event.target;
+      const pointSource = map.getSource(ESOURCES.SinglePointSource) as GeoJSONSource;
+      if (pointSource) {
+        pointSource.setData({
+          type: "Feature",
+          geometry: {
+            type: "Point",
+            coordinates: [event.lngLat.lng, event.lngLat.lat],
+          },
+          properties: {},
+        });
+      }
     }
   };
 
-  // TODO
   #onLineMove = throttle((event: MapLayerMouseEvent) => {
     if (MapUtils.isFeatureTriggered(event, [ELAYERS.PointsLayer, ELAYERS.FirstPointLayer])) return;
 

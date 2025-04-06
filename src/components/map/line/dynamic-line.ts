@@ -1,4 +1,4 @@
-import type { MapLayerMouseEvent, PointLike } from "maplibre-gl";
+import type { GeoJSONSource, MapLayerMouseEvent, PointLike } from "maplibre-gl";
 
 import type { EventsProps, LatLng } from "#types/index";
 import { ELAYERS, ESOURCES, LINE_BASE } from "#utils/geo_constants";
@@ -117,13 +117,17 @@ export class DynamicLineEvents {
   };
 
   hideDynamicLine = () => {
-    const { map, tiles } = this.#props;
+    const { map, } = this.#props;
 
     this.#firstPoint = null;
     this.#secondPoint = null;
     this.#lineFeature = null;
     map.off("mousemove", this.#throttledOnLineMove);
-    tiles.renderLines(LINE_BASE, ESOURCES.LineDynamicSource);
+
+    const lineSource = map.getSource(ESOURCES.LineDynamicSource) as GeoJSONSource;
+    if (lineSource) {
+      lineSource.setData(LINE_BASE as GeoJSON.FeatureCollection);
+    }
     map.setLayoutProperty(ELAYERS.LineDynamicLayer, "visibility", "none");
   };
 
@@ -144,11 +148,13 @@ export class DynamicLineEvents {
 
   #renderLineOnMouseMove = (newCoord: LatLng) => {
     if (!this.#lineFeature) return;
+    const { map, } = this.#props;
 
-    const { tiles } = this.#props;
     this.#lineFeature.features[0].geometry.coordinates[1] = [newCoord.lng, newCoord.lat];
-
-    tiles.renderLines(this.#lineFeature, ESOURCES.LineDynamicSource);
+    const lineSource = map.getSource(ESOURCES.LineDynamicSource) as GeoJSONSource;
+    if (lineSource) {
+      lineSource.setData(this.#lineFeature);
+    }
   };
 
   #onLineMove = (event: MapLayerMouseEvent) => {

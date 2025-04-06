@@ -55,11 +55,9 @@ export const ELAYERS = {
 } as const;
 
 export const ESOURCES = {
+  UnifiedSource: "mdl-unified-source",
   LineDynamicSource: "mdl-line-dynamic-source",
   LineSourceBreak: "mdl-line-source-break",
-  LineSource: "mdl-line-source",
-  PolygonSource: "mdl-polygon-source",
-  PointsSource: "mdl-points-source",
   SinglePointSource: "mdl-single-point-source",
 } as const;
 
@@ -74,14 +72,14 @@ export const FIRST_POINT_COLOR = {
 };
 
 export const FIRST_POINT_PAINT_BASE = {
-  "circle-radius": FIRST_POINT_RADIUS["default"],
+  "circle-radius": FIRST_POINT_RADIUS.default,
   "circle-color": "#FEFFFE",
-  "circle-stroke-color": FIRST_POINT_COLOR["default"],
+  "circle-stroke-color": FIRST_POINT_COLOR.default,
   "circle-stroke-width": 3,
 };
 
 export const ON_LINE_POINT_PAINT_BASE = {
-  "circle-radius": FIRST_POINT_RADIUS["large"],
+  "circle-radius": FIRST_POINT_RADIUS.large,
   "circle-color": "#FEFFFE",
   "circle-stroke-color": "#666666",
   "circle-stroke-width": 3,
@@ -99,7 +97,7 @@ export const LINE_PAINT_BASE = {
 };
 
 export const POINTS_PAINT_BASE = {
-  "circle-radius": FIRST_POINT_RADIUS["default"],
+  "circle-radius": FIRST_POINT_RADIUS.default,
   "circle-color": "#FEFFFE",
   "circle-stroke-color": "#666666",
   "circle-stroke-width": 3,
@@ -124,12 +122,13 @@ export const generateLayersToRender = (options: RequiredDrawOptions) => {
     },
     {
       id: ELAYERS.PolygonLayer,
-      source: ESOURCES.PolygonSource,
+      source: ESOURCES.UnifiedSource,
       type: "fill",
       paint: options.layersPaint.polygon,
       layout: {
         visibility: "none",
       },
+      filter: ["==", "$type", "Polygon"],
     },
     {
       id: ELAYERS.LineDynamicLayer,
@@ -142,21 +141,23 @@ export const generateLayersToRender = (options: RequiredDrawOptions) => {
     },
     {
       id: ELAYERS.LineLayer,
-      source: ESOURCES.LineSource,
+      source: ESOURCES.UnifiedSource,
       type: "line",
       paint: options.layersPaint.line,
       layout: {
         visibility: "visible",
       },
+      filter: ["==", "$type", "LineString"],
     },
     {
       id: ELAYERS.LineLayerTransparent,
-      source: ESOURCES.LineSource,
+      source: ESOURCES.UnifiedSource,
       type: "line",
       paint: {
         "line-width": 4,
         "line-color": "transparent",
       },
+      filter: ["==", "$type", "LineString"],
     },
     {
       id: ELAYERS.LineLayerBreak,
@@ -169,14 +170,18 @@ export const generateLayersToRender = (options: RequiredDrawOptions) => {
     },
     {
       id: ELAYERS.PointsLayer,
-      source: ESOURCES.PointsSource,
+      source: ESOURCES.UnifiedSource,
       type: "circle",
       paint: options.layersPaint.points,
-      filter: ["==", ["get", "isFirst"], false],
+      filter: [
+        "all",
+        ["==", "$type", "Point"],
+        ["==", "isFirst", false]
+      ]
     },
     {
       id: ELAYERS.FirstPointLayer,
-      source: ESOURCES.PointsSource,
+      source: ESOURCES.UnifiedSource,
       type: "circle",
       paint: options.layersPaint.firstPoint,
       filter: ["==", ["get", "isFirst"], true],

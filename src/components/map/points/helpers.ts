@@ -1,28 +1,13 @@
-import type { MapLayerMouseEvent, GeoJSONSource } from "maplibre-gl";
-import type { EventsProps, Step } from "#types/index";
+import type { MapLayerMouseEvent } from "maplibre-gl";
+import type { EventsProps } from "#types/index";
 
-import { ESOURCES, ELAYERS } from "#utils/geo_constants";
+import { ELAYERS } from "#utils/geo_constants";
 import { Spatial, uuidv4 } from "#utils/helpers";
 import { togglePointCircleRadius } from "#components/map/tiles/helpers";
 
 import { FireEvents } from "../helpers";
 
 export const PointHelpers = {
-  updatePointsData(event: MapLayerMouseEvent) {
-    const map = event.target;
-    const pointSource = map.getSource(ESOURCES.SinglePointSource) as GeoJSONSource;
-    if (pointSource) {
-      pointSource.setData({
-        type: "Feature",
-        geometry: {
-          type: "Point",
-          coordinates: [event.lngLat.lng, event.lngLat.lat],
-        },
-        properties: {},
-      });
-    }
-  },
-
   setSinglePointVisible(event: MapLayerMouseEvent) {
     const map = event.target;
     map.setLayoutProperty(ELAYERS.SinglePointLayer, "visibility", "visible");
@@ -51,11 +36,6 @@ export const PointHelpers = {
     store.push(step);
     FireEvents.addPoint({ ...step, total: store.size }, map, mode);
     PointHelpers.triggerPostPointAddition(event, props);
-    requestAnimationFrame(tiles.render);
-  },
-
-  updateSelectedStepLatLng(event: MapLayerMouseEvent, selectedStep: Step) {
-    selectedStep.lat = event.lngLat.lat;
-    selectedStep.lng = event.lngLat.lng;
+    tiles.render()
   },
 };

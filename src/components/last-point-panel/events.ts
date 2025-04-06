@@ -6,6 +6,7 @@ import { Tooltip } from "#components/tooltip";
 import { FireEvents } from "#components/map/helpers";
 import { Spatial } from "#utils/helpers";
 import { togglePointCircleRadius } from "#components/map/tiles/helpers";
+import { ELAYERS } from "#utils/geo_constants";
 
 export class PanelEvents {
   #props: EventsProps;
@@ -122,6 +123,7 @@ export class PanelEvents {
     panel.hidePanel();
     mode.reset();
     togglePointCircleRadius(map, "default");
+    map.setLayoutProperty(ELAYERS.PolygonLayer, "visibility", "none");
     this.#tooltip.remove();
     tiles.resetGeometries();
     FireEvents.removeAllPoints(map, event);

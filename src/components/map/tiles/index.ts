@@ -159,7 +159,10 @@ export class Tiles {
       this.updatePolygon(featureIdx, newCoord);
     }
 
-    this.render();
+    const unifiedSource = this.#props.map.getSource(ESOURCES.UnifiedSource) as GeoJSONSource;
+    if (unifiedSource) {
+      unifiedSource.setData(this.#unifiedGeoJSON);
+    }
   }
 
   resetGeometries = () => {

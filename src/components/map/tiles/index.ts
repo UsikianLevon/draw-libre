@@ -146,11 +146,9 @@ export class Tiles {
     const { mode, options } = this.#props;
 
     // points are always the first feature. Check GeometryFactory.getUnifiedFeatures
-    if (this.#unifiedGeoJSON && this.#unifiedGeoJSON.features[featureIdx]) {
-      this.#unifiedGeoJSON.features[featureIdx].geometry.coordinates = [
-        newCoord.lng,
-        newCoord.lat,
-      ];
+    const feature = this.#unifiedGeoJSON?.features?.[featureIdx];
+    if (feature?.geometry?.coordinates) {
+      feature.geometry.coordinates = [newCoord.lng, newCoord.lat];
     }
 
     this.updateLine(featureIdx, newCoord);

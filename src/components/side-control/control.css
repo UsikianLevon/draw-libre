@@ -16,8 +16,9 @@
   border-top-right-radius: 4px;
 }
 
-.control-button-active {
-  background-color: #f0f0f0 !important;
+/* otherwise if we just .control-button-active, then maplibre will have higher importance */
+.maplibregl-ctrl-group button.control-button-active {
+  background-color: #edeaea;
 }
 
 .control-button:disabled {

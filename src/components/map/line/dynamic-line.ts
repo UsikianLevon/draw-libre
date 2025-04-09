@@ -3,7 +3,7 @@ import type { GeoJSONSource, MapLayerMouseEvent, PointLike } from "maplibre-gl";
 import type { EventsProps, LatLng } from "#types/index";
 import { ELAYERS, ESOURCES, LINE_BASE } from "#utils/geo_constants";
 import { StoreChangeEvent } from "#store/types";
-import { GeometryFactory, MapUtils, Spatial, throttle } from "#utils/helpers";
+import { debounce, GeometryFactory, MapUtils, Spatial, throttle } from "#utils/helpers";
 import { EVENTS } from "#utils/constants";
 
 import { DrawingModeChangeEvent } from "../mode/types";
@@ -72,10 +72,14 @@ export class DynamicLineEvents {
     const { store } = this.#props;
     switch (event.type) {
       case "STORE_CHANGED":
-        if (event.data.tail?.val && !Spatial.isClosedGeometry(store)) {
-          this.#firstPoint = event.data.tail?.val;
-          this.showDynamicLine();
-        }
+        console.log(store, store.tail?.next === store.head);
+        const debouncedDynamicLine = debounce(() => {
+          if (event.data.tail?.val && store.tail?.next !== store.head) {
+            this.#firstPoint = event.data.tail?.val;
+            this.showDynamicLine();
+          }
+        }, 10);
+        debouncedDynamicLine();
         break;
       default:
         break;

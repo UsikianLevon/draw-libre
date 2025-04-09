@@ -92,7 +92,7 @@ export default class DrawLibre implements IControl {
     this.#tiles = new Tiles({ map, store: this.#store, options: this.#defaultOptions, mode: this.#mode });
     const control = new Control({ options: this.#defaultOptions, mode: this.#mode });
     this.#mouseEvents = new MouseEvents();
-    this.#cursor = new Cursor({ map, mode: this.#mode, mouseEvents: this.#mouseEvents, store: this.#store });
+    this.#cursor = new Cursor({ map, mode: this.#mode, mouseEvents: this.#mouseEvents, store: this.#store, options: this.#defaultOptions });
     this.#events = new Events({
       map,
       store: this.#store,

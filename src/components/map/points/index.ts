@@ -1,12 +1,12 @@
 import type { EventsProps, LatLng, Step } from "#types/index";
 import type { MapLayerMouseEvent, MapTouchEvent } from "maplibre-gl";
 
-import { MapUtils, Spatial, throttle } from "#utils/helpers";
+import { MapUtils, Spatial, throttle, uuidv4 } from "#utils/helpers";
 import { ELAYERS } from "#utils/geo_constants";
 import { StoreHelpers } from "#store/index";
 
 import { FireEvents } from "../helpers";
-import { PointHelpers } from "./helpers";
+import { PointHelpers, PointVisibility } from "./helpers";
 import { FirstPoint } from "./first-point";
 import { isDoubleClick, removeTransparentLine, addTransparentLine } from "../tiles/helpers";
 
@@ -16,7 +16,7 @@ export class PointEvents {
   #enteredStep: Step | null;
   #selectedStep: Step | null;
   #selectedIdx: number | null;
-  #firstPoint: FirstPoint;
+  #firstPoint: FirstPoint | null;
   #isThrottled: boolean;
   #lastEvent: MapLayerMouseEvent | null;
 
@@ -26,7 +26,7 @@ export class PointEvents {
     this.#enteredStep = null;
     this.#selectedStep = null;
     this.#selectedIdx = null;
-    this.#firstPoint = new FirstPoint(props);
+    this.#firstPoint = new FirstPoint(this.#props)
     this.#isThrottled = false;
     this.#lastEvent = null;
   }
@@ -42,7 +42,7 @@ export class PointEvents {
     map.on("touchend", ELAYERS.FirstPointLayer, this.#onPointMouseUp);
     map.on("touchstart", ELAYERS.FirstPointLayer, this.#onPointMouseDown);
 
-    this.#firstPoint.initEvents();
+    this.#firstPoint?.initEvents();
   };
 
   initEvents = () => {
@@ -71,7 +71,7 @@ export class PointEvents {
     map.off("mouseup", ELAYERS.FirstPointLayer, this.#onPointMouseUp);
     map.off("touchend", ELAYERS.PointsLayer, this.#onPointMouseUp);
     map.off("touchstart", ELAYERS.PointsLayer, this.#onPointMouseDown);
-    this.#firstPoint.removeEvents();
+    this.#firstPoint?.removeEvents();
   };
 
   removeEvents = () => {
@@ -94,18 +94,17 @@ export class PointEvents {
   };
 
   #onPointClick = (event: MapLayerMouseEvent) => {
-    const { store, tiles, panel, map, mouseEvents } = this.#props;
+    const { store, tiles, map, options, mouseEvents } = this.#props;
 
     // not using dblclick event because it's not working properly(fires if we add point and then move it fast)
     if (isDoubleClick() && this.#selectedStep) {
       store.removeStepById(this.#selectedStep.id);
-      panel.onPointRemove(store.tail?.val as Step);
       FireEvents.pointDoubleClick({ ...this.#selectedStep, total: store.size }, this.#props.map);
       Spatial.switchToLineModeIfCan(this.#props);
     }
 
     const id = MapUtils.queryPointId(map, event.point);
-    if (StoreHelpers.isLastPoint(store, id)) {
+    if (StoreHelpers.isLastPoint(store, options, id)) {
       mouseEvents.lastPointMouseClick = true;
       mouseEvents.lastPointMouseUp = false;
     }
@@ -123,7 +122,7 @@ export class PointEvents {
   };
 
   #onMapClick = (event: MapLayerMouseEvent) => {
-    const { mode, mouseEvents, map } = this.#props;
+    const { mode, mouseEvents, map, options, store } = this.#props;
 
     if (mode.getClosedGeometry()) return;
     if (this.#onOwnGeometryLayersClick(event)) return;
@@ -131,8 +130,12 @@ export class PointEvents {
       mouseEvents.lastPointMouseClick = false;
     }
     map.getCanvasContainer().style.cursor = "grab";
+    const nextStep = { ...event.lngLat, id: uuidv4() };
+    if (options.pointGeneration === "auto" && store?.tail?.val && store.size >= 1) {
+      PointHelpers.createAuxiliaryPoint(store.tail.val, nextStep, this.#props);
+    }
     PointHelpers.addPointToMap(event, this.#props);
-    PointHelpers.setSinglePointHidden(event);
+    PointVisibility.setSinglePointHidden(event);
   };
 
   #onMoveLeftClickUp = (event: MapLayerMouseEvent) => {
@@ -160,14 +163,14 @@ export class PointEvents {
   }, 22);
 
   #onPointMouseEnter = (event: MapLayerMouseEvent) => {
-    const { mouseEvents, map, store } = this.#props;
+    const { mouseEvents, map, store, options } = this.#props;
     if (mouseEvents) {
       mouseEvents.pointMouseEnter = true;
       if (mouseEvents.pointMouseDown) return;
     }
-    PointHelpers.setSinglePointHidden(event);
+    PointVisibility.setSinglePointHidden(event);
     const id = MapUtils.queryPointId(map, event.point);
-    if (StoreHelpers.isLastPoint(store, id)) {
+    if (StoreHelpers.isLastPoint(store, options, id)) {
       mouseEvents.lastPointMouseEnter = true;
       mouseEvents.lastPointMouseLeave = false;
     }
@@ -179,7 +182,7 @@ export class PointEvents {
   };
 
   #onPointMouseLeave = (event: MapLayerMouseEvent) => {
-    const { mouseEvents, store, map } = this.#props;
+    const { mouseEvents, store, map, options } = this.#props;
 
     if (mouseEvents) {
       mouseEvents.pointMouseEnter = false;
@@ -189,7 +192,7 @@ export class PointEvents {
       if (mouseEvents.pointMouseDown) return;
     }
     const id = MapUtils.queryPointId(map, event.point);
-    if (StoreHelpers.isLastPoint(store, id)) {
+    if (StoreHelpers.isLastPoint(store, options, id)) {
       mouseEvents.lastPointMouseEnter = false;
       mouseEvents.lastPointMouseLeave = true;
     }
@@ -202,10 +205,10 @@ export class PointEvents {
   };
 
   #hideLastPointPanel = () => {
-    const { store, panel } = this.#props;
+    const { store, panel, options } = this.#props;
     if (!this.#selectedStep) return;
 
-    if (StoreHelpers.isLastPoint(store, this.#selectedStep.id)) {
+    if (StoreHelpers.isLastPoint(store, options, this.#selectedStep.id)) {
       panel.hidePanel();
     }
   };
@@ -227,8 +230,8 @@ export class PointEvents {
     removeTransparentLine(map);
     this.#setSelectedStep(event);
     this.#hideLastPointPanel();
-    const id = MapUtils.queryPointId(map, event.point);
-    this.#selectedIdx = Spatial.getGeometryIndex(store, id);
+    const point = MapUtils.queryPoint(map, event.point)
+    this.#selectedIdx = Spatial.getGeometryIndex(store, point?.properties.id);
 
     if (mouseEvents) {
       mouseEvents.pointMouseDown = true;
@@ -242,11 +245,10 @@ export class PointEvents {
     const { mouseEvents, store, panel, map, options } = this.#props;
     mouseEvents.pointMouseUp = true;
     if (this.#selectedStep) {
-      if (StoreHelpers.isLastPoint(store, this.#selectedStep.id) && store.tail?.val) {
-        // mouseEvents.lastPointMouseClick = false;
-        // mouseEvents.lastPointMouseUp = true;
-        panel?.setPanelLocation(store.tail.val);
-      }
+      store.notify({
+        type: "STORE_CHANGED",
+        data: store
+      })
       panel?.showPanel();
 
       FireEvents.movePoint(

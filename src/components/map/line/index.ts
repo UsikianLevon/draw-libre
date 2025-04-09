@@ -8,14 +8,14 @@ import { TransparentLineEvents } from "./transparent-line";
 export class LineEvents {
   props: EventsProps;
   #break: LineBreakEvents;
-  #transparent: TransparentLineEvents;
+  #transparent: TransparentLineEvents | null;
   #dynamic: DynamicLineEvents | null;
   #type: "default" | "break";
 
   constructor(props: EventsProps) {
     this.props = props;
     this.#break = new LineBreakEvents(props);
-    this.#transparent = new TransparentLineEvents(props);
+    this.#transparent = props.options.pointGeneration === "manual" ? new TransparentLineEvents(props) : null;
     this.#dynamic = null;
     this.#type = "default";
   }
@@ -36,7 +36,7 @@ export class LineEvents {
   #initEvents() {
     const notBreakMode = !this.props.mode.getBreak();
     if (notBreakMode) {
-      this.#transparent.initEvents();
+      this.#transparent?.initEvents();
       if (this.props.options.dynamicLine) {
         this.#dynamic?.initDynamicEvents();
       }
@@ -63,7 +63,7 @@ export class LineEvents {
 
   #removeEvents() {
     this.#break.removeBreakEvents();
-    this.#transparent.removeEvents();
+    this.#transparent?.removeEvents();
     if (this.props.options.dynamicLine) {
       this.#dynamic?.removeEvents();
       this.#dynamic?.removeLine();
@@ -94,14 +94,14 @@ export class LineEvents {
     if (type === "MODE_CHANGED") {
       if (this.#type === "break") {
         this.#break.removeBreakEvents();
-        this.#transparent.initEvents();
+        this.#transparent?.initEvents();
         this.#type = "default";
       }
     }
 
     if (type === "BREAK_CHANGED" && data) {
       if (this.#type === "default") {
-        this.#transparent.removeEvents();
+        this.#transparent?.removeEvents();
         this.#break.initBreakEvents();
         this.#type = "break";
       }

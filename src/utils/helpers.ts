@@ -1,12 +1,12 @@
 import type { MapLayerMouseEvent, MapMouseEvent } from "maplibre-gl";
-import type { LatLng, Point, Uuid, EventsProps } from "#types/index";
+import type { LatLng, Point, Uuid, EventsProps, RequiredDrawOptions } from "#types/index";
 import type { CustomMap } from "#types/map";
 
 import type { ListNode, Store } from "#store/index";
 import { togglePointCircleRadius } from "#components/map/tiles/helpers";
 
 import type { DrawingMode } from "#components/map/mode";
-import { ELAYERS, POLYGON_BASE } from "./geo_constants";
+import { ELAYERS } from "./geo_constants";
 
 export class MapUtils {
   static isFeatureTriggered(event: MapLayerMouseEvent, layerIds: string[]) {
@@ -27,6 +27,13 @@ export class MapUtils {
     });
     const id = query?.[0]?.properties.id;
     return id;
+  };
+
+  static queryPoint = (map: CustomMap, point: MapMouseEvent["point"]) => {
+    const query = map.queryRenderedFeatures(point, {
+      layers: [ELAYERS.PointsLayer, ELAYERS.FirstPointLayer],
+    });
+    return query?.[0];
   };
 }
 
@@ -119,7 +126,7 @@ export class GeometryFactory {
         const head = current.val.id === store.head?.val?.id;
         pointFeatures.push({
           type: "Feature",
-          properties: { id: val.id, lat: val.lat, lng: val.lng, isFirst: head },
+          properties: { id: val.id, lat: val.lat, lng: val.lng, isFirst: head, isAuxiliary: val.isAuxiliary },
           geometry: {
             type: "Point",
             coordinates: [val.lng, val.lat],
@@ -174,7 +181,7 @@ export class Spatial {
     return Boolean(points.length);
   }
 
-  // √(x2​−x1​)²+(y2​−y1​)²​
+  // √(x1​−x2​)²+(y1​−y2​)²​
   static distance = (point1: Point, point2: Point) =>
     Math.sqrt((point1.x - point2.x) ** 2 + (point1.y - point2.y) ** 2);
 
@@ -192,7 +199,10 @@ export class Spatial {
     return false;
   };
 
-  static isClosedGeometry = (store: Store) => {
+  static isClosedGeometry = (store: Store, options: RequiredDrawOptions) => {
+    if (options.pointGeneration === "auto" && store.tail?.val?.isAuxiliary) {
+      return store.tail?.prev?.next === store.head;
+    }
     return store.tail?.next === store.head;
   };
 
@@ -218,14 +228,15 @@ export class Spatial {
   };
 
   static closeGeometry = (store: Store, mode: DrawingMode) => {
-    if (store.tail) {
+    if (store.tail && store.head) {
       store.tail.next = store.head;
+      store.head.prev = store.tail;
     }
     mode.setClosedGeometry(true);
   };
 
-  static canCloseGeometry = (store: Store) => {
-    return store.size > 2 && !this.isClosedGeometry(store);
+  static canCloseGeometry = (store: Store, options: RequiredDrawOptions) => {
+    return store.size > 2 && !this.isClosedGeometry(store, options);
   };
 
   static canBreakClosedGeometry = (store: Store) => {

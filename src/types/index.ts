@@ -26,6 +26,7 @@ export type StepId = Uuid | string;
 
 export type Step = {
   id: StepId;
+  isAuxiliary?: boolean;
 } & LatLng;
 
 export interface PanelImpl {
@@ -47,13 +48,13 @@ export type SaveButton = Button & {
 
 type InitialSteps =
   | {
-      steps: Step[];
-      generateId?: boolean;
-    }
+    steps: Step[];
+    generateId?: boolean;
+  }
   | {
-      steps: LatLng[];
-      generateId: true;
-    };
+    steps: LatLng[];
+    generateId: true;
+  };
 
 export type Initial = InitialSteps & {
   geometry: "line" | "polygon";
@@ -64,6 +65,7 @@ export interface LayersPaint {
   onLinePoint?: CircleLayerSpecification["paint"];
   firstPoint?: CircleLayerSpecification["paint"];
   points?: CircleLayerSpecification["paint"];
+  auxiliaryPoint?: CircleLayerSpecification["paint"];
   line?: LineLayerSpecification["paint"];
   polygon?: FillLayerSpecification["paint"];
   breakLine?: LineLayerSpecification["paint"];
@@ -81,6 +83,7 @@ interface Locale {
 }
 
 export interface DrawOptions {
+  pointGeneration?: "manual" | "auto"
   panel?: {
     size?: PanelImpl["size"];
     buttons?: PanelImpl["buttons"];

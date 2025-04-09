@@ -57,16 +57,10 @@ export class LineBreakEvents {
 
   // TODO
   #geometryBreakOnClick = () => {
-    const { store, mode, panel, map, tiles } = this.props;
+    const { store, mode, map, tiles } = this.props;
 
     const nextPointId = this.#current?.next?.val?.id as Uuid;
     Spatial.breakGeometry(store, nextPointId);
-    if (store.tail?.val) {
-      panel.setPanelLocation({
-        lat: store.tail?.val?.lat,
-        lng: store.tail?.val?.lng,
-      });
-    }
     this.#onLineLeave();
 
     map.setLayoutProperty(ELAYERS.PolygonLayer, "visibility", "none");
@@ -74,6 +68,32 @@ export class LineBreakEvents {
     tiles.render();
     FireEvents.onLineBreak(map);
   };
+
+  // when the points are generated automatically, we need to get the points from the previous and next nodes
+  #getAutoGenerationPoints = (line: ListNode | null) => {
+    let current: [number, number] | null = null;
+    let next: [number, number] | null = null;
+
+    if (line?.val?.isAuxiliary) {
+      current = [line?.prev?.val?.lng, line?.prev?.val?.lat] as [number, number];
+      next = [line?.next?.val?.lng, line?.next?.val?.lat] as [number, number];
+    } else {
+      current = [line?.val?.lng, line?.val?.lat] as [number, number];
+      next = [line?.next?.next?.val?.lng, line?.next?.next?.val?.lat] as [number, number];
+    }
+    return { current, next };
+  }
+
+  #getLinePoints = (line: ListNode | null) => {
+    const { options } = this.props;
+    if (options.pointGeneration === "manual") {
+      const current = [line?.val?.lng, line?.val?.lat] as [number, number];
+      const next = [line?.next?.val?.lng, line?.next?.val?.lat] as [number, number];
+      return { current, next };
+    }
+
+    return this.#getAutoGenerationPoints(line);
+  }
 
   #onLineEnterBreak = (event: MapLayerMouseEvent) => {
     const { map, store } = this.props;
@@ -84,9 +104,8 @@ export class LineBreakEvents {
     }
 
     const lineSource = map.getSource(ESOURCES.LineSourceBreak) as GeoJSONSource;
+    const { current, next } = this.#getLinePoints(this.#current);
 
-    const current = [line?.val?.lng, line?.val?.lat] as [number, number];
-    const next = [line?.next?.val?.lng, line?.next?.val?.lat] as [number, number];
     const lineBreakData = GeometryFactory.getLine(current, next);
     if (!lineBreakData) return;
 

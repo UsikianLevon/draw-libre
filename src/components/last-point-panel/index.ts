@@ -5,6 +5,8 @@ import type { Store } from "#store/index";
 import type { DrawingMode } from "#components/map/mode";
 import type { DrawingModeChangeEvent } from "#components/map/mode/types";
 import "./panel.css";
+import { StoreChangeEvent } from "#store/types";
+import { debounce } from "#utils/helpers";
 
 interface IProps {
   map: CustomMap;
@@ -29,28 +31,7 @@ export class Panel {
     this.#isHidden = true;
     this.#panelPopup = undefined;
     this.#initPanel();
-    this.#initConsumers();
   }
-
-  #initConsumers() {
-    this.#props.mode?.addObserver(this.#mapModeConsumer);
-  }
-
-  #mapModeConsumer = (event: DrawingModeChangeEvent) => {
-    const { store } = this.#props;
-    const { type, data } = event;
-    if (type === "MODE_CHANGED" && !data) {
-      this.hidePanel();
-    }
-    if (type === "MODE_CHANGED" && data) {
-      if (store.tail?.val) {
-        this.setPanelLocation({
-          lat: store.tail?.val?.lat,
-          lng: store.tail?.val?.lng,
-        });
-      }
-    }
-  };
 
   #applyPanelStyles() {
     if (!this.#panelPopup) return;
@@ -86,13 +67,10 @@ export class Panel {
 
   setPanelLocation = (coordinates: LatLng) => {
     if (!this.#panelPopup) return;
-
     if (this.#isHidden) {
       this.showPanel();
     }
-
     const point = this.#props.map.project(coordinates);
-
     this.#pointPositionUpdate(point);
     this.#updatePanelPositionOnMapMove(coordinates);
   };
@@ -145,14 +123,6 @@ export class Panel {
     if (!this.#isHidden && this.#panelPopup) {
       this.#isHidden = true;
       this.#panelPopup.style.display = "none";
-    }
-  };
-
-  onPointRemove = (head: Step) => {
-    if (head) {
-      this.setPanelLocation(head);
-    } else {
-      this.hidePanel();
     }
   };
 

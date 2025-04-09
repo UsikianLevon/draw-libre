@@ -8,6 +8,7 @@ import {
   LINE_PAINT_BASE,
   POLYGON_PAINT_BASE,
   BREAK_PAINT_BASE,
+  AUXILIARY_POINT_PAINT_BASE,
 } from "./geo_constants";
 
 export class Options {
@@ -46,7 +47,7 @@ export class Options {
 
   static checkInitialStepsOption(options: Initial): void {
     const { closeGeometry, generateId, steps } = options;
-    // if we have ids for all steps if id generation is off
+    // if we have ids for all steps and id generation is off
     this.checkIfMissingIds(steps, generateId);
     // If we want to close the geometry, we need at least 3 points
     this.checkIfEnoughPointsToClose(steps, closeGeometry);
@@ -60,6 +61,7 @@ export class Options {
     }
 
     return {
+      pointGeneration: options.pointGeneration ?? DEFAULT_OPTIONS.pointGeneration,
       panel: generatePanelOptions(options),
       modes: generateModeOptions(options),
       layersPaint: generateLayersOptions(options),
@@ -141,6 +143,15 @@ function generateLayersOptions(options: DrawOptions): RequiredDrawOptions["layer
       "circle-stroke-width":
         options.layersPaint?.points?.["circle-stroke-width"] || POINTS_PAINT_BASE["circle-stroke-width"],
       ...options.layersPaint?.points,
+    },
+    auxiliaryPoint: {
+      "circle-radius": options.layersPaint?.auxiliaryPoint?.["circle-radius"] || AUXILIARY_POINT_PAINT_BASE["circle-radius"],
+      "circle-color": options.layersPaint?.auxiliaryPoint?.["circle-color"] || AUXILIARY_POINT_PAINT_BASE["circle-color"],
+      "circle-stroke-color":
+        options.layersPaint?.auxiliaryPoint?.["circle-stroke-color"] || AUXILIARY_POINT_PAINT_BASE["circle-stroke-color"],
+      "circle-stroke-width":
+        options.layersPaint?.auxiliaryPoint?.["circle-stroke-width"] || AUXILIARY_POINT_PAINT_BASE["circle-stroke-width"],
+      ...options.layersPaint?.auxiliaryPoint,
     },
     line: {
       "line-width": options.layersPaint?.line?.["line-width"] || LINE_PAINT_BASE["line-width"],

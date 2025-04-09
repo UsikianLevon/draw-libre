@@ -4,7 +4,7 @@ import type { EventsProps } from "#types/index";
 import { ELAYERS, ESOURCES } from "#utils/geo_constants";
 import { MapUtils, throttle } from "#utils/helpers";
 import { FireEvents } from "../helpers";
-import { PointHelpers } from "../points/helpers";
+import { PointVisibility } from "../points/helpers";
 import { checkIfPointClicked, insertStepIfOnLine, updateUIAfterInsert } from "./utils";
 
 export const LINE_TRANSPARENT_THROTTLE_TIME = 22;
@@ -42,13 +42,13 @@ export class TransparentLineEvents {
     if (checkIfPointClicked(event)) return;
     const step = insertStepIfOnLine(event, store);
     if (step) {
-      FireEvents.addPoint({ ...step, total: store.size }, map, mode);
       updateUIAfterInsert(event, this.props);
+      FireEvents.addPoint({ ...step, total: store.size }, map, mode);
     }
   };
 
   #processMouseMove = (event: MapLayerMouseEvent) => {
-    PointHelpers.setSinglePointVisible(event);
+    PointVisibility.setSinglePointVisible(event);
     if (event.target.getLayer(ELAYERS.SinglePointLayer)) {
       const map = event.target;
       const pointSource = map.getSource(ESOURCES.SinglePointSource) as GeoJSONSource;
@@ -89,7 +89,7 @@ export class TransparentLineEvents {
     if (MapUtils.isFeatureTriggered(event, [ELAYERS.PointsLayer, ELAYERS.FirstPointLayer])) return;
 
     mouseEvents.lineMouseEnter = true;
-    PointHelpers.setSinglePointVisible(event);
+    PointVisibility.setSinglePointVisible(event);
   };
 
   #onLineLeave = (event: MapLayerMouseEvent) => {
@@ -97,6 +97,6 @@ export class TransparentLineEvents {
     if (mouseEvents.pointMouseDown || mouseEvents.pointMouseEnter) return;
 
     mouseEvents.lineMouseLeave = true;
-    PointHelpers.setSinglePointHidden(event);
+    PointVisibility.setSinglePointHidden(event);
   };
 }

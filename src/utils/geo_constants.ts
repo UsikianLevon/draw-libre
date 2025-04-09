@@ -52,6 +52,7 @@ export const ELAYERS = {
   PointsLayer: "mdl-points-layer",
   SinglePointLayer: "mdl-single-point-layer",
   FirstPointLayer: "mdl-first-point-layer",
+  AuxiliaryPointLayer: "mdl-auxiliary-point-layer",
 } as const;
 
 export const ESOURCES = {
@@ -76,6 +77,13 @@ export const FIRST_POINT_PAINT_BASE = {
   "circle-color": "#FEFFFE",
   "circle-stroke-color": FIRST_POINT_COLOR.default,
   "circle-stroke-width": 3,
+};
+
+export const AUXILIARY_POINT_PAINT_BASE = {
+  "circle-radius": FIRST_POINT_RADIUS.default - 1.5,
+  "circle-color": "#FEFFFE",
+  "circle-stroke-color": "#666666",
+  "circle-stroke-width": 2,
 };
 
 export const ON_LINE_POINT_PAINT_BASE = {
@@ -176,7 +184,8 @@ export const generateLayersToRender = (options: RequiredDrawOptions) => {
       filter: [
         "all",
         ["==", "$type", "Point"],
-        ["==", "isFirst", false]
+        ["==", "isFirst", false],
+        ["==", "isAuxiliary", false]
       ]
     },
     {
@@ -185,6 +194,16 @@ export const generateLayersToRender = (options: RequiredDrawOptions) => {
       type: "circle",
       paint: options.layersPaint.firstPoint,
       filter: ["==", ["get", "isFirst"], true],
+      layout: {
+        visibility: "none",
+      },
+    },
+    {
+      id: ELAYERS.AuxiliaryPointLayer,
+      source: ESOURCES.UnifiedSource,
+      type: "circle",
+      paint: options.layersPaint.auxiliaryPoint,
+      filter: ["==", ["get", "isAuxiliary"], true],
     },
   ] satisfies AddLayerObject[];
 };

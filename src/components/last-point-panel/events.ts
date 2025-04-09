@@ -4,9 +4,12 @@ import type { HTMLEvent } from "#types/helpers";
 import { DOM } from "#utils/dom";
 import { Tooltip } from "#components/tooltip";
 import { FireEvents } from "#components/map/helpers";
-import { Spatial } from "#utils/helpers";
+import { debounce, Spatial } from "#utils/helpers";
 import { togglePointCircleRadius } from "#components/map/tiles/helpers";
 import { ELAYERS } from "#utils/geo_constants";
+import { PointHelpers } from "#components/map/points/helpers";
+import { StoreChangeEvent } from "#store/types";
+import { DrawingModeChangeEvent } from "#components/map/mode/types";
 
 export class PanelEvents {
   #props: EventsProps;
@@ -16,6 +19,61 @@ export class PanelEvents {
     this.#props = props;
     this.#tooltip = new Tooltip();
   }
+
+  initConsumers() {
+    this.#props.store.addObserver(this.#storeEventsConsumer);
+    this.#props.mode?.addObserver(this.#mapModeConsumer);
+  }
+
+  removeConsumers() {
+    this.#props.store.removeObserver(this.#storeEventsConsumer);
+    this.#props.mode?.removeObserver(this.#mapModeConsumer);
+  }
+
+  #storeEventsConsumer = (event: StoreChangeEvent) => {
+    switch (event.type) {
+      case "STORE_CHANGED":
+        const { data } = event;
+        let current = Object.assign({}, data);
+        // we need a debounce here to just get the last point, so there's no flickering on the map
+        const navigatePanelToLastNonAuxLocation = debounce(() => {
+          while (current.tail) {
+            if (current.tail?.val?.isAuxiliary) {
+              current.tail = current.tail?.prev;
+            } else {
+              if (current.tail?.val) {
+                this.#props.panel.setPanelLocation({
+                  lat: current.tail.val.lat,
+                  lng: current.tail.val.lng,
+                });
+              }
+              break
+            }
+          }
+        }, 5)
+
+        navigatePanelToLastNonAuxLocation()
+        break;
+      default:
+        break;
+    }
+  };
+
+  #mapModeConsumer = (event: DrawingModeChangeEvent) => {
+    const { store } = this.#props;
+    const { type, data } = event;
+    if (type === "MODE_CHANGED" && !data) {
+      this.#props.panel.hidePanel();
+    }
+    if (type === "MODE_CHANGED" && data) {
+      if (store.tail?.val) {
+        this.#props.panel.setPanelLocation({
+          lat: store.tail?.val?.lat,
+          lng: store.tail?.val?.lng,
+        });
+      }
+    }
+  };
 
   initEvents() {
     const { panel } = this.#props;
@@ -130,20 +188,25 @@ export class PanelEvents {
   };
 
   #onUndoClick = (event: Event) => {
-    const { store, panel, map, tiles } = this.#props;
+    const { store, map, tiles, options } = this.#props;
 
-    const tailVal = store.tail?.val as Step;
-    store.removeStepById(tailVal.id);
-
-    const step = { ...tailVal, total: store.size };
+    store.removeStepById(store?.tail?.val?.id as string);
+    if (options.pointGeneration === "auto") {
+      store.removeStepById(store.tail?.val?.id as string);
+      if (store.tail?.val?.isAuxiliary) {
+        store.removeStepById(store.tail?.val?.id as string);
+        PointHelpers.createAuxiliaryPoint(store.tail.val, store.head?.val as Step, this.#props);
+        store.tail.next = store.head;
+      }
+    }
+    const step = { ...store.tail?.val as Step, total: store.size };
     FireEvents.undoPoint(step, map, event);
 
     // if we have only 2 points left, we need to switch to line mode and update the tail.next to null
     Spatial.switchToLineModeIfCan(this.#props);
 
-    // after removing the last point, we need to set the panel coordinates to the new last point
-    panel?.onPointRemove(store.tail?.val as Step);
     this.#tooltip.remove();
+
     tiles.render();
   };
 

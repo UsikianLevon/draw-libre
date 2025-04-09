@@ -53,7 +53,7 @@ export class Tiles {
   };
 
   #addLayers = () => {
-    const { map, mode, options } = this.#props;
+    const { map, options } = this.#props;
 
     const LAYERS_TO_RENDER = generateLayersToRender(options);
 
@@ -61,11 +61,6 @@ export class Tiles {
       if (!map.getLayer(layer.id)) {
         map.addLayer(layer);
       }
-    }
-
-    const polygonInvisible = map.getLayoutProperty(ELAYERS.PolygonLayer, "visibility") === "none";
-    if (mode.getMode() === "polygon" && polygonInvisible) {
-      map.setLayoutProperty(ELAYERS.PolygonLayer, "visibility", "visible");
     }
   };
 
@@ -117,7 +112,7 @@ export class Tiles {
     const { mode } = this.#props;
 
     // -1 because line is always the last feature. Check GeometryFactory.getUnifiedFeatures
-    const polygon = this.#unifiedGeoJSON.features.at(-1)?.geometry.coordinates;
+    const polygon = this.#unifiedGeoJSON.features.at(-1)?.geometry.coordinates[0] as number[][];
     if (!polygon) return;
     polygon[featureIdx] = [newCoord.lng, newCoord.lat];
 
@@ -143,7 +138,7 @@ export class Tiles {
 
 
   renderOnMouseMove = (featureIdx: number, newCoord: LatLng) => {
-    const { mode, options } = this.#props;
+    const { mode, options, map } = this.#props;
 
     // points are always the first feature. Check GeometryFactory.getUnifiedFeatures
     const feature = this.#unifiedGeoJSON?.features?.[featureIdx];

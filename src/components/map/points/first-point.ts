@@ -1,5 +1,5 @@
-import type { MapLayerMouseEvent } from "maplibre-gl";
 import type { EventsProps } from "#types/index";
+import type { MapLayerMouseEvent } from "maplibre-gl";
 
 import { uuidv4, Spatial } from "#utils/helpers";
 import { ELAYERS } from "#utils/geo_constants";
@@ -8,6 +8,7 @@ import { togglePointCircleRadius } from "#components/map/tiles/helpers";
 
 import { FireEvents } from "../helpers";
 import type { DrawingModeChangeEvent } from "../mode/types";
+import { PointHelpers, PointsFilter, PointVisibility } from "./helpers";
 
 export class FirstPoint {
   #mouseDown: boolean;
@@ -19,6 +20,12 @@ export class FirstPoint {
     this.#mouseDown = false;
     this.#tooltip = new Tooltip();
     props.mode.addObserver(this.#mapModeConsumer);
+    this.initLayer()
+  }
+
+  initLayer() {
+    const { map } = this.#props;
+    map.setLayoutProperty(ELAYERS.FirstPointLayer, "visibility", "visible");
   }
 
   initEvents() {
@@ -41,34 +48,44 @@ export class FirstPoint {
   }
 
   #mapModeConsumer = (event: DrawingModeChangeEvent) => {
-    const { map, store } = this.#props;
+    const { map, store, options } = this.#props;
     const { type, data } = event;
 
     if (type === "MODE_CHANGED") {
-      if (data === "line" || data === "polygon") {
-        map.on("click", ELAYERS.FirstPointLayer, this.#onFirstPointClick);
-      } else {
-        map.off("click", ELAYERS.FirstPointLayer, this.#onFirstPointClick);
-      }
-      if (Spatial.canCloseGeometry(store)) {
+      // what for?
+      // if (data === "line" || data === "polygon") {
+      //   map.on("click", ELAYERS.FirstPointLayer, this.#onFirstPointClick);
+      // } else {
+      //   map.off("click", ELAYERS.FirstPointLayer, this.#onFirstPointClick);
+      // }
+      if (Spatial.canCloseGeometry(store, options)) {
         togglePointCircleRadius(map, "large");
+      }
+      if (data === "line" && !options.modes.line.closeGeometry) {
+        PointVisibility.setFirstPointHidden(map);
+        PointsFilter.closedGeometry(map)
+      } else {
+        PointVisibility.setFirstPointVisible(map);
+        PointsFilter.default(map)
       }
     }
   };
 
   #onFirstPointClick = () => {
-    const { store, map, mode, tiles } = this.#props;
+    const { store, map, mode, tiles, options } = this.#props;
 
     if (mode.getMode() === "polygon") {
       map.setLayoutProperty(ELAYERS.PolygonLayer, "visibility", "visible");
     }
-
-    if (Spatial.canCloseGeometry(store)) {
-      Spatial.closeGeometry(store, mode);
+    if (Spatial.canCloseGeometry(store, options)) {
       const step = Object.assign({}, store.head?.val, {
         id: uuidv4(),
         total: store.size,
       });
+      if (options.pointGeneration === "auto" && store.tail?.val) {
+        PointHelpers.createAuxiliaryPoint(store.tail?.val, step, this.#props);
+      }
+      Spatial.closeGeometry(store, mode);
       FireEvents.addPoint(step, map, mode);
       togglePointCircleRadius(map, "default");
       tiles.render();
@@ -108,10 +125,10 @@ export class FirstPoint {
   };
 
   #onFirstPointMouseEnter = (event: MapLayerMouseEvent) => {
-    const { mode, mouseEvents, store } = this.#props;
+    const { mode, mouseEvents, store, options } = this.#props;
     if (mode.getClosedGeometry() || this.#mouseDown) return;
     mouseEvents.firstPointMouseEnter = true;
-    if (Spatial.canCloseGeometry(store)) {
+    if (Spatial.canCloseGeometry(store, options)) {
       const { x, y } = event.originalEvent;
       if (x && y) {
         const Y_OFFSET = 14;

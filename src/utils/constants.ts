@@ -24,6 +24,7 @@ export const EVENTS = {
 export const MOBILE_WIDTH = 768;
 
 export const DEFAULT_OPTIONS: RequiredDrawOptions = {
+  pointGeneration: "manual",
   panel: {
     size: "medium",
     buttons: {

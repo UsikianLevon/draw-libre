@@ -26,11 +26,13 @@ export class Events extends Tiles {
   #initEvents = () => {
     this.#lineEvents.init();
     this.#panelEvents?.initEvents();
+    this.#panelEvents?.initConsumers();
     this.#pointEvents?.initEvents();
   };
 
   #removeDrawEvents = () => {
     this.#panelEvents?.removeEvents();
+    this.#panelEvents?.removeConsumers();
     this.#pointEvents?.removeEvents();
     this.#lineEvents?.remove();
   };

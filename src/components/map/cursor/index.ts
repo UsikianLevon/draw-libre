@@ -7,12 +7,14 @@ import type { Store } from "#store/index";
 import type { MouseEvents } from "../mouse-events";
 import type { MouseEventsChangeEvent } from "../mouse-events/types";
 import { CURSORS, type TCursor } from "./constants";
+import type { RequiredDrawOptions } from "#types/index";
 
 interface CursorProps {
   map: CustomMap;
   mode: DrawingMode;
   mouseEvents: MouseEvents;
   store: Store;
+  options: RequiredDrawOptions;
 }
 
 export class Cursor {
@@ -48,12 +50,12 @@ export class Cursor {
   };
 
   handleFirstPointMouseEnter = () => {
-    const { mode, store } = this.#props;
+    const { mode, store, options } = this.#props;
 
     if (mode.getClosedGeometry()) {
       this.set(CURSORS.MOVE);
     }
-    if (Spatial.canCloseGeometry(store)) {
+    if (Spatial.canCloseGeometry(store, options)) {
       this.set(CURSORS.POINTER);
     }
   };

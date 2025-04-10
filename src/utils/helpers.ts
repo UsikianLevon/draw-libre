@@ -200,8 +200,8 @@ export class Spatial {
   };
 
   static isClosedGeometry = (store: Store, options: RequiredDrawOptions) => {
-    if (options.pointGeneration === "auto" && store.tail?.val?.isAuxiliary) {
-      return store.tail?.prev?.next === store.head;
+    if (options.pointGeneration === "auto") {
+      return store.tail?.next === store.head && store.tail.next !== null;
     }
     return store.tail?.next === store.head;
   };
@@ -239,14 +239,20 @@ export class Spatial {
     return store.size > 2 && !this.isClosedGeometry(store, options);
   };
 
-  static canBreakClosedGeometry = (store: Store) => {
-    return store.size <= 2;
+  static canBreakClosedGeometry = (store: Store, options: RequiredDrawOptions) => {
+    if (options.pointGeneration === "auto") {
+      return store.size <= 3
+    }
+
+    return store.size <= 2
   };
 
   static switchToLineModeIfCan = (context: EventsProps) => {
-    const { mode, store, tiles, map } = context;
+    const { mode, store, tiles, map, options } = context;
 
-    if (Spatial.canBreakClosedGeometry(store)) {
+    if (Spatial.canBreakClosedGeometry(store, options)) {
+      console.log("Switching to line mode");
+
       if (store.tail && store.tail.val) {
         store.tail.next = null;
       }

@@ -1,12 +1,9 @@
 import type { CustomMap } from "#types/map";
-import type { LatLng, PanelImpl, Point, RequiredDrawOptions, Step } from "#types/index";
+import type { LatLng, PanelImpl, Point, RequiredDrawOptions } from "#types/index";
 import { DOM } from "#utils/dom";
 import type { Store } from "#store/index";
 import type { DrawingMode } from "#components/map/mode";
-import type { DrawingModeChangeEvent } from "#components/map/mode/types";
 import "./panel.css";
-import { StoreChangeEvent } from "#store/types";
-import { debounce } from "#utils/helpers";
 
 interface IProps {
   map: CustomMap;
@@ -30,7 +27,7 @@ export class Panel {
     this._container = undefined;
     this.#isHidden = true;
     this.#panelPopup = undefined;
-    this.#initPanel();
+    this.#init();
   }
 
   #applyPanelStyles() {
@@ -43,7 +40,7 @@ export class Panel {
     this.#panelPopup.style.display = this.#isHidden ? "none" : "block";
   }
 
-  #initPanel = () => {
+  #init = () => {
     const { store } = this.#props;
 
     this.createPanel();
@@ -144,7 +141,7 @@ export class Panel {
     }
   };
 
-  createButton = (type: "undo" | "save" | "delete", title: string, size: PanelImpl["size"], container: HTMLElement) => {
+  #createButton = (type: "undo" | "save" | "delete", title: string, size: PanelImpl["size"], container: HTMLElement) => {
     const button = DOM.create("button", `panel-button panel-button-${size}`, container);
     button.setAttribute("data-type", type);
     button.setAttribute("aria-label", title);
@@ -161,13 +158,13 @@ export class Panel {
     const container = DOM.create("div", "dashboard");
 
     if (undo.visible) {
-      this._undoButton = this.createButton("undo", locale.undo, panelSize, container);
+      this._undoButton = this.#createButton("undo", locale.undo, panelSize, container);
     }
     if (deleteButton.visible) {
-      this._deleteButton = this.createButton("delete", locale.delete, panelSize, container);
+      this._deleteButton = this.#createButton("delete", locale.delete, panelSize, container);
     }
     if (save.visible) {
-      this._saveButton = this.createButton("save", locale.save, panelSize, container);
+      this._saveButton = this.#createButton("save", locale.save, panelSize, container);
     }
     this._container = container;
   };

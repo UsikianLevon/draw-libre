@@ -4,7 +4,7 @@ import type { HTMLEvent } from "#types/helpers";
 import { DOM } from "#utils/dom";
 import { Tooltip } from "#components/tooltip";
 import { FireEvents } from "#components/map/helpers";
-import { debounce, Spatial } from "#utils/helpers";
+import { Spatial } from "#utils/helpers";
 import { togglePointCircleRadius } from "#components/map/tiles/helpers";
 import { ELAYERS } from "#utils/geo_constants";
 import { PointHelpers } from "#components/map/points/helpers";
@@ -31,31 +31,27 @@ export class PanelEvents {
   }
 
   #storeEventsConsumer = (event: StoreChangeEvent) => {
-    switch (event.type) {
-      case "STORE_CHANGED":
-        const { data } = event;
+    if (event.type === "STORE_CHANGED") {
+      const { data } = event;
+      if (data.size === 0) {
+        this.#props.panel.hidePanel();
+      } else {
         let current = Object.assign({}, data);
         // we need a debounce here to just get the last point, so there's no flickering on the map
-        const navigatePanelToLastNonAuxLocation = debounce(() => {
-          while (current.tail) {
-            if (current.tail?.val?.isAuxiliary) {
-              current.tail = current.tail?.prev;
-            } else {
-              if (current.tail?.val) {
-                this.#props.panel.setPanelLocation({
-                  lat: current.tail.val.lat,
-                  lng: current.tail.val.lng,
-                });
-              }
-              break
+        while (current.tail) {
+          if (current.tail?.val?.isAuxiliary) {
+            current.tail = current.tail?.prev;
+          } else {
+            if (current.tail?.val) {
+              this.#props.panel.setPanelLocation({
+                lat: current.tail.val.lat,
+                lng: current.tail.val.lng,
+              });
             }
+            break
           }
-        }, 5)
-
-        navigatePanelToLastNonAuxLocation()
-        break;
-      default:
-        break;
+        }
+      }
     }
   };
 
@@ -77,43 +73,45 @@ export class PanelEvents {
 
   initEvents() {
     const { panel } = this.#props;
-    if (panel) {
-      DOM.manageEventListener("add", panel?._undoButton, "click", this.#onUndoClick);
+
+    if (panel._undoButton) {
+      DOM.manageEventListener("add", panel._undoButton, "click", this.#onUndoClick);
       DOM.manageEventListener(
         "add",
-        panel?._undoButton,
+        panel._undoButton,
         "mouseenter",
-        this.onMouseEnter as EventListenerOrEventListenerObject,
+        this.onMouseEnter as EventListenerOrEventListenerObject
       );
-      DOM.manageEventListener("add", panel?._undoButton, "mouseleave", this.onMouseLeave);
-    }
-    if (panel) {
-      DOM.manageEventListener("add", panel?._deleteButton, "click", this.#onRemoveAll);
-      DOM.manageEventListener(
-        "add",
-        panel?._deleteButton,
-        "mouseenter",
-        this.onMouseEnter as EventListenerOrEventListenerObject,
-      );
-      DOM.manageEventListener("add", panel?._deleteButton, "mouseleave", this.onMouseLeave);
+      DOM.manageEventListener("add", panel._undoButton, "mouseleave", this.onMouseLeave);
     }
 
-    if (panel) {
-      DOM.manageEventListener("add", panel?._saveButton, "click", this.onSaveClick);
+    if (panel._deleteButton) {
+      DOM.manageEventListener("add", panel._deleteButton, "click", this.#onRemoveAll);
       DOM.manageEventListener(
         "add",
-        panel?._saveButton,
+        panel._deleteButton,
         "mouseenter",
-        this.onMouseEnter as EventListenerOrEventListenerObject,
+        this.onMouseEnter as EventListenerOrEventListenerObject
       );
-      DOM.manageEventListener("add", panel?._saveButton, "mouseleave", this.onMouseLeave);
+      DOM.manageEventListener("add", panel._deleteButton, "mouseleave", this.onMouseLeave);
+    }
+
+    if (panel._saveButton) {
+      DOM.manageEventListener("add", panel._saveButton, "click", this.onSaveClick);
+      DOM.manageEventListener(
+        "add",
+        panel._saveButton,
+        "mouseenter",
+        this.onMouseEnter as EventListenerOrEventListenerObject
+      );
+      DOM.manageEventListener("add", panel._saveButton, "mouseleave", this.onMouseLeave);
     }
   }
 
   removeEvents() {
     const { panel } = this.#props;
 
-    if (panel?._undoButton) {
+    if (panel._undoButton) {
       DOM.manageEventListener("remove", panel._undoButton, "click", this.#onUndoClick);
       DOM.manageEventListener(
         "remove",
@@ -123,7 +121,8 @@ export class PanelEvents {
       );
       DOM.manageEventListener("remove", panel._undoButton, "mouseleave", this.onMouseLeave);
     }
-    if (panel?._deleteButton) {
+
+    if (panel._deleteButton) {
       DOM.manageEventListener("remove", panel._deleteButton, "click", this.#onRemoveAll);
       DOM.manageEventListener(
         "remove",
@@ -133,7 +132,8 @@ export class PanelEvents {
       );
       DOM.manageEventListener("remove", panel._deleteButton, "mouseleave", this.onMouseLeave);
     }
-    if (panel?._saveButton) {
+
+    if (panel._saveButton) {
       DOM.manageEventListener("remove", panel._saveButton, "click", this.onSaveClick);
       DOM.manageEventListener(
         "remove",
@@ -148,7 +148,7 @@ export class PanelEvents {
   #getButtonLabel = (type: ButtonType) => {
     const { options } = this.#props;
 
-    const LABELS = {
+    const LABELS: Record<ButtonType, string> = {
       undo: options.locale.undo,
       delete: options.locale.delete,
       save: options.locale.save,
@@ -189,24 +189,27 @@ export class PanelEvents {
 
   #onUndoClick = (event: Event) => {
     const { store, map, tiles, options } = this.#props;
+    if (store.size == 1) {
+      store.reset();
+    }
 
     store.removeStepById(store?.tail?.val?.id as string);
     if (options.pointGeneration === "auto") {
       store.removeStepById(store.tail?.val?.id as string);
       if (store.tail?.val?.isAuxiliary) {
         store.removeStepById(store.tail?.val?.id as string);
-        PointHelpers.createAuxiliaryPoint(store.tail.val, store.head?.val as Step, this.#props);
+        if (!Spatial.canBreakClosedGeometry(store, options)) {
+          PointHelpers.createAuxiliaryPoint(store.tail.val, store.head?.val as Step, this.#props);
+        }
         store.tail.next = store.head;
       }
     }
     const step = { ...store.tail?.val as Step, total: store.size };
-    FireEvents.undoPoint(step, map, event);
 
     // if we have only 2 points left, we need to switch to line mode and update the tail.next to null
     Spatial.switchToLineModeIfCan(this.#props);
-
     this.#tooltip.remove();
-
+    FireEvents.undoPoint(step, map, event);
     tiles.render();
   };
 

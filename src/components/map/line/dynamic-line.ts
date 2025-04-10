@@ -2,13 +2,13 @@ import type { GeoJSONSource, MapLayerMouseEvent, PointLike } from "maplibre-gl";
 
 import type { EventsProps, LatLng } from "#types/index";
 import { ELAYERS, ESOURCES, LINE_BASE } from "#utils/geo_constants";
-import { StoreChangeEvent } from "#store/types";
-import { debounce, GeometryFactory, MapUtils, Spatial, throttle } from "#utils/helpers";
+import type { StoreChangeEvent } from "#store/types";
+import { GeometryFactory, MapUtils, Spatial, throttle, debounce } from "#utils/helpers";
 import { EVENTS } from "#utils/constants";
 
-import { DrawingModeChangeEvent } from "../mode/types";
-import { MouseEventsChangeEvent } from "../mouse-events/types";
-import { PointDoubleClickEvent, UndoEvent } from "../types";
+import type { DrawingModeChangeEvent } from "../mode/types";
+import type { MouseEventsChangeEvent } from "../mouse-events/types";
+import type { PointDoubleClickEvent, UndoEvent } from "../types";
 
 const LINE_DYNAMIC_THROTTLE_TIME = 10;
 
@@ -19,6 +19,7 @@ export class DynamicLineEvents {
   #secondPoint: LatLng | null;
   #lineFeature: any;
   #throttledOnLineMove: (event: MapLayerMouseEvent) => void;
+  #debouncedDynamicLine: (data: StoreChangeEvent['data']) => void;
 
   constructor(props: EventsProps) {
     this.#props = props;
@@ -27,6 +28,7 @@ export class DynamicLineEvents {
     this.#secondPoint = null;
     this.#initConsumers();
     this.#throttledOnLineMove = throttle(this.#onLineMove, LINE_DYNAMIC_THROTTLE_TIME);
+    this.#debouncedDynamicLine = debounce(this.#dynamicLineVisibility, 10);
   }
 
   #initConsumers() {
@@ -68,33 +70,34 @@ export class DynamicLineEvents {
     }
   };
 
+  #dynamicLineVisibility = (data: StoreChangeEvent['data']) => {
+    const { store, options } = this.#props;
+    if (data.tail?.val && !Spatial.isClosedGeometry(store, options)) {
+      this.#firstPoint = data.tail?.val;
+      this.showDynamicLine();
+    }
+  }
+
   #storeEventsConsumer = (event: StoreChangeEvent) => {
-    const { store } = this.#props;
-    switch (event.type) {
-      case "STORE_CHANGED":
-        console.log(store, store.tail?.next === store.head);
-        const debouncedDynamicLine = debounce(() => {
-          if (event.data.tail?.val && store.tail?.next !== store.head) {
-            this.#firstPoint = event.data.tail?.val;
-            this.showDynamicLine();
-          }
-        }, 10);
-        debouncedDynamicLine();
-        break;
-      default:
-        break;
+    if (event.type === "STORE_CHANGED") {
+      this.#debouncedDynamicLine(event.data);
+      if (!event.data.size) {
+        this.hideDynamicLine();
+      }
     }
   };
 
   #mapModeConsumer = (event: DrawingModeChangeEvent) => {
     const { store } = this.#props;
+
+    const isClosed = event.data
     if (event.type === "CLOSED_GEOMETRY_CHANGED") {
-      if (event.data) {
+      if (isClosed) {
         this.hideDynamicLine();
       }
 
-      if (!event.data && store?.tail?.val) {
-        this.#firstPoint = store?.tail?.val;
+      if (!isClosed && store?.tail?.val) {
+        this.#firstPoint = store?.tail?.val
         this.showDynamicLine();
       }
     }
@@ -137,7 +140,6 @@ export class DynamicLineEvents {
 
   showDynamicLine = () => {
     const { map } = this.#props;
-
     const current = [this.#firstPoint?.lng, this.#firstPoint?.lat] as [number, number];
     const next = [this.#secondPoint?.lng, this.#secondPoint?.lat] as [number, number];
 
@@ -152,7 +154,7 @@ export class DynamicLineEvents {
 
   #renderLineOnMouseMove = (newCoord: LatLng) => {
     if (!this.#lineFeature) return;
-    const { map, } = this.#props;
+    const { map } = this.#props;
 
     this.#lineFeature.features[0].geometry.coordinates[1] = [newCoord.lng, newCoord.lat];
     const lineSource = map.getSource(ESOURCES.LineDynamicSource) as GeoJSONSource;
@@ -173,13 +175,12 @@ export class DynamicLineEvents {
     }
 
     if (lineClick) return;
-
     this.hideDynamicLine();
   };
 
   #onUndoClick = (event: UndoEvent) => {
-    const { store, mode } = this.#props;
-    if (!mode.getClosedGeometry()) {
+    const { store, options } = this.#props;
+    if (!Spatial.isClosedGeometry(store, options)) {
       const latLng = event.target.unproject({ x: event.originalEvent.x, y: event.originalEvent.y } as PointLike);
       this.#secondPoint = { lng: latLng.lng, lat: latLng.lat };
       this.#firstPoint = store.tail?.val as LatLng;

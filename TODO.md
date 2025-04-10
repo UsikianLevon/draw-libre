@@ -1,0 +1,5 @@
+- [ ] split 
+- [ ] double click
+- [ ] mousemove on aux
+- [ ] mousemove on primary target  
+- [ ] aux when dots are initialized

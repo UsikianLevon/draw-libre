@@ -40,7 +40,7 @@ export const insertStepIfOnLine = (event: MapLayerMouseEvent, store: Store): Ste
 };
 
 export const updateUIAfterInsert = (event: MapLayerMouseEvent, context: EventsProps) => {
-  const { store, tiles, panel } = context;
+  const { store, tiles } = context;
   if (store.tail?.val) {
     PointVisibility.setSinglePointHidden(event);
     tiles.render();

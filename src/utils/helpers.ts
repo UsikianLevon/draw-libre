@@ -206,25 +206,32 @@ export class Spatial {
     return store.tail?.next === store.head;
   };
 
-  static breakGeometry = (store: Store, id: Uuid) => {
+  //  when we have 1 primary <--- 1 aux <--- 1 primary current will be an aux when 1 prim <--- 1 aux and a primary 1 aux <--- 1 prim
+  //                         [aux]     [primary]         
+  static breakGeometry = (store: Store, options: RequiredDrawOptions, current: ListNode) => {
     if (!store.head) return;
 
-    let current = store.head;
-    let prev = store.tail as ListNode; // we know that tail is not null because the geometry is closed
-
-    do {
-      if (current?.val?.id === id) {
-        if (current !== store.head) {
-          prev.next = current.next;
-          store.head = current;
-          store.tail = prev;
-        }
-        (store.tail as ListNode).next = null;
-        return;
+    if (options.pointGeneration === "auto") {
+      // if the current node is an aux, then we need to make one step back for the tail and the head is the next node from the aux point
+      if (current.val?.isAuxiliary) {
+        store.head = current.next as ListNode;
+        store.head.prev = null;
+        store.tail = current.prev as ListNode;
+        store.tail.next = null;
+      } else {
+        // else the tail tis the current node and for the head we need to jump over the aux point so the next.next
+        store.head = current.next?.next as ListNode;
+        store.head.prev = null;
+        store.tail = current;
+        store.tail.next = null;
       }
-      prev = current;
-      current = current.next as ListNode;
-    } while (current !== store.head);
+    } else {
+      // no aux here, so the tail is the current node and the head is the next node
+      store.head = current.next as ListNode;
+      store.head.prev = null;
+      store.tail = current
+      store.tail.next = null;
+    }
   };
 
   static closeGeometry = (store: Store, mode: DrawingMode) => {

@@ -1,4 +1,4 @@
-- [ ] split 
+- [x] split 
 - [ ] double click
 - [ ] mousemove on aux
 - [ ] mousemove on primary target  

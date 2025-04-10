@@ -55,21 +55,19 @@ export class LineBreakEvents {
     }
   };
 
-  // TODO
   #geometryBreakOnClick = () => {
-    const { store, mode, map, tiles } = this.props;
+    const { store, mode, map, tiles, options } = this.props;
 
-    const nextPointId = this.#current?.next?.val?.id as Uuid;
-    Spatial.breakGeometry(store, nextPointId);
+    if (!this.#current) return;
+
+    Spatial.breakGeometry(store, options, this.#current);
     this.#onLineLeave();
-
     map.setLayoutProperty(ELAYERS.PolygonLayer, "visibility", "none");
     mode.reset();
     tiles.render();
     FireEvents.onLineBreak(map);
   };
 
-  // when the points are generated automatically, we need to get the points from the previous and next nodes
   #getAutoGenerationPoints = (line: ListNode | null) => {
     let current: [number, number] | null = null;
     let next: [number, number] | null = null;
@@ -81,6 +79,9 @@ export class LineBreakEvents {
       current = [line?.val?.lng, line?.val?.lat] as [number, number];
       next = [line?.next?.next?.val?.lng, line?.next?.next?.val?.lat] as [number, number];
     }
+    console.log("getAutoGenerationPoints", line);
+
+
     return { current, next };
   }
 

@@ -79,9 +79,6 @@ export class LineBreakEvents {
       current = [line?.val?.lng, line?.val?.lat] as [number, number];
       next = [line?.next?.next?.val?.lng, line?.next?.next?.val?.lat] as [number, number];
     }
-    console.log("getAutoGenerationPoints", line);
-
-
     return { current, next };
   }
 

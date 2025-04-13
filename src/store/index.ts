@@ -77,21 +77,37 @@ export class Store extends Observable<StoreChangeEvent> {
     return node ? node : null;
   }
 
-  removeStepById(id: StepId): ListNode | null {
+  removeNodeById(id: StepId): ListNode | null {
     const node = this.map.get(id);
     if (!node) return null;
 
-    if (node.prev) {
-      node.prev.next = node.next;
-    }
-    if (node.next) {
-      node.next.prev = node.prev;
-    }
-    if (node === this.head) {
-      this.head = node.next;
-    }
-    if (node === this.tail) {
-      this.tail = node.prev;
+    // Если это единственный узел в списке
+    if (this.size === 1) {
+      this.head = null;
+      this.tail = null;
+    } else {
+      // Обновляем связи соседних узлов
+      if (node.prev) {
+        node.prev.next = node.next;
+      }
+
+      if (node.next) {
+        node.next.prev = node.prev;
+      }
+
+      // Обновляем head если удаляем первый элемент
+      if (node === this.head) {
+        this.head = node.next;
+        // Для циклического списка, обновляем связь tail->head
+        if (this.tail) this.tail.next = this.head;
+      }
+
+      // Обновляем tail если удаляем последний элемент
+      if (node === this.tail) {
+        this.tail = node.prev;
+        // Для циклического списка, обновляем связь head->tail
+        if (this.head) this.head.prev = this.tail;
+      }
     }
 
     this.map.delete(id);
@@ -100,7 +116,6 @@ export class Store extends Observable<StoreChangeEvent> {
 
     return node;
   }
-
   reset() {
     this.head = null;
     this.tail = null;

@@ -1,6 +1,6 @@
 import type { GeoJSONSource, MapLayerMouseEvent, PointLike } from "maplibre-gl";
 
-import type { EventsProps, LatLng } from "#types/index";
+import type { EventsProps, LatLng, Step } from "#types/index";
 import { ELAYERS, ESOURCES, LINE_BASE } from "#utils/geo_constants";
 import type { StoreChangeEvent } from "#store/types";
 import { GeometryFactory, MapUtils, Spatial, throttle, debounce } from "#utils/helpers";
@@ -73,7 +73,7 @@ export class DynamicLineEvents {
   #dynamicLineVisibility = (data: StoreChangeEvent['data']) => {
     const { store, options } = this.#props;
     if (data.tail?.val && !Spatial.isClosedGeometry(store, options)) {
-      this.#firstPoint = data.tail?.val;
+      this.#firstPoint = store.tail?.val as Step;
       this.showDynamicLine();
     }
   }
@@ -105,7 +105,6 @@ export class DynamicLineEvents {
 
   initDynamicEvents = () => {
     const { map } = this.#props;
-
     map.on("click", this.#onMapClick);
     map.on("mousemove", this.#throttledOnLineMove);
     map.on(EVENTS.REMOVEALL, this.hideDynamicLine);
@@ -139,15 +138,17 @@ export class DynamicLineEvents {
   };
 
   showDynamicLine = () => {
-    const { map } = this.#props;
-    const current = [this.#firstPoint?.lng, this.#firstPoint?.lat] as [number, number];
-    const next = [this.#secondPoint?.lng, this.#secondPoint?.lat] as [number, number];
+    const { map, store } = this.#props;
+    if (store.size) {
+      const current = [this.#firstPoint?.lng, this.#firstPoint?.lat] as [number, number];
+      const next = [this.#secondPoint?.lng, this.#secondPoint?.lat] as [number, number];
 
-    this.#lineFeature = GeometryFactory.getLine(current, next);
+      this.#lineFeature = GeometryFactory.getLine(current, next);
 
-    map.setLayoutProperty(ELAYERS.LineDynamicLayer, "visibility", "visible");
-    if (this.#secondPoint) {
-      this.#renderLineOnMouseMove({ lng: this.#secondPoint?.lng, lat: this.#secondPoint?.lat });
+      map.setLayoutProperty(ELAYERS.LineDynamicLayer, "visibility", "visible");
+      if (this.#secondPoint) {
+        this.#renderLineOnMouseMove({ lng: this.#secondPoint?.lng, lat: this.#secondPoint?.lat });
+      }
     }
     map.on("mousemove", this.#throttledOnLineMove);
   };
@@ -192,7 +193,7 @@ export class DynamicLineEvents {
   };
 
   #onDoubleClick = (event: PointDoubleClickEvent) => {
-    const { store, mode } = this.#props;
+    const { store, mode, options } = this.#props;
     if (!mode.getClosedGeometry()) {
       this.#secondPoint = { lng: event.coordinates.lng, lat: event.coordinates.lat };
       this.#firstPoint = store.tail?.val as LatLng;

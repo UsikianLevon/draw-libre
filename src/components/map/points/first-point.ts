@@ -4,7 +4,7 @@ import type { MapLayerMouseEvent } from "maplibre-gl";
 import { uuidv4, Spatial } from "#utils/helpers";
 import { ELAYERS } from "#utils/geo_constants";
 import { Tooltip } from "#components/tooltip";
-import { togglePointCircleRadius } from "#components/map/tiles/helpers";
+import { createDoubleClickDetector, togglePointCircleRadius } from "#components/map/tiles/helpers";
 
 import { FireEvents } from "../helpers";
 import type { DrawingModeChangeEvent } from "../mode/types";
@@ -52,12 +52,6 @@ export class FirstPoint {
     const { type, data } = event;
 
     if (type === "MODE_CHANGED") {
-      // what for?
-      // if (data === "line" || data === "polygon") {
-      //   map.on("click", ELAYERS.FirstPointLayer, this.#onFirstPointClick);
-      // } else {
-      //   map.off("click", ELAYERS.FirstPointLayer, this.#onFirstPointClick);
-      // }
       if (Spatial.canCloseGeometry(store, options)) {
         togglePointCircleRadius(map, "large");
       }
@@ -77,13 +71,15 @@ export class FirstPoint {
     if (mode.getMode() === "polygon") {
       map.setLayoutProperty(ELAYERS.PolygonLayer, "visibility", "visible");
     }
+
     if (Spatial.canCloseGeometry(store, options)) {
       const step = Object.assign({}, store.head?.val, {
         id: uuidv4(),
         total: store.size,
       });
       if (options.pointGeneration === "auto" && store.tail?.val) {
-        PointHelpers.createAuxiliaryPoint(store.tail?.val, step, this.#props);
+        const auxPoint = PointHelpers.createAuxiliaryPoint(store.tail?.val, step);
+        store.push(auxPoint);
       }
       Spatial.closeGeometry(store, mode);
       FireEvents.addPoint(step, map, mode);

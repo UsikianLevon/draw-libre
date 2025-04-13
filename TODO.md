@@ -1,5 +1,5 @@
 - [x] split 
-- [ ] double click
+- [x] remove on right click on the point
 - [ ] mousemove on aux
 - [ ] mousemove on primary target  
 - [ ] aux when dots are initialized

@@ -3,7 +3,6 @@ import type { CustomMap } from "#types/map";
 import { ELAYERS, FIRST_POINT_COLOR, generateLayersToRender, FIRST_POINT_RADIUS } from "#utils/geo_constants";
 import type { RequiredDrawOptions } from "#types/index";
 
-let lastClickTime = 0;
 
 const firstPointCircleRadius = (map: CustomMap) => {
   map.setPaintProperty(ELAYERS.FirstPointLayer, "circle-radius", FIRST_POINT_RADIUS.large);
@@ -38,15 +37,19 @@ export const addTransparentLine = (map: CustomMap, options: RequiredDrawOptions)
   }
 };
 
-export const isDoubleClick = () => {
-  const DOUBLE_CLICK_THRESHOLD = 400;
-  const now = Date.now();
+// not using dblclick event because it's not working properly(fires if we add point and then move it fast)
+export const createDoubleClickDetector = (threshold = 400) => {
+  let lastClickTime = 0;
 
-  if (now - lastClickTime <= DOUBLE_CLICK_THRESHOLD) {
+  return () => {
+    const now = Date.now();
+
+    if (now - lastClickTime <= threshold) {
+      lastClickTime = now;
+      return true;
+    }
+
     lastClickTime = now;
-    return true;
-  }
-
-  lastClickTime = now;
-  return false;
+    return false;
+  };
 };

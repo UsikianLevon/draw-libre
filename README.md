@@ -81,7 +81,7 @@ const draw = DrawLibre.getInstance({
     polygon: {}, // FillLayerSpecification["paint"]
     breakLine: {}, // LineLayerSpecification["paint"]
   },
-  dynamicLine: true, // Whether to draw a dynamic line following the cursor after placing the first point
+  dynamicLine: true, // Whether to draw a dynamic line following the cursor after placing the first point. It's always false for mobile phones(when the viewport is less than 768)
   initial: {
     // Initialize with pre-existing GeoJSON data
     closeGeometry: false, // Specify if the geometry is closed. Must be true if the geometry type is polygon.

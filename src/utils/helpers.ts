@@ -7,6 +7,7 @@ import { togglePointCircleRadius } from "#components/map/tiles/helpers";
 
 import type { DrawingMode } from "#components/map/mode";
 import { ELAYERS } from "./geo_constants";
+import { PointHelpers } from "#components/map/points/helpers";
 
 export class MapUtils {
   static isFeatureTriggered(event: MapLayerMouseEvent, layerIds: string[]) {
@@ -172,15 +173,6 @@ export class Spatial {
     return -1;
   };
 
-  static isFirstPoint(event: MapLayerMouseEvent): boolean {
-    const map = event.target;
-    const point = event.point;
-    const points = map.queryRenderedFeatures(point, {
-      layers: [ELAYERS.FirstPointLayer],
-    });
-    return Boolean(points.length);
-  }
-
   // √(x1​−x2​)²+(y1​−y2​)²​
   static distance = (point1: Point, point2: Point) =>
     Math.sqrt((point1.x - point2.x) ** 2 + (point1.y - point2.y) ** 2);
@@ -219,7 +211,7 @@ export class Spatial {
         store.tail = current.prev as ListNode;
         store.tail.next = null;
       } else {
-        // else the tail tis the current node and for the head we need to jump over the aux point so the next.next
+        // else the tail is the current node and for the head we need to jump over the aux point so the next.next
         store.head = current.next?.next as ListNode;
         store.head.prev = null;
         store.tail = current;
@@ -254,19 +246,40 @@ export class Spatial {
     return store.size <= 2
   };
 
-  static switchToLineModeIfCan = (context: EventsProps) => {
-    const { mode, store, tiles, map, options } = context;
-
-    if (Spatial.canBreakClosedGeometry(store, options)) {
-      console.log("Switching to line mode");
-
-      if (store.tail && store.tail.val) {
-        store.tail.next = null;
+  static switchToLineModeIfCan = ({ store, options, map, mode }: EventsProps) => {
+    if (Spatial.canBreakClosedGeometry(store, options) && Spatial.isClosedGeometry(store, options)) {
+      if (options.pointGeneration === "auto") {
+        if (store.tail?.val?.isAuxiliary) {
+          if (store.head) {
+            store.head.next = store.tail;
+            store.head.prev = null;
+          }
+          if (store.tail && store.tail.prev && store.head) {
+            store.tail = store.tail.prev;
+            store.tail.prev = store.head.next;
+            store.tail.next = null;
+          }
+          if (store.head?.next) {
+            store.head.next.next = store.tail
+            store.head.next.prev = store.head
+          }
+        } else {
+          if (store.head) {
+            store.head.prev = null;
+          }
+          if (store.tail && store.head) {
+            store.tail.prev = store.head.next;
+            store.tail.next = null;
+          }
+        }
+      } else {
+        if (store.tail) {
+          store.tail.next = null;
+        }
       }
       map.setLayoutProperty(ELAYERS.PolygonLayer, "visibility", "none");
       mode.reset();
       togglePointCircleRadius(map, "default");
-      tiles.render();
     }
   };
 }

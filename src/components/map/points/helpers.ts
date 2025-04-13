@@ -16,22 +16,22 @@ export const PointHelpers = {
     };
   },
 
-  createAuxiliaryPoint(p1: Step, p2: Step, props: EventsProps) {
+  createAuxiliaryPoint(p1: Step, p2: Step) {
     const mid = PointHelpers.getMidpoint(p1, p2);
     const step = { lat: mid.lat, lng: mid.lng, isAuxiliary: true, id: uuidv4(), };
-    props.store.push(step);
+    return step
   },
 
   addPointToMap(event: MapLayerMouseEvent, props: EventsProps) {
-    const { store, tiles, map, mode } = props;
+    const { store, tiles, map } = props;
 
     const step = { ...event.lngLat, isAuxiliary: false, id: uuidv4() };
     store.push(step);
-    FireEvents.addPoint({ ...step, total: store.size }, map, mode);
     if (Spatial.canCloseGeometry(store, props.options)) {
       togglePointCircleRadius(map, "large");
     }
     tiles.render()
+    return step;
   },
 };
 

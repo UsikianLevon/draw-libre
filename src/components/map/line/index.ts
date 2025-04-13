@@ -1,4 +1,5 @@
 import type { EventsProps } from "#types/index";
+import { MOBILE_WIDTH } from "#utils/constants";
 import { DrawingModeChangeEvent } from "../mode/types";
 import { MouseEventsChangeEvent } from "../mouse-events/types";
 import { LineBreakEvents } from "./break-line";
@@ -27,7 +28,7 @@ export class LineEvents {
   }
 
   #initDynamicLine = () => {
-    if (window.innerWidth <= 768) return;
+    if (window.innerWidth <= MOBILE_WIDTH) return;
     if (this.props.options.dynamicLine) {
       this.#dynamic = new DynamicLineEvents(this.props);
     }

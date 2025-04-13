@@ -1,5 +1,5 @@
 import { StoreHelpers } from "#store/index";
-import type { ButtonType, EventsProps, Step } from "#types/index";
+import type { ButtonType, EventsProps, Step, StepId } from "#types/index";
 import type { HTMLEvent } from "#types/helpers";
 import { DOM } from "#utils/dom";
 import { Tooltip } from "#components/tooltip";
@@ -188,25 +188,26 @@ export class PanelEvents {
   };
 
   #onUndoClick = (event: Event) => {
-    const { store, map, tiles, options } = this.#props;
+    const { store, map, mode, tiles, options } = this.#props;
     if (store.size == 1) {
       store.reset();
     }
 
-    store.removeStepById(store?.tail?.val?.id as string);
+    store.removeNodeById(store.tail?.val?.id as StepId);
     if (options.pointGeneration === "auto") {
-      store.removeStepById(store.tail?.val?.id as string);
+      store.removeNodeById(store.tail?.val?.id as StepId);
       if (store.tail?.val?.isAuxiliary) {
-        store.removeStepById(store.tail?.val?.id as string);
+        store.removeNodeById(store.tail?.val?.id);
         if (!Spatial.canBreakClosedGeometry(store, options)) {
-          PointHelpers.createAuxiliaryPoint(store.tail.val, store.head?.val as Step, this.#props);
+          const auxPoint = PointHelpers.createAuxiliaryPoint(store.tail.val, store.head?.val as Step);
+          store.push(auxPoint);
         }
         store.tail.next = store.head;
       }
     }
     const step = { ...store.tail?.val as Step, total: store.size };
 
-    // if we have only 2 points left, we need to switch to line mode and update the tail.next to null
+    // if we have only 2(or 3 if aux) points left, we need to switch to line mode and update the tail.next to null
     Spatial.switchToLineModeIfCan(this.#props);
     this.#tooltip.remove();
     FireEvents.undoPoint(step, map, event);

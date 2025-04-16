@@ -36,20 +36,3 @@ export const addTransparentLine = (map: CustomMap, options: RequiredDrawOptions)
     map.addLayer(transparentLayer);
   }
 };
-
-// not using dblclick event because it's not working properly(fires if we add point and then move it fast)
-export const createDoubleClickDetector = (threshold = 400) => {
-  let lastClickTime = 0;
-
-  return () => {
-    const now = Date.now();
-
-    if (now - lastClickTime <= threshold) {
-      lastClickTime = now;
-      return true;
-    }
-
-    lastClickTime = now;
-    return false;
-  };
-};

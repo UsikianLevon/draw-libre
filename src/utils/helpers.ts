@@ -3,11 +3,9 @@ import type { LatLng, Point, Uuid, EventsProps, RequiredDrawOptions } from "#typ
 import type { CustomMap } from "#types/map";
 
 import type { ListNode, Store } from "#store/index";
-import { togglePointCircleRadius } from "#components/map/tiles/helpers";
 
 import type { DrawingMode } from "#components/map/mode";
 import { ELAYERS } from "./geo_constants";
-import { PointHelpers } from "#components/map/points/helpers";
 
 export class MapUtils {
   static isFeatureTriggered(event: MapLayerMouseEvent, layerIds: string[]) {
@@ -24,15 +22,16 @@ export class MapUtils {
 
   static queryPointId = (map: CustomMap, point: MapMouseEvent["point"]) => {
     const query = map.queryRenderedFeatures(point, {
-      layers: [ELAYERS.PointsLayer, ELAYERS.FirstPointLayer],
+      layers: [ELAYERS.PointsLayer, ELAYERS.FirstPointLayer, ELAYERS.AuxiliaryPointLayer],
     });
+
     const id = query?.[0]?.properties.id;
     return id;
   };
 
   static queryPoint = (map: CustomMap, point: MapMouseEvent["point"]) => {
     const query = map.queryRenderedFeatures(point, {
-      layers: [ELAYERS.PointsLayer, ELAYERS.FirstPointLayer],
+      layers: [ELAYERS.PointsLayer, ELAYERS.FirstPointLayer, ELAYERS.AuxiliaryPointLayer],
     });
     return query?.[0];
   };
@@ -163,10 +162,16 @@ export class Spatial {
   static getGeometryIndex = (store: Store, id: Uuid) => {
     let current = store.head;
     let idx = 0;
+    const visitedNodes = new Set();
     while (current !== null) {
+      if (visitedNodes.has(current.val?.id)) {
+        break;
+      }
       if (current.val?.id === id) {
         return idx;
       }
+
+      visitedNodes.add(current.val?.id);
       idx++;
       current = current.next;
     }
@@ -217,6 +222,7 @@ export class Spatial {
         store.tail = current;
         store.tail.next = null;
       }
+      store.size = store.size - 1;
     } else {
       // no aux here, so the tail is the current node and the head is the next node
       store.head = current.next as ListNode;
@@ -224,6 +230,7 @@ export class Spatial {
       store.tail = current
       store.tail.next = null;
     }
+
   };
 
   static closeGeometry = (store: Store, mode: DrawingMode) => {
@@ -246,40 +253,39 @@ export class Spatial {
     return store.size <= 2
   };
 
-  static switchToLineModeIfCan = ({ store, options, map, mode }: EventsProps) => {
-    if (Spatial.canBreakClosedGeometry(store, options) && Spatial.isClosedGeometry(store, options)) {
-      if (options.pointGeneration === "auto") {
-        if (store.tail?.val?.isAuxiliary) {
-          if (store.head) {
-            store.head.next = store.tail;
-            store.head.prev = null;
+  static switchToLineModeIfCan = (args: EventsProps) => {
+    if (Spatial.canBreakClosedGeometry(args.store, args.options) && Spatial.isClosedGeometry(args.store, args.options)) {
+      if (args.options.pointGeneration === "auto") {
+        if (args.store.tail?.val?.isAuxiliary) {
+          if (args.store.head) {
+            args.store.head.next = args.store.tail;
+            args.store.head.prev = null;
           }
-          if (store.tail && store.tail.prev && store.head) {
-            store.tail = store.tail.prev;
-            store.tail.prev = store.head.next;
-            store.tail.next = null;
+          if (args.store.tail && args.store.tail.prev && args.store.head) {
+            args.store.tail = args.store.tail.prev;
+            args.store.tail.prev = args.store.head.next;
+            args.store.tail.next = null;
           }
-          if (store.head?.next) {
-            store.head.next.next = store.tail
-            store.head.next.prev = store.head
+          if (args.store.head?.next) {
+            args.store.head.next.next = args.store.tail
+            args.store.head.next.prev = args.store.head
           }
         } else {
-          if (store.head) {
-            store.head.prev = null;
+          if (args.store.head) {
+            args.store.head.prev = null;
           }
-          if (store.tail && store.head) {
-            store.tail.prev = store.head.next;
-            store.tail.next = null;
+          if (args.store.tail && args.store.head) {
+            args.store.tail.prev = args.store.head.next;
+            args.store.tail.next = null;
           }
         }
       } else {
-        if (store.tail) {
-          store.tail.next = null;
+        if (args.store.tail) {
+          args.store.tail.next = null;
         }
       }
-      map.setLayoutProperty(ELAYERS.PolygonLayer, "visibility", "none");
-      mode.reset();
-      togglePointCircleRadius(map, "default");
+      args.map.setLayoutProperty(ELAYERS.PolygonLayer, "visibility", "none");
+      args.mode.reset();
     }
   };
 }

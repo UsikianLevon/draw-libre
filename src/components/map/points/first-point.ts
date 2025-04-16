@@ -4,20 +4,23 @@ import type { MapLayerMouseEvent } from "maplibre-gl";
 import { uuidv4, Spatial } from "#utils/helpers";
 import { ELAYERS } from "#utils/geo_constants";
 import { Tooltip } from "#components/tooltip";
-import { createDoubleClickDetector, togglePointCircleRadius } from "#components/map/tiles/helpers";
+import { togglePointCircleRadius } from "#components/map/tiles/helpers";
 
 import { FireEvents } from "../helpers";
 import type { DrawingModeChangeEvent } from "../mode/types";
 import { PointHelpers, PointsFilter, PointVisibility } from "./helpers";
+import type { PrimaryPointEvents } from ".";
 
 export class FirstPoint {
   #mouseDown: boolean;
   #props: EventsProps;
   #tooltip: Tooltip;
+  #events: PrimaryPointEvents;
 
-  constructor(props: EventsProps) {
+  constructor(props: EventsProps, baseEvents: PrimaryPointEvents) {
     this.#props = props;
     this.#mouseDown = false;
+    this.#events = baseEvents;
     this.#tooltip = new Tooltip();
     props.mode.addObserver(this.#mapModeConsumer);
     this.initLayer()
@@ -28,6 +31,17 @@ export class FirstPoint {
     map.setLayoutProperty(ELAYERS.FirstPointLayer, "visibility", "visible");
   }
 
+  #initBaseEvents = () => {
+    const { map } = this.#props;
+
+    map.on("mouseenter", ELAYERS.FirstPointLayer, this.#events.onPointMouseEnter);
+    map.on("mouseleave", ELAYERS.FirstPointLayer, this.#events.onPointMouseLeave);
+    map.on("mousedown", ELAYERS.FirstPointLayer, this.#events.onPointMouseDown);
+    map.on("mouseup", ELAYERS.FirstPointLayer, this.#events.onPointMouseUp);
+    map.on("touchend", ELAYERS.FirstPointLayer, this.#events.onPointMouseUp);
+    map.on("touchstart", ELAYERS.FirstPointLayer, this.#events.onPointMouseDown);
+  };
+
   initEvents() {
     const { map } = this.#props;
 
@@ -36,7 +50,20 @@ export class FirstPoint {
     map.on("mouseleave", ELAYERS.FirstPointLayer, this.#onFirstPointMouseLeave);
     map.on("mouseup", ELAYERS.FirstPointLayer, this.#onFirstPointMouseUp);
     map.on("mousedown", ELAYERS.FirstPointLayer, this.#onFirstPointMouseDown);
+    this.#initBaseEvents();
   }
+
+
+  #removeBaseEvents = () => {
+    const { map } = this.#props;
+
+    map.off("mouseenter", ELAYERS.FirstPointLayer, this.#events.onPointMouseEnter);
+    map.off("mouseleave", ELAYERS.FirstPointLayer, this.#events.onPointMouseLeave);
+    map.off("mousedown", ELAYERS.FirstPointLayer, this.#events.onPointMouseDown);
+    map.off("mouseup", ELAYERS.FirstPointLayer, this.#events.onPointMouseUp);
+    map.off("touchend", ELAYERS.FirstPointLayer, this.#events.onPointMouseUp);
+    map.off("touchstart", ELAYERS.FirstPointLayer, this.#events.onPointMouseDown);
+  };
 
   removeEvents() {
     const { map } = this.#props;
@@ -45,6 +72,7 @@ export class FirstPoint {
     map.off("mouseenter", ELAYERS.FirstPointLayer, this.#onFirstPointMouseEnter);
     map.off("mouseleave", ELAYERS.FirstPointLayer, this.#onFirstPointMouseLeave);
     map.off("mouseup", ELAYERS.FirstPointLayer, this.#onFirstPointMouseUp);
+    this.#removeBaseEvents();
   }
 
   #mapModeConsumer = (event: DrawingModeChangeEvent) => {

@@ -95,6 +95,12 @@ export class Tiles {
     }
   };
 
+  removeTiles = () => {
+    // first remove the layers then all the sources
+    this.#removeLayers();
+    this.#removeSources();
+  };
+
   private updateLine(featureIdx: number, newCoord: LatLng) {
     const { mode } = this.#props;
 
@@ -121,40 +127,58 @@ export class Tiles {
     }
   }
 
-  removeTiles = () => {
-    // first remove the layers then all the sources
-    this.#removeLayers();
-    this.#removeSources();
-  };
-
-  render() {
-    this.#unifiedGeoJSON = GeometryFactory.getUnifiedFeatures(this.#props.store)
-    const unifiedSource = this.#props.map.getSource(ESOURCES.UnifiedSource) as GeoJSONSource;
-
-    if (unifiedSource) {
-      unifiedSource.setData(this.#unifiedGeoJSON);
-    }
-  }
-
-
-  renderOnMouseMove = (featureIdx: number, newCoord: LatLng) => {
-    const { mode, options, map } = this.#props;
+  private updatePoint(featureIdx: number, newCoord: LatLng) {
 
     // points are always the first feature. Check GeometryFactory.getUnifiedFeatures
     const feature = this.#unifiedGeoJSON?.features?.[featureIdx];
     if (feature?.geometry?.coordinates) {
       feature.geometry.coordinates = [newCoord.lng, newCoord.lat];
     }
+  }
+
+  renderOnMouseMove = (featureIdx: number, newCoord: LatLng, aux: { next: LatLng | null, prev: LatLng | null } | null) => {
+    const { mode, options, store } = this.#props;
+    // if the selected index is the first one then we the prev index is the store.size - 1 
+    const prevIdx = featureIdx === 0 ? store.size - 1 : featureIdx - 1;
+
+    this.updatePoint(featureIdx, newCoord);
+    if (aux && aux.prev) {
+      this.updatePoint(prevIdx, aux.prev);
+    }
+    if (aux && aux.next) {
+      this.updatePoint(featureIdx + 1, aux.next);
+    }
 
     this.updateLine(featureIdx, newCoord);
+    if (aux && aux.prev) {
+      this.updateLine(prevIdx, aux.prev);
+    }
+    if (aux && aux.next) {
+      this.updateLine(featureIdx + 1, aux.next);
+    }
 
     const polygonOptionChecked = options.modes.polygon.visible;
 
     if (polygonOptionChecked && mode.isPolygon()) {
       this.updatePolygon(featureIdx, newCoord);
+      if (aux && aux.prev) {
+        this.updatePolygon(prevIdx, aux.prev);
+      }
+      if (aux && aux.next) {
+        this.updatePolygon(featureIdx + 1, aux.next);
+      }
     }
 
     const unifiedSource = this.#props.map.getSource(ESOURCES.UnifiedSource) as GeoJSONSource;
+    if (unifiedSource) {
+      unifiedSource.setData(this.#unifiedGeoJSON);
+    }
+  }
+
+  render() {
+    this.#unifiedGeoJSON = GeometryFactory.getUnifiedFeatures(this.#props.store)
+    const unifiedSource = this.#props.map.getSource(ESOURCES.UnifiedSource) as GeoJSONSource;
+
     if (unifiedSource) {
       unifiedSource.setData(this.#unifiedGeoJSON);
     }

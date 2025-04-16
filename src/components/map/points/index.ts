@@ -8,43 +8,59 @@ import { ListNode, StoreHelpers } from "#store/index";
 import { FireEvents } from "../helpers";
 import { PointHelpers, PointVisibility } from "./helpers";
 import { FirstPoint } from "./first-point";
-import { removeTransparentLine, addTransparentLine, createDoubleClickDetector, togglePointCircleRadius } from "../tiles/helpers";
+import { removeTransparentLine, addTransparentLine, togglePointCircleRadius } from "../tiles/helpers";
+import { AuxPoints } from "./aux-points";
+import { StoreChangeEvent } from "#store/types";
+import { DrawingModeChangeEvent } from "../mode/types";
+
+export interface PrimaryPointEvents {
+  onPointMouseEnter: (event: MapLayerMouseEvent) => void;
+  onPointMouseLeave: (event: MapLayerMouseEvent) => void;
+  onPointMouseDown: (event: MapLayerMouseEvent | MapTouchEvent) => void;
+  onPointMouseUp: () => void;
+  onMapMouseMove: (event: MapLayerMouseEvent) => void;
+}
 
 export class PointEvents {
   #props: EventsProps;
-  #startCoordinates: LatLng | undefined;
+  #startCoordinates: LatLng | null;
   #enteredStep: Step | null;
-  #selectedStep: Step | null;
+  #selectedNode: ListNode | null;
   #selectedIdx: number | null;
   #firstPoint: FirstPoint | null;
+  #auxPoints: AuxPoints | null;
   #isThrottled: boolean;
   #lastEvent: MapLayerMouseEvent | null;
-  isDoubleClick: () => boolean;
+  #events: PrimaryPointEvents
 
   constructor(props: EventsProps) {
     this.#props = props;
-    this.#startCoordinates = undefined;
+    this.#startCoordinates = null;
     this.#enteredStep = null;
-    this.#selectedStep = null;
+    this.#selectedNode = null;
     this.#selectedIdx = null;
-    this.#firstPoint = new FirstPoint(this.#props)
+    this.#events = {
+      onPointMouseEnter: this.#onPointMouseEnter,
+      onPointMouseLeave: this.#onPointMouseLeave,
+      onPointMouseDown: this.#onPointMouseDown,
+      onPointMouseUp: this.#onPointMouseUp,
+      onMapMouseMove: this.#onMapMouseMove,
+    };
+    this.#firstPoint = new FirstPoint(this.#props, this.#events);
+    this.#auxPoints = new AuxPoints(this.#props, this.#events);
     this.#isThrottled = false;
     this.#lastEvent = null;
-    this.isDoubleClick = createDoubleClickDetector();
   }
 
-  #initFirstPointEvents = () => {
-    const { map } = this.#props;
+  #initConsumers = () => {
+    this.#props.mode.addObserver(this.#mapModeConsumer);
+    this.#props.store.addObserver(this.#storeEventsConsumer);
+  }
 
-    map.on("mouseenter", ELAYERS.FirstPointLayer, this.#onPointMouseEnter);
-    map.on("mouseleave", ELAYERS.FirstPointLayer, this.#onPointMouseLeave);
-    map.on("mousedown", ELAYERS.FirstPointLayer, this.#onPointMouseDown);
-    map.on("mouseup", ELAYERS.FirstPointLayer, this.#onPointMouseUp);
-    map.on("touchend", ELAYERS.FirstPointLayer, this.#onPointMouseUp);
-    map.on("touchstart", ELAYERS.FirstPointLayer, this.#onPointMouseDown);
-
-    this.#firstPoint?.initEvents();
-  };
+  #removeConsumers = () => {
+    this.#props.mode.removeObserver(this.#mapModeConsumer);
+    this.#props.store.removeObserver(this.#storeEventsConsumer);
+  }
 
   initEvents = () => {
     const { map } = this.#props;
@@ -58,19 +74,8 @@ export class PointEvents {
     map.on("touchend", ELAYERS.PointsLayer, this.#onPointMouseUp);
     map.on("touchstart", ELAYERS.PointsLayer, this.#onPointMouseDown);
 
-    this.#initFirstPointEvents();
-  };
-
-  #removeFirstPointEvents = () => {
-    const { map } = this.#props;
-
-    map.off("mouseenter", ELAYERS.FirstPointLayer, this.#onPointMouseEnter);
-    map.off("mouseleave", ELAYERS.FirstPointLayer, this.#onPointMouseLeave);
-    map.off("mousedown", ELAYERS.FirstPointLayer, this.#onPointMouseDown);
-    map.off("mouseup", ELAYERS.FirstPointLayer, this.#onPointMouseUp);
-    map.off("touchend", ELAYERS.PointsLayer, this.#onPointMouseUp);
-    map.off("touchstart", ELAYERS.PointsLayer, this.#onPointMouseDown);
-    this.#firstPoint?.removeEvents();
+    this.#firstPoint?.initEvents();
+    this.#initConsumers();
   };
 
   removeEvents = () => {
@@ -84,7 +89,9 @@ export class PointEvents {
     map.off("mousedown", ELAYERS.PointsLayer, this.#onPointMouseDown);
     map.off("mouseup", ELAYERS.PointsLayer, this.#onPointMouseUp);
 
-    this.#removeFirstPointEvents();
+    this.#firstPoint?.removeEvents();
+    this.#auxPoints?.removeEvents();
+    this.#removeConsumers();
   };
 
   #onMapDblClick = (event: MapLayerMouseEvent) => {
@@ -109,7 +116,7 @@ export class PointEvents {
   }
 
   #onPointRemove = (event: MapLayerMouseEvent | MapTouchEvent) => {
-    const { store, tiles, options, mouseEvents } = this.#props;
+    const { store, tiles, options, mouseEvents, map } = this.#props;
 
     if (store.size == 1) {
       store.reset();
@@ -118,17 +125,22 @@ export class PointEvents {
     const id = MapUtils.queryPointId(this.#props.map, event.point);
     const clickedNode = store.findNodeById(id);
 
-    store.removeNodeById(id);
-    if (options.pointGeneration === "auto") {
-      this.#recalculateAuxiliaryPoints(clickedNode);
-    }
-    Spatial.switchToLineModeIfCan(this.#props);
-    FireEvents.pointDoubleClick({ ...clickedNode?.val as Step, total: store.size }, this.#props.map);
-    if (StoreHelpers.isLastPoint(store, options, id)) {
-      mouseEvents.lastPointMouseClick = true;
-      mouseEvents.lastPointMouseUp = false;
-    }
+    if (!clickedNode?.val?.isAuxiliary) {
+      store.removeNodeById(id);
+      if (options.pointGeneration === "auto") {
+        this.#recalculateAuxiliaryPoints(clickedNode);
+      }
+      Spatial.switchToLineModeIfCan(this.#props);
+      if (Spatial.canBreakClosedGeometry(store, options)) {
+        togglePointCircleRadius(map, "default");
+      }
+      FireEvents.pointDoubleClick({ ...clickedNode?.val as Step, total: store.size }, this.#props.map);
+      if (StoreHelpers.isLastPoint(store, options, id)) {
+        mouseEvents.lastPointMouseClick = true;
+        mouseEvents.lastPointMouseUp = false;
+      }
 
+    }
     tiles.render();
   };
 
@@ -167,22 +179,38 @@ export class PointEvents {
     }
   };
 
+  #getAuxPointsLatLng = (event: MapLayerMouseEvent) => {
+    if (!this.#selectedNode) return null;
+
+    const { options } = this.#props;
+    const prevPrimary = this.#selectedNode?.prev?.prev;
+    const nextPrimary = this.#selectedNode?.next?.next;
+
+    if (options.pointGeneration === "auto") {
+      return {
+        next: nextPrimary ? PointHelpers.getMidpoint(nextPrimary?.val as LatLng, event.lngLat) : null,
+        prev: prevPrimary ? PointHelpers.getMidpoint(event.lngLat, prevPrimary?.val as LatLng) : null,
+      } as const
+    }
+    return null;
+  }
+
   #onMapMouseMove = throttle((event: MapLayerMouseEvent) => {
+
     if (!this.#isThrottled) {
       this.#lastEvent = event;
       this.#isThrottled = true;
 
       requestAnimationFrame(() => {
-        if (!this.#selectedStep || !this.#lastEvent) return;
-        this.#selectedStep.lat = event.lngLat.lat;
-        this.#selectedStep.lng = event.lngLat.lng;
-        this.#onMoveLeftClickUp(this.#lastEvent);
+        if (!this.#selectedNode || !this.#lastEvent) return;
         const { tiles } = this.#props;
-        tiles.renderOnMouseMove(this.#selectedIdx as number, event.lngLat);
+        this.#onMoveLeftClickUp(this.#lastEvent);
+        const auxPoints = this.#getAuxPointsLatLng(this.#lastEvent);
+        tiles.renderOnMouseMove(this.#selectedIdx as number, event.lngLat, auxPoints);
         this.#isThrottled = false;
       });
     }
-  }, 22);
+  }, 17);
 
   #onPointMouseEnter = (event: MapLayerMouseEvent) => {
     const { mouseEvents, map, store, options } = this.#props;
@@ -226,22 +254,45 @@ export class PointEvents {
     );
   };
 
+  #resetHelpers = () => {
+    this.#selectedNode = null;
+    this.#selectedIdx = null;
+    this.#lastEvent = null;
+    this.#startCoordinates = null;
+    this.#enteredStep = null;
+    this.#isThrottled = false;
+  }
+
+  #storeEventsConsumer = (event: StoreChangeEvent) => {
+    if (event.type === "STORE_CHANGED") {
+      if (event.data.size === 0) {
+        this.#resetHelpers();
+      }
+    }
+  };
+
+  #mapModeConsumer = (event: DrawingModeChangeEvent) => {
+    if (event.type === "BREAK_CHANGED" || event.type === "MODE_CHANGED") {
+      this.#resetHelpers();
+    }
+  };
+
   #hideLastPointPanel = () => {
     const { store, panel, options } = this.#props;
-    if (!this.#selectedStep) return;
+    if (!this.#selectedNode || !this.#selectedNode.val) return;
 
-    if (StoreHelpers.isLastPoint(store, options, this.#selectedStep.id)) {
+    if (StoreHelpers.isLastPoint(store, options, this.#selectedNode.val.id)) {
       panel.hidePanel();
     }
   };
 
-  #setSelectedStep = (event: MapLayerMouseEvent | MapTouchEvent) => {
+  #setSelectedNode = (event: MapLayerMouseEvent | MapTouchEvent) => {
     const { store, map } = this.#props;
 
     const id = MapUtils.queryPointId(map, event.point);
-    const step = store.findStepById(id);
+    const step = store.findNodeById(id);
     if (step) {
-      this.#selectedStep = step;
+      this.#selectedNode = step;
     }
   };
 
@@ -252,13 +303,15 @@ export class PointEvents {
       this.#onPointRemove(event);
       return;
     }
+
+    this.#setSelectedNode(event);
     event.preventDefault();
 
     removeTransparentLine(map);
-    this.#setSelectedStep(event);
     this.#hideLastPointPanel();
     const point = MapUtils.queryPoint(map, event.point)
     this.#selectedIdx = Spatial.getGeometryIndex(store, point?.properties.id);
+
     if (mouseEvents) {
       mouseEvents.pointMouseDown = true;
     }
@@ -267,10 +320,35 @@ export class PointEvents {
     map.on("touchmove", this.#onMapMouseMove);
   };
 
+  // we've got the reference to the selected node from the store and just updating the lat/lng when mouse up event happens
+  #updateStore = () => {
+    if (!this.#lastEvent) return;
+
+    if (this.#selectedNode && this.#selectedNode.val) {
+      this.#selectedNode.val.lat = this.#lastEvent?.lngLat.lat;
+      this.#selectedNode.val.lng = this.#lastEvent.lngLat.lng;
+      const auxPoints = this.#getAuxPointsLatLng(this.#lastEvent);
+
+      if (auxPoints) {
+        if (this.#selectedNode.prev?.val && auxPoints.prev) {
+          this.#selectedNode.prev.val.lat = auxPoints.prev.lat;
+          this.#selectedNode.prev.val.lng = auxPoints.prev.lng;
+        }
+        if (this.#selectedNode.next?.val && auxPoints.next) {
+          this.#selectedNode.next.val.lat = auxPoints.next.lat;
+          this.#selectedNode.next.val.lng = auxPoints.next.lng;
+        }
+      }
+    }
+  }
+
   #onPointMouseUp = () => {
     const { mouseEvents, store, panel, map, options } = this.#props;
     mouseEvents.pointMouseUp = true;
-    if (this.#selectedStep) {
+    if (this.#selectedNode && this.#selectedNode.val) {
+      if (this.#lastEvent) {
+        this.#updateStore();
+      }
       store.notify({
         type: "STORE_CHANGED",
         data: store
@@ -279,9 +357,9 @@ export class PointEvents {
 
       FireEvents.movePoint(
         {
-          id: this.#selectedStep.id,
+          id: this.#selectedNode.val.id,
           total: store.size,
-          end: { lat: this.#selectedStep.lat, lng: this.#selectedStep.lng },
+          end: { lat: this.#selectedNode.val.lat, lng: this.#selectedNode.val.lng },
           start: this.#startCoordinates as LatLng,
         },
         map,

@@ -3,7 +3,7 @@ import type { CircleLayerSpecification, FillLayerSpecification, LineLayerSpecifi
 import type { CustomMap } from "#types/map";
 
 import type { Control } from "#components/side-control";
-import type { Panel } from "#components/last-point-panel";
+import type { Panel } from "#components/panel";
 import type { Tiles } from "#components/map/tiles";
 import type { MouseEvents } from "#components/map/mouse-events/index";
 import type { Store } from "#store/index";

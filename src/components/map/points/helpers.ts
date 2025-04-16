@@ -4,7 +4,6 @@ import type { EventsProps, Step } from "#types/index";
 import { ELAYERS } from "#utils/geo_constants";
 import { Spatial, uuidv4 } from "#utils/helpers";
 
-import { FireEvents } from "../helpers";
 import { CustomMap } from "#types/map";
 import { togglePointCircleRadius } from "../tiles/helpers";
 

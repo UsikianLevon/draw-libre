@@ -1,5 +1,6 @@
 - [x] split 
 - [x] remove on right click on the point
-- [ ] mousemove on aux
-- [ ] mousemove on primary target  
+- [x] add on aux click
+- [x] mouseup doesn't work if we move point fast
+- [x] mousemove on primary target  
 - [ ] aux when dots are initialized

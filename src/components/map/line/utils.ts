@@ -48,5 +48,5 @@ export const updateUIAfterInsert = (event: MapLayerMouseEvent, context: EventsPr
 };
 
 export const checkIfPointClicked = (event: MapLayerMouseEvent) => {
-  return MapUtils.isFeatureTriggered(event, [ELAYERS.PointsLayer, ELAYERS.FirstPointLayer]);
+  return MapUtils.isFeatureTriggered(event, [ELAYERS.PointsLayer, ELAYERS.FirstPointLayer, ELAYERS.AuxiliaryPointLayer]);
 };

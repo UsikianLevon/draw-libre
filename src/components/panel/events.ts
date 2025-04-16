@@ -8,8 +8,8 @@ import { Spatial } from "#utils/helpers";
 import { togglePointCircleRadius } from "#components/map/tiles/helpers";
 import { ELAYERS } from "#utils/geo_constants";
 import { PointHelpers } from "#components/map/points/helpers";
-import { StoreChangeEvent } from "#store/types";
-import { DrawingModeChangeEvent } from "#components/map/mode/types";
+import type { StoreChangeEvent } from "#store/types";
+import type { DrawingModeChangeEvent } from "#components/map/mode/types";
 
 export class PanelEvents {
   #props: EventsProps;
@@ -37,7 +37,6 @@ export class PanelEvents {
         this.#props.panel.hidePanel();
       } else {
         let current = Object.assign({}, data);
-        // we need a debounce here to just get the last point, so there's no flickering on the map
         while (current.tail) {
           if (current.tail?.val?.isAuxiliary) {
             current.tail = current.tail?.prev;
@@ -187,13 +186,12 @@ export class PanelEvents {
     FireEvents.removeAllPoints(map, event);
   };
 
-  #onUndoClick = (event: Event) => {
-    const { store, map, mode, tiles, options } = this.#props;
-    if (store.size == 1) {
-      store.reset();
-    }
+  #removeStep = () => {
+    const { store, options } = this.#props;
 
+    // Remove the last point
     store.removeNodeById(store.tail?.val?.id as StepId);
+    // if we are in aux mode then remove 2 aux points and then add 1 aux point between the 2 points
     if (options.pointGeneration === "auto") {
       store.removeNodeById(store.tail?.val?.id as StepId);
       if (store.tail?.val?.isAuxiliary) {
@@ -205,11 +203,21 @@ export class PanelEvents {
         store.tail.next = store.head;
       }
     }
-    const step = { ...store.tail?.val as Step, total: store.size };
+  }
 
-    // if we have only 2(or 3 if aux) points left, we need to switch to line mode and update the tail.next to null
+  #onUndoClick = (event: Event) => {
+    const { store, map, tiles, options } = this.#props;
+    if (store.size == 1) {
+      store.reset();
+    }
+
+    this.#removeStep();
     Spatial.switchToLineModeIfCan(this.#props);
+    if (Spatial.canBreakClosedGeometry(store, options)) {
+      togglePointCircleRadius(map, "default");
+    }
     this.#tooltip.remove();
+    const step = { ...store.tail?.val as Step, total: store.size };
     FireEvents.undoPoint(step, map, event);
     tiles.render();
   };

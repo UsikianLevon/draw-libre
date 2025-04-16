@@ -1,7 +1,7 @@
 import type { IControl, CustomMap } from "#types/map";
 
 import type { DrawOptions, LatLng, RequiredDrawOptions, Step, StepId } from "#types/index";
-import { Panel } from "#components/last-point-panel";
+import { Panel } from "#components/panel";
 import { Tiles } from "#components/map/tiles";
 import { Events } from "#components/map";
 import { Control } from "#components/side-control";

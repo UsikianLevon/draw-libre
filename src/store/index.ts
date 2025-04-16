@@ -52,7 +52,6 @@ export class Store extends Observable<StoreChangeEvent> {
     newNode.next = current.next;
 
     const betweenHeadAndTail = this.tail === current && this.head === current.next;
-    // If the point is inserted between head and tail, update the tail
     if (betweenHeadAndTail) {
       this.tail = newNode;
     }
@@ -81,12 +80,10 @@ export class Store extends Observable<StoreChangeEvent> {
     const node = this.map.get(id);
     if (!node) return null;
 
-    // Если это единственный узел в списке
     if (this.size === 1) {
       this.head = null;
       this.tail = null;
     } else {
-      // Обновляем связи соседних узлов
       if (node.prev) {
         node.prev.next = node.next;
       }
@@ -95,17 +92,13 @@ export class Store extends Observable<StoreChangeEvent> {
         node.next.prev = node.prev;
       }
 
-      // Обновляем head если удаляем первый элемент
       if (node === this.head) {
         this.head = node.next;
-        // Для циклического списка, обновляем связь tail->head
         if (this.tail) this.tail.next = this.head;
       }
 
-      // Обновляем tail если удаляем последний элемент
       if (node === this.tail) {
         this.tail = node.prev;
-        // Для циклического списка, обновляем связь head->tail
         if (this.head) this.head.prev = this.tail;
       }
     }

@@ -1,0 +1,2 @@
+- [ ] Tile class needs to be cut in half
+- [ ] add an option to export dots with our without aux points

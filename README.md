@@ -1,6 +1,16 @@
 <section >
 <h1>DrawLibre</h1>
-<img width=600 alt="GIF" src="https://i.giphy.com/media/v1.Y2lkPTc5MGI3NjExaDZscnowMHNndmtiZzcwb3Bvc2Y2b29qbHdndndndGE3Mzk5Z2Q0cSZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/m6lig0ZCfL45FZQo7b/giphy.gif" />
+<article style="display: flex; gap: 8px">
+<figure style="margin: 0; padding: 0;">
+  <figcaption>pointGeneration: "manual"</figcaption>
+  <img width="550" height="350" alt="GIF" src="https://i.giphy.com/media/v1.Y2lkPTc5MGI3NjExaDZscnowMHNndmtiZzcwb3Bvc2Y2b29qbHdndndndGE3Mzk5Z2Q0cSZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/m6lig0ZCfL45FZQo7b/giphy.gif">
+</figure>
+
+<figure style="margin: 0; padding: 0;">
+  <figcaption>pointGeneration: "auto"</figcaption>
+  <img width="550" height="350" alt="GIF" src="https://media2.giphy.com/media/v1.Y2lkPTc5MGI3NjExY2VieG1rd3ZkaWt5azVhYWpqaWEwZnVybGdjYW90d2xwNWwzeWtzayZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/6ohjkf9L1NWUESTaQA/giphy.gif" />
+</figure>
+</article>
 </section>
 
 ## Features
@@ -41,6 +51,7 @@ map.on("load", (event) => {
 
 ```javascript
 const draw = DrawLibre.getInstance({
+  pointGeneration: "manual", // or "auto"; pointGeneration controls whether additional points are automatically generated on the line or if you place them manually by clicking.
   modes: {
     initial: null, // default value; can be "line" or "polygon". Initial mode for drawing
     breakGeometry: { visible: true }, // Controls visibility of the break geometry button
@@ -128,10 +139,13 @@ Available events:
 ```javascript
 const draw = DrawLibre.getInstance();
 
-// Find a step by its ID
+// Retrieves a step from the store by its ID. 
 draw.findStepById(id: string)
 
-// Get all steps, optionally specifying the return type
+// Retrieves a node from the store by its ID.
+draw.findNodeById(id: string)
+
+// Get all steps, optionally specifying the return type. Selecting 'linkedlist' will return a circular doubly linked list. Have fun. 
 draw.getAllSteps(type?: "array" | "linkedlist")
 
 // Set new steps. If ID is not provided, it will be generated automatically
@@ -162,4 +176,5 @@ draw.setOptions((options: RequiredDrawOptions) => {
 
 ## License
 
-This project is licensed under the [MIT License](LICENSE).
+This project is licensed under the This project is licensed under the [MIT License](https://opensource.org/licenses/MIT).
+

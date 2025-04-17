@@ -159,20 +159,27 @@ export default class DrawLibre implements IControl {
   };
 
   /**
-   * Retrieves a step from the store by its ID. This method is called by {@link map.findStepById}
-   * internally.
+   * Retrieves a step from the store by its ID. 
    *
    * @param id - The ID of the step to retrieve.
-   * @returns The step with the specified ID, or undefined if not found.
+   * @returns The step with the specified ID, or null if not found.
    */
   findStepById = (id: StepId) => {
     return this.#store?.findStepById(id);
   };
 
   /**
+   * Retrieves a node from the store by its ID. 
+   *
+   * @param id - The ID of the node to retrieve.
+   * @returns The node with the specified ID, or null if not found.
+   */
+  findNodeById = (id: StepId) => {
+    return this.#store?.findNodeById(id);
+  };
+
+  /**
    * Retrieves all steps from the store, either as an array or as a linked list, based on the type specified.
-   * This method is called by {@link map.getAllSteps}
-   * internally.
    *
    * @param type - The type of collection to return, either "array" or "ll" (linked list).
    * @returns An array of all steps or the linked list of steps.

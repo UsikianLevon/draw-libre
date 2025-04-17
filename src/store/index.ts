@@ -94,12 +94,12 @@ export class Store extends Observable<StoreChangeEvent> {
 
       if (node === this.head) {
         this.head = node.next;
-        if (this.tail) this.tail.next = this.head;
+        if (this.head?.prev && this.tail) this.tail.next = this.head;
       }
 
       if (node === this.tail) {
         this.tail = node.prev;
-        if (this.head) this.head.prev = this.tail;
+        if (this.head && this.tail?.next) this.head.prev = this.tail;
       }
     }
 
@@ -109,6 +109,7 @@ export class Store extends Observable<StoreChangeEvent> {
 
     return node;
   }
+
   reset() {
     this.head = null;
     this.tail = null;

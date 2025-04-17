@@ -22,7 +22,7 @@ export class MapUtils {
 
   static queryPointId = (map: CustomMap, point: MapMouseEvent["point"]) => {
     const query = map.queryRenderedFeatures(point, {
-      layers: [ELAYERS.PointsLayer, ELAYERS.FirstPointLayer, ELAYERS.AuxiliaryPointLayer],
+      layers: [ELAYERS.PointsLayer, ELAYERS.FirstPointLayer, ELAYERS.AuxiliaryPointLayer, ELAYERS.SinglePointLayer],
     });
 
     const id = query?.[0]?.properties.id;
@@ -31,16 +31,13 @@ export class MapUtils {
 
   static queryPoint = (map: CustomMap, point: MapMouseEvent["point"]) => {
     const query = map.queryRenderedFeatures(point, {
-      layers: [ELAYERS.PointsLayer, ELAYERS.FirstPointLayer, ELAYERS.AuxiliaryPointLayer],
+      layers: [ELAYERS.PointsLayer, ELAYERS.FirstPointLayer, ELAYERS.AuxiliaryPointLayer, ELAYERS.SinglePointLayer],
     });
     return query?.[0];
   };
 }
 
 export class GeometryFactory {
-
-
-
   static #collectGeometryCoordinates(store: Store): number[][] {
     const coordinates = [];
     let current = store.head;
@@ -242,7 +239,8 @@ export class Spatial {
   };
 
   static canCloseGeometry = (store: Store, options: RequiredDrawOptions) => {
-    return store.size > 2 && !this.isClosedGeometry(store, options);
+    const storeSize = options.pointGeneration === "auto" ? store.size > 3 : store.size > 2;
+    return storeSize && !this.isClosedGeometry(store, options);
   };
 
   static canBreakClosedGeometry = (store: Store, options: RequiredDrawOptions) => {
@@ -254,7 +252,10 @@ export class Spatial {
   };
 
   static switchToLineModeIfCan = (args: EventsProps) => {
-    if (Spatial.canBreakClosedGeometry(args.store, args.options) && Spatial.isClosedGeometry(args.store, args.options)) {
+    const isCircle = args.store.tail?.next === args.store.head
+    const canBreakGeometry = Spatial.canBreakClosedGeometry(args.store, args.options)
+
+    if (canBreakGeometry && isCircle) {
       if (args.options.pointGeneration === "auto") {
         if (args.store.tail?.val?.isAuxiliary) {
           if (args.store.head) {

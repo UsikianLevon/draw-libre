@@ -99,17 +99,22 @@ export class PointEvents {
   };
 
   #recalculateAuxiliaryPoints = (clickedNode: ListNode | null) => {
-    const { store, options } = this.#props;
+    const { store } = this.#props;
 
     const nextAuxNode = clickedNode?.next;
     const prevAuxNode = clickedNode?.prev;
     const nextPrimaryNode = clickedNode?.next?.next;
     const prevPrimaryNode = clickedNode?.prev?.prev;
 
-    store.removeNodeById(nextAuxNode?.val?.id as string);
-    store.removeNodeById(prevAuxNode?.val?.id as string);
+    if (nextAuxNode) {
+      store.removeNodeById(nextAuxNode?.val?.id as string);
+    }
 
-    if (!Spatial.canBreakClosedGeometry(store, options)) {
+    if (prevAuxNode) {
+      store.removeNodeById(prevAuxNode?.val?.id as string);
+    }
+
+    if (nextAuxNode && prevAuxNode && !Spatial.canBreakClosedGeometry(store, this.#props.options)) {
       const auxPoint = PointHelpers.createAuxiliaryPoint(nextPrimaryNode?.val as Step, prevPrimaryNode?.val as Step);
       store.insert(auxPoint, prevPrimaryNode as ListNode);
     }
@@ -117,29 +122,31 @@ export class PointEvents {
 
   #onPointRemove = (event: MapLayerMouseEvent | MapTouchEvent) => {
     const { store, tiles, options, mouseEvents, map } = this.#props;
-
-    if (store.size == 1) {
+    // debugger
+    if (store.size === 1) {
       store.reset();
-    }
+    } else {
+      const id = MapUtils.queryPointId(this.#props.map, event.point);
 
-    const id = MapUtils.queryPointId(this.#props.map, event.point);
-    const clickedNode = store.findNodeById(id);
+      const clickedNode = store.findNodeById(id);
+      const isPrimaryNode = !clickedNode?.val?.isAuxiliary;
 
-    if (!clickedNode?.val?.isAuxiliary) {
-      store.removeNodeById(id);
-      if (options.pointGeneration === "auto") {
-        this.#recalculateAuxiliaryPoints(clickedNode);
-      }
-      Spatial.switchToLineModeIfCan(this.#props);
-      if (Spatial.canBreakClosedGeometry(store, options)) {
-        togglePointCircleRadius(map, "default");
-      }
-      FireEvents.pointDoubleClick({ ...clickedNode?.val as Step, total: store.size }, this.#props.map);
-      if (StoreHelpers.isLastPoint(store, options, id)) {
-        mouseEvents.lastPointMouseClick = true;
-        mouseEvents.lastPointMouseUp = false;
-      }
+      if (isPrimaryNode) {
+        store.removeNodeById(id);
+        if (options.pointGeneration === "auto") {
+          this.#recalculateAuxiliaryPoints(clickedNode);
+        }
+        Spatial.switchToLineModeIfCan(this.#props);
+        if (Spatial.canBreakClosedGeometry(store, options)) {
+          togglePointCircleRadius(map, "default");
+        }
+        FireEvents.pointDoubleClick({ ...clickedNode?.val as Step, total: store.size }, this.#props.map);
+        if (StoreHelpers.isLastPoint(store, options, id)) {
+          mouseEvents.lastPointMouseClick = true;
+          mouseEvents.lastPointMouseUp = false;
+        }
 
+      }
     }
     tiles.render();
   };
@@ -196,7 +203,6 @@ export class PointEvents {
   }
 
   #onMapMouseMove = throttle((event: MapLayerMouseEvent) => {
-
     if (!this.#isThrottled) {
       this.#lastEvent = event;
       this.#isThrottled = true;
@@ -298,7 +304,6 @@ export class PointEvents {
 
   #onPointMouseDown = (event: MapLayerMouseEvent | MapTouchEvent) => {
     const { mouseEvents, map, store } = this.#props;
-
     if ((event.originalEvent as { button: number }).button === 2) {
       this.#onPointRemove(event);
       return;

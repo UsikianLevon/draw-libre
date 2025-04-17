@@ -103,10 +103,13 @@ export default class DrawLibre implements IControl {
       tiles: this.#tiles,
       mouseEvents: this.#mouseEvents,
     });
+
     if (this.#mode.getMode()) {
       map.fire("mode:initialize");
     }
+
     this.#mode.pingConsumers();
+    this.#store.pingConsumers();
     this.#container = control.getContainer();
 
     return this.#container;

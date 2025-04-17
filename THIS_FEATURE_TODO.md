@@ -1,0 +1,9 @@
+- [x] split 
+- [x] remove on right click on the point
+- [x] add on aux click
+- [x] mouseup doesn't work if we move point fast
+- [x] mousemove on primary target  
+- [x] aux when dots are initialized
+- [x] fix initial polygon
+- [ ] Tile class needs to be cut in half
+- [ ] add an option to export dots with our without aux points

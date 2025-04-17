@@ -4,8 +4,9 @@ import type { LatLng, RequiredDrawOptions } from "#types/index";
 import type { CustomMap } from "#types/map";
 import type { Store } from "#store/index";
 import { ELAYERS, ESOURCES, generateLayersToRender } from "#utils/geo_constants";
-import { GeometryFactory } from "#utils/helpers";
+import { debounce, GeometryFactory, Spatial } from "#utils/helpers";
 import type { DrawingMode } from "#components/map/mode";
+import type { StoreChangeEvent } from "#store/types";
 
 interface IProps {
   map: CustomMap;
@@ -34,7 +35,31 @@ export class Tiles {
     this.#swapLayers(ELAYERS.LineLayerTransparent, ELAYERS.FirstPointLayer);
     this.#swapLayers(ELAYERS.LineLayerTransparent, ELAYERS.PointsLayer);
     this.#swapLayers(ELAYERS.PolygonLayer, ELAYERS.LineLayer);
+
+    this.#initConsumers();
   }
+
+  #initConsumers = () => {
+    const { store } = this.#props;
+    store.addObserver(this.#polygonVisibility)
+  }
+
+  #removeConsumers = () => {
+    const { store } = this.#props;
+    store.removeObserver(this.#polygonVisibility)
+  }
+
+  #polygonVisibility = debounce((event: StoreChangeEvent) => {
+    if (event.type === "STORE_MUTATED" || event.type === "STORE_DETACHED") {
+      const { map, mode, options, store } = this.#props;
+      const isPolygon = mode.getMode() === "polygon";
+      if (isPolygon && Spatial.isClosedGeometry(store, options)) {
+        map.setLayoutProperty(ELAYERS.PolygonLayer, "visibility", "visible");
+      } else {
+        map.setLayoutProperty(ELAYERS.PolygonLayer, "visibility", "none");
+      }
+    }
+  }, 10)
 
   #addSources = () => {
     const { map } = this.#props;
@@ -99,6 +124,7 @@ export class Tiles {
     // first remove the layers then all the sources
     this.#removeLayers();
     this.#removeSources();
+    this.#removeConsumers()
   };
 
   private updateLine(featureIdx: number, newCoord: LatLng) {
@@ -128,7 +154,6 @@ export class Tiles {
   }
 
   private updatePoint(featureIdx: number, newCoord: LatLng) {
-
     // points are always the first feature. Check GeometryFactory.getUnifiedFeatures
     const feature = this.#unifiedGeoJSON?.features?.[featureIdx];
     if (feature?.geometry?.coordinates) {
@@ -138,7 +163,7 @@ export class Tiles {
 
   renderOnMouseMove = (featureIdx: number, newCoord: LatLng, aux: { next: LatLng | null, prev: LatLng | null } | null) => {
     const { mode, options, store } = this.#props;
-    // if the selected index is the first one then we the prev index is the store.size - 1 
+    // if the selected index is the first one then the prev index is the store.size - 1 
     const prevIdx = featureIdx === 0 ? store.size - 1 : featureIdx - 1;
 
     this.updatePoint(featureIdx, newCoord);

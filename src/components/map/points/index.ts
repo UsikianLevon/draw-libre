@@ -8,7 +8,7 @@ import { ListNode, StoreHelpers } from "#store/index";
 import { FireEvents } from "../helpers";
 import { PointHelpers, PointVisibility } from "./helpers";
 import { FirstPoint } from "./first-point";
-import { removeTransparentLine, addTransparentLine, togglePointCircleRadius } from "../tiles/helpers";
+import { removeTransparentLine, addTransparentLine } from "../tiles/helpers";
 import { AuxPoints } from "./aux-points";
 import { StoreChangeEvent } from "#store/types";
 import { DrawingModeChangeEvent } from "../mode/types";
@@ -122,7 +122,6 @@ export class PointEvents {
 
   #onPointRemove = (event: MapLayerMouseEvent | MapTouchEvent) => {
     const { store, tiles, options, mouseEvents, map } = this.#props;
-    // debugger
     if (store.size === 1) {
       store.reset();
     } else {
@@ -137,9 +136,6 @@ export class PointEvents {
           this.#recalculateAuxiliaryPoints(clickedNode);
         }
         Spatial.switchToLineModeIfCan(this.#props);
-        if (Spatial.canBreakClosedGeometry(store, options)) {
-          togglePointCircleRadius(map, "default");
-        }
         FireEvents.pointDoubleClick({ ...clickedNode?.val as Step, total: store.size }, this.#props.map);
         if (StoreHelpers.isLastPoint(store, options, id)) {
           mouseEvents.lastPointMouseClick = true;
@@ -161,7 +157,7 @@ export class PointEvents {
   };
 
   #onMapClick = (event: MapLayerMouseEvent) => {
-    const { mode, mouseEvents, map, options, store } = this.#props;
+    const { mode, mouseEvents, map, options, store, tiles } = this.#props;
 
     if (mode.getClosedGeometry()) return;
     if (this.#onOwnGeometryLayersClick(event)) return;
@@ -177,6 +173,7 @@ export class PointEvents {
     const addedStep = PointHelpers.addPointToMap(event, this.#props);
     FireEvents.addPoint({ ...addedStep, total: store.size }, map, mode);
     PointVisibility.setSinglePointHidden(event);
+    tiles.render()
   };
 
   #onMoveLeftClickUp = (event: MapLayerMouseEvent) => {
@@ -270,7 +267,7 @@ export class PointEvents {
   }
 
   #storeEventsConsumer = (event: StoreChangeEvent) => {
-    if (event.type === "STORE_CHANGED") {
+    if (event.type === "STORE_MUTATED") {
       if (event.data.size === 0) {
         this.#resetHelpers();
       }
@@ -355,7 +352,7 @@ export class PointEvents {
         this.#updateStore();
       }
       store.notify({
-        type: "STORE_CHANGED",
+        type: "STORE_MUTATED",
         data: store
       })
       panel?.showPanel();

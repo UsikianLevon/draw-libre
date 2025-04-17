@@ -2,10 +2,9 @@ import type { MapLayerMouseEvent } from "maplibre-gl";
 import type { EventsProps, Step } from "#types/index";
 
 import { ELAYERS } from "#utils/geo_constants";
-import { Spatial, uuidv4 } from "#utils/helpers";
+import { uuidv4 } from "#utils/helpers";
 
 import { CustomMap } from "#types/map";
-import { togglePointCircleRadius } from "../tiles/helpers";
 
 export const PointHelpers = {
   getMidpoint(p1: { lat: number; lng: number }, p2: { lat: number; lng: number }) {
@@ -22,14 +21,10 @@ export const PointHelpers = {
   },
 
   addPointToMap(event: MapLayerMouseEvent, props: EventsProps) {
-    const { store, tiles, map } = props;
+    const { store } = props;
 
     const step = { ...event.lngLat, isAuxiliary: false, id: uuidv4() };
     store.push(step);
-    if (Spatial.canCloseGeometry(store, props.options)) {
-      togglePointCircleRadius(map, "large");
-    }
-    tiles.render()
     return step;
   },
 };

@@ -100,7 +100,6 @@ function generateModeOptions(options: DrawOptions): RequiredDrawOptions["modes"]
           : options?.initial?.geometry === "line" || DEFAULT_OPTIONS.modes.line.visible,
       closeGeometry:
         options?.modes?.line?.closeGeometry ??
-        options?.initial?.closeGeometry ??
         DEFAULT_OPTIONS.modes.line.closeGeometry,
     },
     polygon: {

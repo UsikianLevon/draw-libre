@@ -62,9 +62,12 @@ export class LineBreakEvents {
 
     Spatial.breakGeometry(store, options, this.#current);
     this.#onLineLeave();
-    map.setLayoutProperty(ELAYERS.PolygonLayer, "visibility", "none");
     mode.reset();
     tiles.render();
+    store.notify({
+      type: "STORE_DETACHED",
+      data: null
+    })
     FireEvents.onLineBreak(map);
   };
 

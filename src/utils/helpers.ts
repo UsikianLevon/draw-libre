@@ -195,7 +195,7 @@ export class Spatial {
 
   static isClosedGeometry = (store: Store, options: RequiredDrawOptions) => {
     if (options.pointGeneration === "auto") {
-      return store.tail?.next === store.head && store.tail.next !== null;
+      return store.tail?.next?.val?.id === store.head?.val?.id && store.tail?.next !== null;
     }
     return store.tail?.next === store.head;
   };
@@ -252,41 +252,42 @@ export class Spatial {
   };
 
   static switchToLineModeIfCan = (args: EventsProps) => {
-    const isCircle = args.store.tail?.next === args.store.head
-    const canBreakGeometry = Spatial.canBreakClosedGeometry(args.store, args.options)
+    const { store, map, mode, options } = args;
+
+    const isCircle = store.tail?.next === store.head
+    const canBreakGeometry = Spatial.canBreakClosedGeometry(store, options)
 
     if (canBreakGeometry && isCircle) {
-      if (args.options.pointGeneration === "auto") {
-        if (args.store.tail?.val?.isAuxiliary) {
-          if (args.store.head) {
-            args.store.head.next = args.store.tail;
-            args.store.head.prev = null;
+      if (options.pointGeneration === "auto") {
+        if (store.tail?.val?.isAuxiliary) {
+          if (store.head) {
+            store.head.next = store.tail;
+            store.head.prev = null;
           }
-          if (args.store.tail && args.store.tail.prev && args.store.head) {
-            args.store.tail = args.store.tail.prev;
-            args.store.tail.prev = args.store.head.next;
-            args.store.tail.next = null;
+          if (store.tail && store.tail.prev && store.head) {
+            store.tail = store.tail.prev;
+            store.tail.prev = store.head.next;
+            store.tail.next = null;
           }
-          if (args.store.head?.next) {
-            args.store.head.next.next = args.store.tail
-            args.store.head.next.prev = args.store.head
+          if (store.head?.next) {
+            store.head.next.next = store.tail
+            store.head.next.prev = store.head
           }
         } else {
-          if (args.store.head) {
-            args.store.head.prev = null;
+          if (store.head) {
+            store.head.prev = null;
           }
-          if (args.store.tail && args.store.head) {
-            args.store.tail.prev = args.store.head.next;
-            args.store.tail.next = null;
+          if (store.tail && store.head) {
+            store.tail.prev = store.head.next;
+            store.tail.next = null;
           }
         }
       } else {
-        if (args.store.tail) {
-          args.store.tail.next = null;
+        if (store.tail) {
+          store.tail.next = null;
         }
       }
-      args.map.setLayoutProperty(ELAYERS.PolygonLayer, "visibility", "none");
-      args.mode.reset();
+      mode.reset();
     }
   };
 }

@@ -5,7 +5,6 @@ import { DOM } from "#utils/dom";
 import { Tooltip } from "#components/tooltip";
 import { FireEvents } from "#components/map/helpers";
 import { Spatial } from "#utils/helpers";
-import { togglePointCircleRadius } from "#components/map/tiles/helpers";
 import { ELAYERS } from "#utils/geo_constants";
 import { PointHelpers } from "#components/map/points/helpers";
 import type { StoreChangeEvent } from "#store/types";
@@ -31,7 +30,7 @@ export class PanelEvents {
   }
 
   #storeEventsConsumer = (event: StoreChangeEvent) => {
-    if (event.type === "STORE_CHANGED") {
+    if (event.type === "STORE_MUTATED") {
       const { data } = event;
       if (data.size === 0) {
         this.#props.panel.hidePanel();
@@ -179,8 +178,6 @@ export class PanelEvents {
     store.reset();
     panel.hidePanel();
     mode.reset();
-    togglePointCircleRadius(map, "default");
-    map.setLayoutProperty(ELAYERS.PolygonLayer, "visibility", "none");
     this.#tooltip.remove();
     tiles.resetGeometries();
     FireEvents.removeAllPoints(map, event);
@@ -213,9 +210,6 @@ export class PanelEvents {
 
     this.#removeStep();
     Spatial.switchToLineModeIfCan(this.#props);
-    if (Spatial.canBreakClosedGeometry(store, options)) {
-      togglePointCircleRadius(map, "default");
-    }
     this.#tooltip.remove();
     const step = { ...store.tail?.val as Step, total: store.size };
     FireEvents.undoPoint(step, map, event);

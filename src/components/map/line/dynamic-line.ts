@@ -72,14 +72,14 @@ export class DynamicLineEvents {
 
   #dynamicLineVisibility = (data: StoreChangeEvent['data']) => {
     const { store, options } = this.#props;
-    if (data.tail?.val && !Spatial.isClosedGeometry(store, options)) {
+    if (data?.tail?.val && !Spatial.isClosedGeometry(store, options)) {
       this.#firstPoint = store.tail?.val as Step;
       this.showDynamicLine();
     }
   }
 
   #storeEventsConsumer = (event: StoreChangeEvent) => {
-    if (event.type === "STORE_CHANGED") {
+    if (event.type === "STORE_MUTATED") {
       this.#debouncedDynamicLine(event.data);
       if (!event.data.size) {
         this.hideDynamicLine();

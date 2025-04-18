@@ -85,7 +85,7 @@ export default class DrawLibre implements IControl {
    * to the DOM: the map will insert the control's element into the DOM
    * as necessary.
    */
-  onAdd(map: CustomMap) {
+  onAdd = (map: CustomMap) => {
     this.#store = new Store(this.#defaultOptions);
     this.#mode = new DrawingMode(this.#defaultOptions);
     this.#panel = new Panel({ map, mode: this.#mode, options: this.#defaultOptions, store: this.#store });
@@ -128,7 +128,7 @@ export default class DrawLibre implements IControl {
    *
    * @param map - the Map this control will be removed from
    */
-  onRemove() {
+  onRemove = () => {
     this.#cursor?.removeConsumers();
     this.#tiles?.removeTiles();
     this.#events?.removeMapEventsAndConsumers();
@@ -193,6 +193,7 @@ export default class DrawLibre implements IControl {
     }
     throw new Error("Invalid type specified. Use 'array' or 'linkedlist'.");
   };
+
 
   setOptions = (fn: (options: RequiredDrawOptions) => RequiredDrawOptions) => {
     this.#defaultOptions = fn(this.#defaultOptions);

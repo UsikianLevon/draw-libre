@@ -114,14 +114,17 @@ export class PointEvents {
       store.removeNodeById(prevAuxNode?.val?.id as string);
     }
 
-    if (nextAuxNode && prevAuxNode && !Spatial.canBreakClosedGeometry(store, this.#props.options)) {
-      const auxPoint = PointHelpers.createAuxiliaryPoint(nextPrimaryNode?.val as Step, prevPrimaryNode?.val as Step);
+    // this is an edge case when we have only 3 main points, and the middle one is being deleted. TODO
+    const isNonEdgeSize = store.size !== 3;
+
+    if (nextPrimaryNode && prevPrimaryNode && isNonEdgeSize) {
+      const auxPoint = PointHelpers.createAuxiliaryPoint(nextPrimaryNode.val as Step, prevPrimaryNode.val as Step);
       store.insert(auxPoint, prevPrimaryNode as ListNode);
     }
   }
 
   #onPointRemove = (event: MapLayerMouseEvent | MapTouchEvent) => {
-    const { store, tiles, options, mouseEvents, map } = this.#props;
+    const { store, tiles, options, mouseEvents } = this.#props;
     if (store.size === 1) {
       store.reset();
     } else {

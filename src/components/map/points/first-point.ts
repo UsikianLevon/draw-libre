@@ -169,8 +169,8 @@ export class FirstPoint {
 
   #onFirstPointMouseEnter = (event: MapLayerMouseEvent) => {
     const { mode, mouseEvents, store, options } = this.#props;
-    if (mode.getClosedGeometry() || this.#mouseDown) return;
     mouseEvents.firstPointMouseEnter = true;
+    if (mode.getClosedGeometry() || this.#mouseDown) return;
     if (Spatial.canCloseGeometry(store, options)) {
       const { x, y } = event.originalEvent;
       if (x && y) {

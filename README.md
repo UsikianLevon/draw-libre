@@ -5,7 +5,7 @@
 ## Features
 
 - Draw linestrings (including closed ones) and polygons
-- Compatible with maplibre-gl.js(v3, v4, v5) and mapbox-gl.js (currently supports Mercator projection only)
+- Compatible with maplibre-gl(v2-v5) and mapbox-gl(v1-v3) and all projections
 - Customizable UI and controls
 - Event-driven architecture for easy integration
 
@@ -15,8 +15,6 @@
 ### Automatic Point Generation (an auxiliary point is generated between every two primary points.)
 <img src="https://media2.giphy.com/media/v1.Y2lkPTc5MGI3NjExY2VieG1rd3ZkaWt5azVhYWpqaWEwZnVybGdjYW90d2xwNWwzeWtzayZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/6ohjkf9L1NWUESTaQA/giphy.gif" width="800" alt="Automatic Point Generation">
 </section>
-
-
 
 ## Installation
 
@@ -174,5 +172,5 @@ draw.setOptions((options: RequiredDrawOptions) => {
 
 ## License
 
-This project is licensed under the This project is licensed under the [MIT License](https://opensource.org/licenses/MIT).
+This project is licensed under the [MIT License](https://opensource.org/licenses/MIT).
 

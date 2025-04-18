@@ -63,7 +63,7 @@ export const DEFAULT_OPTIONS: RequiredDrawOptions = {
     line: "Line",
     polygon: "Polygon",
     break: "Split",
-    closeLine: "Close line",
-    createPolygon: "Create polygon",
+    closeLine: "Close the line",
+    createPolygon: "Create a polygon",
   },
 };

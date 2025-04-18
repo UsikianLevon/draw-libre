@@ -1,7 +1,7 @@
 import type { IControl, CustomMap } from "#types/map";
 
 import type { DrawOptions, LatLng, RequiredDrawOptions, Step, StepId } from "#types/index";
-import { Panel } from "#components/last-point-panel";
+import { Panel } from "#components/panel";
 import { Tiles } from "#components/map/tiles";
 import { Events } from "#components/map";
 import { Control } from "#components/side-control";
@@ -85,14 +85,14 @@ export default class DrawLibre implements IControl {
    * to the DOM: the map will insert the control's element into the DOM
    * as necessary.
    */
-  onAdd(map: CustomMap) {
+  onAdd = (map: CustomMap) => {
     this.#store = new Store(this.#defaultOptions);
     this.#mode = new DrawingMode(this.#defaultOptions);
     this.#panel = new Panel({ map, mode: this.#mode, options: this.#defaultOptions, store: this.#store });
     this.#tiles = new Tiles({ map, store: this.#store, options: this.#defaultOptions, mode: this.#mode });
     const control = new Control({ options: this.#defaultOptions, mode: this.#mode });
     this.#mouseEvents = new MouseEvents();
-    this.#cursor = new Cursor({ map, mode: this.#mode, mouseEvents: this.#mouseEvents, store: this.#store });
+    this.#cursor = new Cursor({ map, mode: this.#mode, mouseEvents: this.#mouseEvents, store: this.#store, options: this.#defaultOptions });
     this.#events = new Events({
       map,
       store: this.#store,
@@ -103,10 +103,13 @@ export default class DrawLibre implements IControl {
       tiles: this.#tiles,
       mouseEvents: this.#mouseEvents,
     });
+
     if (this.#mode.getMode()) {
       map.fire("mode:initialize");
     }
+
     this.#mode.pingConsumers();
+    this.#store.pingConsumers();
     this.#container = control.getContainer();
 
     return this.#container;
@@ -125,7 +128,7 @@ export default class DrawLibre implements IControl {
    *
    * @param map - the Map this control will be removed from
    */
-  onRemove() {
+  onRemove = () => {
     this.#cursor?.removeConsumers();
     this.#tiles?.removeTiles();
     this.#events?.removeMapEventsAndConsumers();
@@ -156,20 +159,27 @@ export default class DrawLibre implements IControl {
   };
 
   /**
-   * Retrieves a step from the store by its ID. This method is called by {@link map.findStepById}
-   * internally.
+   * Retrieves a step from the store by its ID. 
    *
    * @param id - The ID of the step to retrieve.
-   * @returns The step with the specified ID, or undefined if not found.
+   * @returns The step with the specified ID, or null if not found.
    */
   findStepById = (id: StepId) => {
     return this.#store?.findStepById(id);
   };
 
   /**
+   * Retrieves a node from the store by its ID. 
+   *
+   * @param id - The ID of the node to retrieve.
+   * @returns The node with the specified ID, or null if not found.
+   */
+  findNodeById = (id: StepId) => {
+    return this.#store?.findNodeById(id);
+  };
+
+  /**
    * Retrieves all steps from the store, either as an array or as a linked list, based on the type specified.
-   * This method is called by {@link map.getAllSteps}
-   * internally.
    *
    * @param type - The type of collection to return, either "array" or "ll" (linked list).
    * @returns An array of all steps or the linked list of steps.
@@ -183,6 +193,7 @@ export default class DrawLibre implements IControl {
     }
     throw new Error("Invalid type specified. Use 'array' or 'linkedlist'.");
   };
+
 
   setOptions = (fn: (options: RequiredDrawOptions) => RequiredDrawOptions) => {
     this.#defaultOptions = fn(this.#defaultOptions);

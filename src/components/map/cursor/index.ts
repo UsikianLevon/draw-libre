@@ -1,18 +1,20 @@
 import type { CustomMap } from "#types/map";
 
-import { Spatial } from "#utils/helpers";
+import { debounce, Spatial } from "#utils/helpers";
 import type { DrawingMode } from "#components/map/mode";
 import type { Store } from "#store/index";
 
 import type { MouseEvents } from "../mouse-events";
 import type { MouseEventsChangeEvent } from "../mouse-events/types";
 import { CURSORS, type TCursor } from "./constants";
+import type { RequiredDrawOptions } from "#types/index";
 
 interface CursorProps {
   map: CustomMap;
   mode: DrawingMode;
   mouseEvents: MouseEvents;
   store: Store;
+  options: RequiredDrawOptions;
 }
 
 export class Cursor {
@@ -33,7 +35,7 @@ export class Cursor {
 
   get = () => this.#canvas.style.cursor;
 
-  handleMouseLeave = () => {
+  handleMouseLeave = debounce(() => {
     const { mouseEvents, mode } = this.#props;
     if (mouseEvents.pointMouseDown) return;
     if (!mode.getMode()) {
@@ -45,18 +47,15 @@ export class Cursor {
     } else {
       this.set(CURSORS.CROSSHAIR);
     }
-  };
+  }, 10)
 
-  handleFirstPointMouseEnter = () => {
-    const { mode, store } = this.#props;
+  handleFirstPointMouseEnter = debounce(() => {
+    const { store, options } = this.#props;
 
-    if (mode.getClosedGeometry()) {
-      this.set(CURSORS.MOVE);
-    }
-    if (Spatial.canCloseGeometry(store)) {
+    if (Spatial.canCloseGeometry(store, options)) {
       this.set(CURSORS.POINTER);
     }
-  };
+  }, 10)
 
   #initConsumers() {
     const { mouseEvents } = this.#props;
@@ -71,7 +70,7 @@ export class Cursor {
   }
 
   #mouseEventsObserver = (event: MouseEventsChangeEvent) => {
-    const { mode, mouseEvents } = this.#props;
+    const { mode, mouseEvents, store, options } = this.#props;
     if (mode.getBreak()) return;
 
     const { type, data } = event;
@@ -106,7 +105,9 @@ export class Cursor {
         this.handleMouseLeave();
         break;
       case "lastPointMouseEnter":
-        this.set(CURSORS.POINTER);
+        if (!Spatial.isClosedGeometry(store, options)) {
+          this.set(CURSORS.POINTER);
+        }
         break;
       case "lastPointMouseLeave":
         this.handleMouseLeave();

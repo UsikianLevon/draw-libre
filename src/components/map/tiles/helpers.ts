@@ -3,7 +3,6 @@ import type { CustomMap } from "#types/map";
 import { ELAYERS, FIRST_POINT_COLOR, generateLayersToRender, FIRST_POINT_RADIUS } from "#utils/geo_constants";
 import type { RequiredDrawOptions } from "#types/index";
 
-let lastClickTime = 0;
 
 const firstPointCircleRadius = (map: CustomMap) => {
   map.setPaintProperty(ELAYERS.FirstPointLayer, "circle-radius", FIRST_POINT_RADIUS.large);
@@ -36,17 +35,4 @@ export const addTransparentLine = (map: CustomMap, options: RequiredDrawOptions)
   if (transparentLayer) {
     map.addLayer(transparentLayer);
   }
-};
-
-export const isDoubleClick = () => {
-  const DOUBLE_CLICK_THRESHOLD = 400;
-  const now = Date.now();
-
-  if (now - lastClickTime <= DOUBLE_CLICK_THRESHOLD) {
-    lastClickTime = now;
-    return true;
-  }
-
-  lastClickTime = now;
-  return false;
 };

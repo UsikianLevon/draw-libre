@@ -1,14 +1,20 @@
 <section >
-<h1>DrawLibre</h1>
-<img width=600 alt="GIF" src="https://i.giphy.com/media/v1.Y2lkPTc5MGI3NjExaDZscnowMHNndmtiZzcwb3Bvc2Y2b29qbHdndndndGE3Mzk5Z2Q0cSZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/m6lig0ZCfL45FZQo7b/giphy.gif" />
-</section>
+
+# Drawlibre
 
 ## Features
 
 - Draw linestrings (including closed ones) and polygons
-- Compatible with maplibre-gl.js(v3, v4, v5) and mapbox-gl.js (currently supports Mercator projection only)
+- Compatible with maplibre-gl(v2-v5) and mapbox-gl(v1-v3) and all projections
 - Customizable UI and controls
 - Event-driven architecture for easy integration
+
+### Manual Point Generation (extra points are added when a line is clicked)
+<img src="https://i.giphy.com/media/v1.Y2lkPTc5MGI3NjExaDZscnowMHNndmtiZzcwb3Bvc2Y2b29qbHdndndndGE3Mzk5Z2Q0cSZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/m6lig0ZCfL45FZQo7b/giphy.gif" width="800" alt="Manual Point Generation">
+
+### Automatic Point Generation (an auxiliary point is generated between every two primary points.)
+<img src="https://media2.giphy.com/media/v1.Y2lkPTc5MGI3NjExY2VieG1rd3ZkaWt5azVhYWpqaWEwZnVybGdjYW90d2xwNWwzeWtzayZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/6ohjkf9L1NWUESTaQA/giphy.gif" width="800" alt="Automatic Point Generation">
+</section>
 
 ## Installation
 
@@ -41,6 +47,7 @@ map.on("load", (event) => {
 
 ```javascript
 const draw = DrawLibre.getInstance({
+  pointGeneration: "manual", // or "auto"; pointGeneration controls whether additional points are automatically generated on the line or if you place them manually by clicking.
   modes: {
     initial: null, // default value; can be "line" or "polygon". Initial mode for drawing
     breakGeometry: { visible: true }, // Controls visibility of the break geometry button
@@ -81,7 +88,7 @@ const draw = DrawLibre.getInstance({
     polygon: {}, // FillLayerSpecification["paint"]
     breakLine: {}, // LineLayerSpecification["paint"]
   },
-  dynamicLine: true, // Whether to draw a dynamic line following the cursor after placing the first point
+  dynamicLine: true, // Whether to draw a dynamic line following the cursor after placing the first point. It's always false for mobile phones(when the viewport is less than 768)
   initial: {
     // Initialize with pre-existing GeoJSON data
     closeGeometry: false, // Specify if the geometry is closed. Must be true if the geometry type is polygon.
@@ -128,10 +135,13 @@ Available events:
 ```javascript
 const draw = DrawLibre.getInstance();
 
-// Find a step by its ID
+// Retrieves a step from the store by its ID. 
 draw.findStepById(id: string)
 
-// Get all steps, optionally specifying the return type
+// Retrieves a node from the store by its ID.
+draw.findNodeById(id: string)
+
+// Get all steps, optionally specifying the return type. Selecting 'linkedlist' will return a circular doubly linked list. Have fun. 
 draw.getAllSteps(type?: "array" | "linkedlist")
 
 // Set new steps. If ID is not provided, it will be generated automatically
@@ -162,4 +172,5 @@ draw.setOptions((options: RequiredDrawOptions) => {
 
 ## License
 
-This project is licensed under the [MIT License](LICENSE).
+This project is licensed under the [MIT License](https://opensource.org/licenses/MIT).
+

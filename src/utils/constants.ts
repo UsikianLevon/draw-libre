@@ -24,6 +24,7 @@ export const EVENTS = {
 export const MOBILE_WIDTH = 768;
 
 export const DEFAULT_OPTIONS: RequiredDrawOptions = {
+  pointGeneration: "manual",
   panel: {
     size: "medium",
     buttons: {
@@ -62,7 +63,7 @@ export const DEFAULT_OPTIONS: RequiredDrawOptions = {
     line: "Line",
     polygon: "Polygon",
     break: "Split",
-    closeLine: "Close line",
-    createPolygon: "Create polygon",
+    closeLine: "Close the line",
+    createPolygon: "Create a polygon",
   },
 };

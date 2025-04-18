@@ -140,7 +140,6 @@ export class ControlEvents {
     if (mode.getMode() === "polygon" && !mode.getBreak()) {
       mode.setMode(null);
       map.fire("mode:remove");
-      map.setLayoutProperty(ELAYERS.PolygonLayer, "visibility", "visible");
       tiles.resetGeometries();
     } else {
       control._polygon?.classList.add("control-button-active");

@@ -1,12 +1,11 @@
 import type { MapLayerMouseEvent, MapMouseEvent } from "maplibre-gl";
-import type { LatLng, Point, Uuid, EventsProps } from "#types/index";
+import type { LatLng, Point, Uuid, EventsProps, RequiredDrawOptions } from "#types/index";
 import type { CustomMap } from "#types/map";
 
 import type { ListNode, Store } from "#store/index";
-import { togglePointCircleRadius } from "#components/map/tiles/helpers";
 
 import type { DrawingMode } from "#components/map/mode";
-import { ELAYERS, POLYGON_BASE } from "./geo_constants";
+import { ELAYERS } from "./geo_constants";
 
 export class MapUtils {
   static isFeatureTriggered(event: MapLayerMouseEvent, layerIds: string[]) {
@@ -23,17 +22,22 @@ export class MapUtils {
 
   static queryPointId = (map: CustomMap, point: MapMouseEvent["point"]) => {
     const query = map.queryRenderedFeatures(point, {
-      layers: [ELAYERS.PointsLayer, ELAYERS.FirstPointLayer],
+      layers: [ELAYERS.PointsLayer, ELAYERS.FirstPointLayer, ELAYERS.AuxiliaryPointLayer, ELAYERS.SinglePointLayer],
     });
+
     const id = query?.[0]?.properties.id;
     return id;
+  };
+
+  static queryPoint = (map: CustomMap, point: MapMouseEvent["point"]) => {
+    const query = map.queryRenderedFeatures(point, {
+      layers: [ELAYERS.PointsLayer, ELAYERS.FirstPointLayer, ELAYERS.AuxiliaryPointLayer, ELAYERS.SinglePointLayer],
+    });
+    return query?.[0];
   };
 }
 
 export class GeometryFactory {
-
-
-
   static #collectGeometryCoordinates(store: Store): number[][] {
     const coordinates = [];
     let current = store.head;
@@ -119,7 +123,7 @@ export class GeometryFactory {
         const head = current.val.id === store.head?.val?.id;
         pointFeatures.push({
           type: "Feature",
-          properties: { id: val.id, lat: val.lat, lng: val.lng, isFirst: head },
+          properties: { id: val.id, lat: val.lat, lng: val.lng, isFirst: head, isAuxiliary: val.isAuxiliary },
           geometry: {
             type: "Point",
             coordinates: [val.lng, val.lat],
@@ -155,26 +159,23 @@ export class Spatial {
   static getGeometryIndex = (store: Store, id: Uuid) => {
     let current = store.head;
     let idx = 0;
+    const visitedNodes = new Set();
     while (current !== null) {
+      if (visitedNodes.has(current.val?.id)) {
+        break;
+      }
       if (current.val?.id === id) {
         return idx;
       }
+
+      visitedNodes.add(current.val?.id);
       idx++;
       current = current.next;
     }
     return -1;
   };
 
-  static isFirstPoint(event: MapLayerMouseEvent): boolean {
-    const map = event.target;
-    const point = event.point;
-    const points = map.queryRenderedFeatures(point, {
-      layers: [ELAYERS.FirstPointLayer],
-    });
-    return Boolean(points.length);
-  }
-
-  // √(x2​−x1​)²+(y2​−y1​)²​
+  // √(x1​−x2​)²+(y1​−y2​)²​
   static distance = (point1: Point, point2: Point) =>
     Math.sqrt((point1.x - point2.x) ** 2 + (point1.y - point2.y) ** 2);
 
@@ -192,57 +193,101 @@ export class Spatial {
     return false;
   };
 
-  static isClosedGeometry = (store: Store) => {
+  static isClosedGeometry = (store: Store, options: RequiredDrawOptions) => {
+    if (options.pointGeneration === "auto") {
+      return store.tail?.next?.val?.id === store.head?.val?.id && store.tail?.next !== null;
+    }
     return store.tail?.next === store.head;
   };
 
-  static breakGeometry = (store: Store, id: Uuid) => {
+  //  when we have 1 primary <--- 1 aux <--- 1 primary current will be an aux when 1 prim <--- 1 aux and a primary 1 aux <--- 1 prim
+  //                         [aux]     [primary]         
+  static breakGeometry = (store: Store, options: RequiredDrawOptions, current: ListNode) => {
     if (!store.head) return;
 
-    let current = store.head;
-    let prev = store.tail as ListNode; // we know that tail is not null because the geometry is closed
-
-    do {
-      if (current?.val?.id === id) {
-        if (current !== store.head) {
-          prev.next = current.next;
-          store.head = current;
-          store.tail = prev;
-        }
-        (store.tail as ListNode).next = null;
-        return;
+    if (options.pointGeneration === "auto") {
+      // if the current node is an aux, then we need to make one step back for the tail and the head is the next node from the aux point
+      if (current.val?.isAuxiliary) {
+        store.head = current.next as ListNode;
+        store.head.prev = null;
+        store.tail = current.prev as ListNode;
+        store.tail.next = null;
+      } else {
+        // else the tail is the current node and for the head we need to jump over the aux point so the next.next
+        store.head = current.next?.next as ListNode;
+        store.head.prev = null;
+        store.tail = current;
+        store.tail.next = null;
       }
-      prev = current;
-      current = current.next as ListNode;
-    } while (current !== store.head);
+      store.size = store.size - 1;
+    } else {
+      // no aux here, so the tail is the current node and the head is the next node
+      store.head = current.next as ListNode;
+      store.head.prev = null;
+      store.tail = current
+      store.tail.next = null;
+    }
+
   };
 
   static closeGeometry = (store: Store, mode: DrawingMode) => {
-    if (store.tail) {
+    if (store.tail && store.head) {
       store.tail.next = store.head;
+      store.head.prev = store.tail;
     }
     mode.setClosedGeometry(true);
   };
 
-  static canCloseGeometry = (store: Store) => {
-    return store.size > 2 && !this.isClosedGeometry(store);
+  static canCloseGeometry = (store: Store, options: RequiredDrawOptions) => {
+    const storeSize = options.pointGeneration === "auto" ? store.size > 3 : store.size > 2;
+    return storeSize && !this.isClosedGeometry(store, options);
   };
 
-  static canBreakClosedGeometry = (store: Store) => {
-    return store.size <= 2;
+  static canBreakClosedGeometry = (store: Store, options: RequiredDrawOptions) => {
+    if (options.pointGeneration === "auto") {
+      return store.size <= 3
+    }
+
+    return store.size <= 2
   };
 
-  static switchToLineModeIfCan = (context: EventsProps) => {
-    const { mode, store, tiles, map } = context;
+  static switchToLineModeIfCan = (args: EventsProps) => {
+    const { store, map, mode, options } = args;
 
-    if (Spatial.canBreakClosedGeometry(store)) {
-      if (store.tail && store.tail.val) {
-        store.tail.next = null;
+    const isCircle = store.tail?.next === store.head
+    const canBreakGeometry = Spatial.canBreakClosedGeometry(store, options)
+
+    if (canBreakGeometry && isCircle) {
+      if (options.pointGeneration === "auto") {
+        if (store.tail?.val?.isAuxiliary) {
+          if (store.head) {
+            store.head.next = store.tail;
+            store.head.prev = null;
+          }
+          if (store.tail && store.tail.prev && store.head) {
+            store.tail = store.tail.prev;
+            store.tail.prev = store.head.next;
+            store.tail.next = null;
+          }
+          if (store.head?.next) {
+            store.head.next.next = store.tail
+            store.head.next.prev = store.head
+          }
+        } else {
+          if (store.head) {
+            store.head.prev = null;
+          }
+          if (store.tail && store.head) {
+            store.tail.prev = store.head.next;
+            store.tail.next = null;
+          }
+        }
+      } else {
+        if (store.tail) {
+          store.tail.next = null;
+        }
       }
-      map.setLayoutProperty(ELAYERS.PolygonLayer, "visibility", "none");
       mode.reset();
-      togglePointCircleRadius(map, "default");
-      tiles.render();
     }
   };
 }

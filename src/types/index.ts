@@ -3,7 +3,7 @@ import type { CircleLayerSpecification, FillLayerSpecification, LineLayerSpecifi
 import type { CustomMap } from "#types/map";
 
 import type { Control } from "#components/side-control";
-import type { Panel } from "#components/last-point-panel";
+import type { Panel } from "#components/panel";
 import type { Tiles } from "#components/map/tiles";
 import type { MouseEvents } from "#components/map/mouse-events/index";
 import type { Store } from "#store/index";
@@ -26,6 +26,7 @@ export type StepId = Uuid | string;
 
 export type Step = {
   id: StepId;
+  isAuxiliary?: boolean;
 } & LatLng;
 
 export interface PanelImpl {
@@ -47,13 +48,13 @@ export type SaveButton = Button & {
 
 type InitialSteps =
   | {
-      steps: Step[];
-      generateId?: boolean;
-    }
+    steps: Step[];
+    generateId?: boolean;
+  }
   | {
-      steps: LatLng[];
-      generateId: true;
-    };
+    steps: LatLng[];
+    generateId: true;
+  };
 
 export type Initial = InitialSteps & {
   geometry: "line" | "polygon";
@@ -64,6 +65,7 @@ export interface LayersPaint {
   onLinePoint?: CircleLayerSpecification["paint"];
   firstPoint?: CircleLayerSpecification["paint"];
   points?: CircleLayerSpecification["paint"];
+  auxiliaryPoint?: CircleLayerSpecification["paint"];
   line?: LineLayerSpecification["paint"];
   polygon?: FillLayerSpecification["paint"];
   breakLine?: LineLayerSpecification["paint"];
@@ -81,6 +83,7 @@ interface Locale {
 }
 
 export interface DrawOptions {
+  pointGeneration?: "manual" | "auto"
   panel?: {
     size?: PanelImpl["size"];
     buttons?: PanelImpl["buttons"];

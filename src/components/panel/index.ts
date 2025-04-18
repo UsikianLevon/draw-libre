@@ -1,9 +1,8 @@
 import type { CustomMap } from "#types/map";
-import type { LatLng, PanelImpl, Point, RequiredDrawOptions, Step } from "#types/index";
+import type { LatLng, PanelImpl, Point, RequiredDrawOptions } from "#types/index";
 import { DOM } from "#utils/dom";
 import type { Store } from "#store/index";
 import type { DrawingMode } from "#components/map/mode";
-import type { DrawingModeChangeEvent } from "#components/map/mode/types";
 import "./panel.css";
 
 interface IProps {
@@ -28,29 +27,8 @@ export class Panel {
     this._container = undefined;
     this.#isHidden = true;
     this.#panelPopup = undefined;
-    this.#initPanel();
-    this.#initConsumers();
+    this.#init();
   }
-
-  #initConsumers() {
-    this.#props.mode?.addObserver(this.#mapModeConsumer);
-  }
-
-  #mapModeConsumer = (event: DrawingModeChangeEvent) => {
-    const { store } = this.#props;
-    const { type, data } = event;
-    if (type === "MODE_CHANGED" && !data) {
-      this.hidePanel();
-    }
-    if (type === "MODE_CHANGED" && data) {
-      if (store.tail?.val) {
-        this.setPanelLocation({
-          lat: store.tail?.val?.lat,
-          lng: store.tail?.val?.lng,
-        });
-      }
-    }
-  };
 
   #applyPanelStyles() {
     if (!this.#panelPopup) return;
@@ -62,7 +40,7 @@ export class Panel {
     this.#panelPopup.style.display = this.#isHidden ? "none" : "block";
   }
 
-  #initPanel = () => {
+  #init = () => {
     const { store } = this.#props;
 
     this.createPanel();
@@ -86,13 +64,10 @@ export class Panel {
 
   setPanelLocation = (coordinates: LatLng) => {
     if (!this.#panelPopup) return;
-
     if (this.#isHidden) {
       this.showPanel();
     }
-
     const point = this.#props.map.project(coordinates);
-
     this.#pointPositionUpdate(point);
     this.#updatePanelPositionOnMapMove(coordinates);
   };
@@ -148,14 +123,6 @@ export class Panel {
     }
   };
 
-  onPointRemove = (head: Step) => {
-    if (head) {
-      this.setPanelLocation(head);
-    } else {
-      this.hidePanel();
-    }
-  };
-
   removePanel = () => {
     if (this._updatePositionCallback) {
       this.#props.map.off("move", this._updatePositionCallback);
@@ -174,7 +141,7 @@ export class Panel {
     }
   };
 
-  createButton = (type: "undo" | "save" | "delete", title: string, size: PanelImpl["size"], container: HTMLElement) => {
+  #createButton = (type: "undo" | "save" | "delete", title: string, size: PanelImpl["size"], container: HTMLElement) => {
     const button = DOM.create("button", `panel-button panel-button-${size}`, container);
     button.setAttribute("data-type", type);
     button.setAttribute("aria-label", title);
@@ -191,13 +158,13 @@ export class Panel {
     const container = DOM.create("div", "dashboard");
 
     if (undo.visible) {
-      this._undoButton = this.createButton("undo", locale.undo, panelSize, container);
+      this._undoButton = this.#createButton("undo", locale.undo, panelSize, container);
     }
     if (deleteButton.visible) {
-      this._deleteButton = this.createButton("delete", locale.delete, panelSize, container);
+      this._deleteButton = this.#createButton("delete", locale.delete, panelSize, container);
     }
     if (save.visible) {
-      this._saveButton = this.createButton("save", locale.save, panelSize, container);
+      this._saveButton = this.#createButton("save", locale.save, panelSize, container);
     }
     this._container = container;
   };

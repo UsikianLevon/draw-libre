@@ -1,25 +1,59 @@
-import type { MapLayerMouseEvent } from "maplibre-gl";
 import type { EventsProps } from "#types/index";
+import type { MapLayerMouseEvent } from "maplibre-gl";
 
-import { uuidv4, Spatial } from "#utils/helpers";
+import { uuidv4, Spatial, debounce } from "#utils/helpers";
 import { ELAYERS } from "#utils/geo_constants";
 import { Tooltip } from "#components/tooltip";
 import { togglePointCircleRadius } from "#components/map/tiles/helpers";
 
 import { FireEvents } from "../helpers";
 import type { DrawingModeChangeEvent } from "../mode/types";
+import { PointHelpers, PointsFilter, PointVisibility } from "./helpers";
+import type { PrimaryPointEvents } from ".";
+import type { StoreChangeEvent } from "#store/types";
 
 export class FirstPoint {
   #mouseDown: boolean;
   #props: EventsProps;
   #tooltip: Tooltip;
+  #events: PrimaryPointEvents;
 
-  constructor(props: EventsProps) {
+  constructor(props: EventsProps, baseEvents: PrimaryPointEvents) {
     this.#props = props;
     this.#mouseDown = false;
+    this.#events = baseEvents;
     this.#tooltip = new Tooltip();
-    props.mode.addObserver(this.#mapModeConsumer);
+
+    this.initLayer()
   }
+
+  #initConsumers = () => {
+    const { mode, store } = this.#props;
+    mode.addObserver(this.#mapModeConsumer);
+    store.addObserver(this.#storeConsumer);
+  }
+
+  #removeConsumers = () => {
+    const { mode, store } = this.#props;
+    mode.removeObserver(this.#mapModeConsumer);
+    store.removeObserver(this.#storeConsumer);
+  };
+
+  initLayer() {
+    const { map } = this.#props;
+    map.setLayoutProperty(ELAYERS.FirstPointLayer, "visibility", "visible");
+  }
+
+  #initBaseEvents = () => {
+    const { map } = this.#props;
+
+    map.on("mouseenter", ELAYERS.FirstPointLayer, this.#events.onPointMouseEnter);
+    map.on("mouseleave", ELAYERS.FirstPointLayer, this.#events.onPointMouseLeave);
+    map.on("mousedown", ELAYERS.FirstPointLayer, this.#events.onPointMouseDown);
+    map.on("mouseup", ELAYERS.FirstPointLayer, this.#events.onPointMouseUp);
+    map.on("touchend", ELAYERS.FirstPointLayer, this.#events.onPointMouseUp);
+    map.on("touchstart", ELAYERS.FirstPointLayer, this.#events.onPointMouseDown);
+  };
 
   initEvents() {
     const { map } = this.#props;
@@ -29,7 +63,20 @@ export class FirstPoint {
     map.on("mouseleave", ELAYERS.FirstPointLayer, this.#onFirstPointMouseLeave);
     map.on("mouseup", ELAYERS.FirstPointLayer, this.#onFirstPointMouseUp);
     map.on("mousedown", ELAYERS.FirstPointLayer, this.#onFirstPointMouseDown);
+    this.#initBaseEvents();
+    this.#initConsumers();
   }
+
+  #removeBaseEvents = () => {
+    const { map } = this.#props;
+
+    map.off("mouseenter", ELAYERS.FirstPointLayer, this.#events.onPointMouseEnter);
+    map.off("mouseleave", ELAYERS.FirstPointLayer, this.#events.onPointMouseLeave);
+    map.off("mousedown", ELAYERS.FirstPointLayer, this.#events.onPointMouseDown);
+    map.off("mouseup", ELAYERS.FirstPointLayer, this.#events.onPointMouseUp);
+    map.off("touchend", ELAYERS.FirstPointLayer, this.#events.onPointMouseUp);
+    map.off("touchstart", ELAYERS.FirstPointLayer, this.#events.onPointMouseDown);
+  };
 
   removeEvents() {
     const { map } = this.#props;
@@ -38,39 +85,52 @@ export class FirstPoint {
     map.off("mouseenter", ELAYERS.FirstPointLayer, this.#onFirstPointMouseEnter);
     map.off("mouseleave", ELAYERS.FirstPointLayer, this.#onFirstPointMouseLeave);
     map.off("mouseup", ELAYERS.FirstPointLayer, this.#onFirstPointMouseUp);
+    this.#removeBaseEvents();
+    this.#removeConsumers();
   }
 
   #mapModeConsumer = (event: DrawingModeChangeEvent) => {
-    const { map, store } = this.#props;
+    const { map, options } = this.#props;
     const { type, data } = event;
 
     if (type === "MODE_CHANGED") {
-      if (data === "line" || data === "polygon") {
-        map.on("click", ELAYERS.FirstPointLayer, this.#onFirstPointClick);
+      if (data === "line" && !options.modes.line.closeGeometry) {
+        PointVisibility.setFirstPointHidden(map);
+        PointsFilter.closedGeometry(map)
       } else {
-        map.off("click", ELAYERS.FirstPointLayer, this.#onFirstPointClick);
-      }
-      if (Spatial.canCloseGeometry(store)) {
-        togglePointCircleRadius(map, "large");
+        PointVisibility.setFirstPointVisible(map);
+        PointsFilter.default(map)
       }
     }
   };
 
-  #onFirstPointClick = () => {
-    const { store, map, mode, tiles } = this.#props;
+  #storeConsumer = debounce((event: StoreChangeEvent) => {
+    const { map, store, options } = this.#props;
 
-    if (mode.getMode() === "polygon") {
-      map.setLayoutProperty(ELAYERS.PolygonLayer, "visibility", "visible");
+    const { type } = event;
+    if (type === "STORE_MUTATED" || type === "STORE_DETACHED") {
+      if (Spatial.canCloseGeometry(store, options)) {
+        togglePointCircleRadius(map, "large");
+      } else {
+        togglePointCircleRadius(map, "default");
+      }
     }
+  }, 10)
 
-    if (Spatial.canCloseGeometry(store)) {
-      Spatial.closeGeometry(store, mode);
+  #onFirstPointClick = () => {
+    const { store, map, mode, tiles, options } = this.#props;
+
+    if (Spatial.canCloseGeometry(store, options)) {
       const step = Object.assign({}, store.head?.val, {
         id: uuidv4(),
         total: store.size,
       });
+      if (options.pointGeneration === "auto" && store.tail?.val) {
+        const auxPoint = PointHelpers.createAuxiliaryPoint(store.tail?.val, step);
+        store.push(auxPoint);
+      }
+      Spatial.closeGeometry(store, mode);
       FireEvents.addPoint(step, map, mode);
-      togglePointCircleRadius(map, "default");
       tiles.render();
     }
   };
@@ -108,10 +168,10 @@ export class FirstPoint {
   };
 
   #onFirstPointMouseEnter = (event: MapLayerMouseEvent) => {
-    const { mode, mouseEvents, store } = this.#props;
-    if (mode.getClosedGeometry() || this.#mouseDown) return;
+    const { mode, mouseEvents, store, options } = this.#props;
     mouseEvents.firstPointMouseEnter = true;
-    if (Spatial.canCloseGeometry(store)) {
+    if (mode.getClosedGeometry() || this.#mouseDown) return;
+    if (Spatial.canCloseGeometry(store, options)) {
       const { x, y } = event.originalEvent;
       if (x && y) {
         const Y_OFFSET = 14;

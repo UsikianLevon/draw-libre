@@ -5,7 +5,7 @@ import type { CustomMap } from "#types/map";
 import type { Store } from "#store/index";
 import { ELAYERS } from "#utils/geo_constants";
 import { MapUtils, Spatial, uuidv4 } from "#utils/helpers";
-import { PointHelpers } from "../points/helpers";
+import { PointVisibility } from "../points/helpers";
 
 export const isOnLine = (event: MapLayerMouseEvent, store: Store) => {
   let current = store.head;
@@ -32,7 +32,7 @@ export const insertStepIfOnLine = (event: MapLayerMouseEvent, store: Store): Ste
   const currentStep = isOnLine(event, store);
 
   if (currentStep) {
-    const step = { ...event.lngLat, id: uuidv4() };
+    const step = { ...event.lngLat, isAuxiliary: false, id: uuidv4() };
     store.insert(step, currentStep);
     return step;
   }
@@ -40,14 +40,13 @@ export const insertStepIfOnLine = (event: MapLayerMouseEvent, store: Store): Ste
 };
 
 export const updateUIAfterInsert = (event: MapLayerMouseEvent, context: EventsProps) => {
-  const { store, tiles, panel } = context;
+  const { store, tiles } = context;
   if (store.tail?.val) {
-    panel?.setPanelLocation(store.tail.val);
-    PointHelpers.setSinglePointHidden(event);
+    PointVisibility.setSinglePointHidden(event);
     tiles.render();
   }
 };
 
 export const checkIfPointClicked = (event: MapLayerMouseEvent) => {
-  return MapUtils.isFeatureTriggered(event, [ELAYERS.PointsLayer, ELAYERS.FirstPointLayer]);
+  return MapUtils.isFeatureTriggered(event, [ELAYERS.PointsLayer, ELAYERS.FirstPointLayer, ELAYERS.AuxiliaryPointLayer]);
 };

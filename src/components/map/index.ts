@@ -1,7 +1,7 @@
 import type { EventsProps } from "#types/index";
 import { Tiles } from "#components/map/tiles";
 import { ControlEvents } from "#components/side-control/events";
-import { PanelEvents } from "#components/last-point-panel/events";
+import { PanelEvents } from "#components/panel/events";
 import { LineEvents } from "./line";
 import { PointEvents } from "./points";
 
@@ -26,11 +26,13 @@ export class Events extends Tiles {
   #initEvents = () => {
     this.#lineEvents.init();
     this.#panelEvents?.initEvents();
+    this.#panelEvents?.initConsumers();
     this.#pointEvents?.initEvents();
   };
 
   #removeDrawEvents = () => {
     this.#panelEvents?.removeEvents();
+    this.#panelEvents?.removeConsumers();
     this.#pointEvents?.removeEvents();
     this.#lineEvents?.remove();
   };

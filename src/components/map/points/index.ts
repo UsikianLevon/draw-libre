@@ -182,6 +182,7 @@ export class PointEvents {
   #onMoveLeftClickUp = (event: MapLayerMouseEvent) => {
     const mouseLeftClickUp = event.originalEvent.buttons === 0;
     if (mouseLeftClickUp) {
+      const { map } = this.#props;
       this.#onPointMouseUp();
     }
   };
@@ -203,17 +204,18 @@ export class PointEvents {
   }
 
   #onMapMouseMove = throttle((event: MapLayerMouseEvent) => {
-    if (!this.#isThrottled) {
+    const { mouseEvents } = this.#props;
+
+    if (mouseEvents.pointMouseDown) {
       this.#lastEvent = event;
-      this.#isThrottled = true;
 
       requestAnimationFrame(() => {
         if (!this.#selectedNode || !this.#lastEvent) return;
+
         const { tiles } = this.#props;
         this.#onMoveLeftClickUp(this.#lastEvent);
         const auxPoints = this.#getAuxPointsLatLng(this.#lastEvent);
         tiles.renderOnMouseMove(this.#selectedIdx as number, event.lngLat, auxPoints);
-        this.#isThrottled = false;
       });
     }
   }, 17);
@@ -303,6 +305,7 @@ export class PointEvents {
   };
 
   #onPointMouseDown = (event: MapLayerMouseEvent | MapTouchEvent) => {
+    this.#lastEvent = null;
     const { mouseEvents, map, store } = this.#props;
     if ((event.originalEvent as { button: number }).button === 2) {
       this.#onPointRemove(event);
@@ -327,6 +330,7 @@ export class PointEvents {
 
   // we've got the reference to the selected node from the store and just updating the lat/lng when mouse up event happens
   #updateStore = () => {
+
     if (!this.#lastEvent) return;
 
     if (this.#selectedNode && this.#selectedNode.val) {
@@ -349,10 +353,16 @@ export class PointEvents {
 
   #onPointMouseUp = () => {
     const { mouseEvents, store, panel, map, options } = this.#props;
+    // if the event.originalEvent.buttons === 0 in mousemove didn't work, let's try on mouse up
+    // but this is a fail safe, it should work on event.originalEvent.buttons
+    map.off("mousemove", this.#onMapMouseMove);
+    map.off("touchmove", this.#onMapMouseMove);
+
     mouseEvents.pointMouseUp = true;
     if (this.#selectedNode && this.#selectedNode.val) {
       if (this.#lastEvent) {
         this.#updateStore();
+        this.#lastEvent = null;
       }
       store.notify({
         type: "STORE_MUTATED",
@@ -369,14 +379,14 @@ export class PointEvents {
         },
         map,
       );
+      this.#selectedIdx = null;
+      this.#selectedNode = null;
     }
     if (mouseEvents) {
       mouseEvents.pointMouseDown = false;
     }
+
     addTransparentLine(map, options);
-    // if the event.originalEvent.buttons === 0 in mousemove didn't work, let's try on mouse up
-    // but this is a fail safe, it should work on event.originalEvent.buttons
-    map.off("mousemove", this.#onMapMouseMove);
-    map.off("touchmove", this.#onMapMouseMove);
+
   };
 }

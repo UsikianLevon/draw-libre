@@ -144,6 +144,7 @@ export class MouseEvents extends Observable<MouseEventsChangeEvent> {
   get lineMouseEnter() {
     return this.#lineMouseEnter;
   }
+
   set lineMouseEnter(value) {
     this.#lineMouseEnter = value;
     this.notify({
@@ -155,6 +156,7 @@ export class MouseEvents extends Observable<MouseEventsChangeEvent> {
   get lineMouseLeave() {
     return this.#lineMouseLeave;
   }
+
   set lineMouseLeave(value) {
     this.#lineMouseLeave = value;
     this.notify({

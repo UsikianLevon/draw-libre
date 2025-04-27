@@ -8,7 +8,7 @@ import { EVENTS } from "#utils/constants";
 
 import type { DrawingModeChangeEvent } from "../mode/types";
 import type { MouseEventsChangeEvent } from "../mouse-events/types";
-import type { PointDoubleClickEvent, UndoEvent } from "../types";
+import type { PointRightClickRemoveEvent, UndoEvent } from "../types";
 
 const LINE_DYNAMIC_THROTTLE_TIME = 10;
 
@@ -109,7 +109,7 @@ export class DynamicLineEvents {
     map.on("mousemove", this.#throttledOnLineMove);
     map.on(EVENTS.REMOVEALL, this.hideDynamicLine);
     map.on(EVENTS.UNDO, this.#onUndoClick);
-    map.on(EVENTS.DOUBLECLICK, this.#onDoubleClick);
+    map.on(EVENTS.RIGHTCLICKREMOVE, this.#onRightClickRemove);
   };
 
   removeEvents = () => {
@@ -119,7 +119,7 @@ export class DynamicLineEvents {
     map.off("mousemove", this.#throttledOnLineMove);
     map.off(EVENTS.REMOVEALL, this.hideDynamicLine);
     map.off(EVENTS.UNDO, this.#onUndoClick);
-    map.off(EVENTS.DOUBLECLICK, this.#onDoubleClick);
+    map.off(EVENTS.RIGHTCLICKREMOVE, this.#onRightClickRemove);
   };
 
   hideDynamicLine = () => {
@@ -139,9 +139,9 @@ export class DynamicLineEvents {
 
   showDynamicLine = () => {
     const { map, store } = this.#props;
-    if (store.size) {
-      const current = [this.#firstPoint?.lng, this.#firstPoint?.lat] as [number, number];
-      const next = [this.#secondPoint?.lng, this.#secondPoint?.lat] as [number, number];
+    if (store.size && this.#firstPoint?.lat && this.#firstPoint.lng && this.#secondPoint?.lng && this.#secondPoint?.lat) {
+      const current = [this.#firstPoint.lng, this.#firstPoint.lat] as [number, number];
+      const next = [this.#secondPoint.lng, this.#secondPoint.lat] as [number, number];
 
       this.#lineFeature = GeometryFactory.getLine(current, next);
 
@@ -192,7 +192,7 @@ export class DynamicLineEvents {
     }
   };
 
-  #onDoubleClick = (event: PointDoubleClickEvent) => {
+  #onRightClickRemove = (event: PointRightClickRemoveEvent) => {
     const { store, mode, options } = this.#props;
     if (!mode.getClosedGeometry()) {
       this.#secondPoint = { lng: event.coordinates.lng, lat: event.coordinates.lat };

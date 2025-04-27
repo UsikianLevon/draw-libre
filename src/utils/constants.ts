@@ -9,7 +9,7 @@ import {
 } from "./geo_constants";
 
 export const EVENTS = {
-  DOUBLECLICK: "mdl:doubleclick",
+  RIGHTCLICKREMOVE: "mdl:rightclickremove",
   POINTENTER: "mdl:pointenter",
   POINTLEAVE: "mdl:pointleave",
   MOVEEND: "mdl:moveend",

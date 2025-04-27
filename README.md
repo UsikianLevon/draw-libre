@@ -120,7 +120,7 @@ map.on(mdl:add, (event: PointAddEvent) => {
 
 Available events:
 
-- `mdl:doubleclick` (PointDoubleClickEvent) -- Fired when a point is double-clicked
+- `mdl:rightclickremove` (PointRightClickRemoveEvent) -- Fired when a point is removed by right-clicking on it.
 - `mdl:pointenter` (PointEnterEvent) -- Fired when the cursor enters a point
 - `mdl:pointleave` (PointLeaveEvent) -- Fired when the cursor leaves a point
 - `mdl:moveend` (PointMoveEvent) -- Fired when a point is moved

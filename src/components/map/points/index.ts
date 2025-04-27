@@ -94,7 +94,7 @@ export class PointEvents {
   };
 
   #onPointRemove = (event: MapLayerMouseEvent | MapTouchEvent) => {
-    const { store, tiles, options, mouseEvents } = this.props;
+    const { store, tiles } = this.props;
     if (store.size === 1) {
       store.reset();
     } else {
@@ -108,11 +108,6 @@ export class PointEvents {
       if (isPrimaryNode) {
         FireEvents.pointRemoveRightClick({ ...clickedNode?.val as Step, total: store.size }, this.props.map);
         Spatial.switchToLineModeIfCan(this.props);
-        if (StoreHelpers.isLastPoint(store, options, id)) {
-          mouseEvents.lastPointMouseClick = true;
-          mouseEvents.lastPointMouseUp = false;
-        }
-
       }
     }
     tiles.render();
@@ -244,9 +239,11 @@ export class PointEvents {
   };
 
   #onPointMouseDown = (event: MapLayerMouseEvent | MapTouchEvent) => {
+    event.preventDefault();
+
     this.pointState.clearLastEvent();
 
-    const { mouseEvents, map, store } = this.props;
+    const { mouseEvents, map, store, options } = this.props;
 
     if ((event.originalEvent as { button: number }).button === 2) {
       this.#onPointRemove(event);
@@ -254,7 +251,6 @@ export class PointEvents {
     }
 
     this.#setSelectedNode(event);
-    event.preventDefault();
 
     removeTransparentLine(map);
     this.#hideLastPointPanel();
@@ -265,6 +261,12 @@ export class PointEvents {
 
     if (mouseEvents) {
       mouseEvents.pointMouseDown = true;
+      const id = MapUtils.queryPointId(this.props.map, event.point);
+
+      if (StoreHelpers.isLastPoint(store, options, id)) {
+        mouseEvents.lastPointMouseClick = true;
+        mouseEvents.lastPointMouseUp = false;
+      }
     }
 
     this.pointState.setStartCoordinates(event.lngLat);

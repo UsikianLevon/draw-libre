@@ -99,14 +99,15 @@ export class PointEvents {
       store.reset();
     } else {
       const id = MapUtils.queryPointId(this.props.map, event.point);
+      const clickedNode = store.findNodeById(id);
+
       this.topologyManager.removePointFromStore(id);
 
-      const clickedNode = store.findNodeById(id);
       const isPrimaryNode = !clickedNode?.val?.isAuxiliary;
 
       if (isPrimaryNode) {
-        Spatial.switchToLineModeIfCan(this.props);
         FireEvents.pointRemoveRightClick({ ...clickedNode?.val as Step, total: store.size }, this.props.map);
+        Spatial.switchToLineModeIfCan(this.props);
         if (StoreHelpers.isLastPoint(store, options, id)) {
           mouseEvents.lastPointMouseClick = true;
           mouseEvents.lastPointMouseUp = false;

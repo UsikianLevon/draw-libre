@@ -74,6 +74,8 @@ export class DynamicLineEvents {
     const { store, options } = this.#props;
     if (data?.tail?.val && !Spatial.isClosedGeometry(store, options)) {
       this.#firstPoint = store.tail?.val as Step;
+      console.log("showing dynamic line");
+
       this.showDynamicLine();
     }
   }
@@ -82,6 +84,8 @@ export class DynamicLineEvents {
     if (event.type === "STORE_MUTATED") {
       this.#debouncedDynamicLine(event.data);
       if (!event.data.size) {
+        console.log("removing dynamic line !event.data.size");
+
         this.hideDynamicLine();
       }
     }
@@ -139,6 +143,7 @@ export class DynamicLineEvents {
 
   showDynamicLine = () => {
     const { map, store } = this.#props;
+
     if (store.size && this.#firstPoint?.lat && this.#firstPoint.lng && this.#secondPoint?.lng && this.#secondPoint?.lat) {
       const current = [this.#firstPoint.lng, this.#firstPoint.lat] as [number, number];
       const next = [this.#secondPoint.lng, this.#secondPoint.lat] as [number, number];
@@ -193,8 +198,10 @@ export class DynamicLineEvents {
   };
 
   #onRightClickRemove = (event: PointRightClickRemoveEvent) => {
-    const { store, mode, options } = this.#props;
+    const { store, mode } = this.#props;
     if (!mode.getClosedGeometry()) {
+      console.log("right click remove event", event);
+
       this.#secondPoint = { lng: event.coordinates.lng, lat: event.coordinates.lat };
       this.#firstPoint = store.tail?.val as LatLng;
       this.showDynamicLine();

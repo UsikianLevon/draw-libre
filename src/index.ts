@@ -16,7 +16,7 @@ import { Options } from "#utils/options";
 import type {
   UndoEvent,
   PointAddEvent,
-  PointDoubleClickEvent,
+  PointRightClickRemoveEvent,
   PointEnterEvent,
   PointLeaveEvent,
   PointMoveEvent,
@@ -212,7 +212,7 @@ export default class DrawLibre implements IControl {
 export type {
   RequiredDrawOptions,
   PointAddEvent,
-  PointDoubleClickEvent,
+  PointRightClickRemoveEvent,
   PointEnterEvent,
   PointLeaveEvent,
   PointMoveEvent,

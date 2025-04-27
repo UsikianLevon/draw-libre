@@ -25,6 +25,7 @@ export class FirstPoint {
     this.#tooltip = new Tooltip();
 
     this.initLayer()
+    this.#initEvents()
   }
 
   #initConsumers = () => {
@@ -55,7 +56,7 @@ export class FirstPoint {
     map.on("touchstart", ELAYERS.FirstPointLayer, this.#events.onPointMouseDown);
   };
 
-  initEvents() {
+  #initEvents() {
     const { map } = this.#props;
 
     map.on("click", ELAYERS.FirstPointLayer, this.#onFirstPointClick);

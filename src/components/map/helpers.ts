@@ -35,8 +35,8 @@ export class FireEvents {
       timestamp: Date.now(),
     });
   }
-  static pointDoubleClick(step: Step & { total: number }, map: CustomMap) {
-    map.fire(EVENTS.DOUBLECLICK, {
+  static pointRemoveRightClick(step: Step & { total: number }, map: CustomMap) {
+    map.fire(EVENTS.RIGHTCLICKREMOVE, {
       id: step.id,
       coordinates: {
         lat: step.lat,

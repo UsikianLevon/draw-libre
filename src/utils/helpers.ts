@@ -141,7 +141,9 @@ export class GeometryFactory {
   }
 
   // CAUTION: render is dependent on this function
-  static getUnifiedFeatures(store: Store): GeoJSON.FeatureCollection<GeoJSON.LineString | GeoJSON.Polygon | GeoJSON.Point> {
+  static getUnifiedFeatures(
+    store: Store,
+  ): GeoJSON.FeatureCollection<GeoJSON.LineString | GeoJSON.Polygon | GeoJSON.Point> {
     const points = this.getPoints(store).features;
     const coordinates = this.#collectGeometryCoordinates(store);
 
@@ -201,7 +203,7 @@ export class Spatial {
   };
 
   //  when we have 1 primary <--- 1 aux <--- 1 primary current will be an aux when 1 prim <--- 1 aux and a primary 1 aux <--- 1 prim
-  //                         [aux]     [primary]         
+  //                         [aux]     [primary]
   static breakGeometry = (store: Store, options: RequiredDrawOptions, current: ListNode) => {
     if (!store.head) return;
 
@@ -224,10 +226,9 @@ export class Spatial {
       // no aux here, so the tail is the current node and the head is the next node
       store.head = current.next as ListNode;
       store.head.prev = null;
-      store.tail = current
+      store.tail = current;
       store.tail.next = null;
     }
-
   };
 
   static closeGeometry = (store: Store, mode: DrawingMode) => {
@@ -245,17 +246,17 @@ export class Spatial {
 
   static canBreakClosedGeometry = (store: Store, options: RequiredDrawOptions) => {
     if (options.pointGeneration === "auto") {
-      return store.size <= 3
+      return store.size <= 3;
     }
 
-    return store.size <= 2
+    return store.size <= 2;
   };
 
   static switchToLineModeIfCan = (args: EventsProps) => {
     const { store, map, mode, options } = args;
 
-    const isCircle = store.tail?.next === store.head
-    const canBreakGeometry = Spatial.canBreakClosedGeometry(store, options)
+    const isCircle = store.tail?.next === store.head;
+    const canBreakGeometry = Spatial.canBreakClosedGeometry(store, options);
 
     if (canBreakGeometry && isCircle) {
       if (options.pointGeneration === "auto") {
@@ -270,8 +271,8 @@ export class Spatial {
             store.tail.next = null;
           }
           if (store.head?.next) {
-            store.head.next.next = store.tail
-            store.head.next.prev = store.head
+            store.head.next.next = store.tail;
+            store.head.next.prev = store.head;
           }
         } else {
           if (store.head) {

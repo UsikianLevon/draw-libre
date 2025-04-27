@@ -3,7 +3,6 @@ import type { CustomMap } from "#types/map";
 import { ELAYERS, FIRST_POINT_COLOR, generateLayersToRender, FIRST_POINT_RADIUS } from "#utils/geo_constants";
 import type { RequiredDrawOptions } from "#types/index";
 
-
 const firstPointCircleRadius = (map: CustomMap) => {
   map.setPaintProperty(ELAYERS.FirstPointLayer, "circle-radius", FIRST_POINT_RADIUS.large);
   map.setPaintProperty(ELAYERS.FirstPointLayer, "circle-stroke-color", FIRST_POINT_COLOR.large);

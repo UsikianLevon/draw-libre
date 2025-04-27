@@ -181,12 +181,7 @@ export const generateLayersToRender = (options: RequiredDrawOptions) => {
       source: ESOURCES.UnifiedSource,
       type: "circle",
       paint: options.layersPaint.points,
-      filter: [
-        "all",
-        ["==", "$type", "Point"],
-        ["==", "isFirst", false],
-        ["==", "isAuxiliary", false]
-      ]
+      filter: ["all", ["==", "$type", "Point"], ["==", "isFirst", false], ["==", "isAuxiliary", false]],
     },
     {
       id: ELAYERS.FirstPointLayer,

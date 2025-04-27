@@ -141,7 +141,12 @@ export class Panel {
     }
   };
 
-  #createButton = (type: "undo" | "save" | "delete", title: string, size: PanelImpl["size"], container: HTMLElement) => {
+  #createButton = (
+    type: "undo" | "save" | "delete",
+    title: string,
+    size: PanelImpl["size"],
+    container: HTMLElement,
+  ) => {
     const button = DOM.create("button", `panel-button panel-button-${size}`, container);
     button.setAttribute("data-type", type);
     button.setAttribute("aria-label", title);

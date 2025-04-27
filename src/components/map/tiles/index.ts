@@ -41,13 +41,13 @@ export class Tiles {
 
   #initConsumers = () => {
     const { store } = this.#props;
-    store.addObserver(this.#polygonVisibility)
-  }
+    store.addObserver(this.#polygonVisibility);
+  };
 
   #removeConsumers = () => {
     const { store } = this.#props;
-    store.removeObserver(this.#polygonVisibility)
-  }
+    store.removeObserver(this.#polygonVisibility);
+  };
 
   #polygonVisibility = debounce((event: StoreChangeEvent) => {
     if (event.type === "STORE_MUTATED" || event.type === "STORE_DETACHED") {
@@ -59,7 +59,7 @@ export class Tiles {
         map.setLayoutProperty(ELAYERS.PolygonLayer, "visibility", "none");
       }
     }
-  }, 10)
+  }, 10);
 
   #addSources = () => {
     const { map } = this.#props;
@@ -124,7 +124,7 @@ export class Tiles {
     // first remove the layers then all the sources
     this.#removeLayers();
     this.#removeSources();
-    this.#removeConsumers()
+    this.#removeConsumers();
   };
 
   private updateLine(featureIdx: number, newCoord: LatLng) {
@@ -161,9 +161,13 @@ export class Tiles {
     }
   }
 
-  renderOnMouseMove = (featureIdx: number, newCoord: LatLng, aux: { next: LatLng | null, prev: LatLng | null } | null) => {
+  renderOnMouseMove = (
+    featureIdx: number,
+    newCoord: LatLng,
+    aux: { next: LatLng | null; prev: LatLng | null } | null,
+  ) => {
     const { mode, options, store } = this.#props;
-    // if the selected index is the first one then the prev index is the store.size - 1 
+    // if the selected index is the first one then the prev index is the store.size - 1
     const prevIdx = featureIdx === 0 ? store.size - 1 : featureIdx - 1;
 
     this.updatePoint(featureIdx, newCoord);
@@ -198,10 +202,10 @@ export class Tiles {
     if (unifiedSource) {
       unifiedSource.setData(this.#unifiedGeoJSON);
     }
-  }
+  };
 
   render() {
-    this.#unifiedGeoJSON = GeometryFactory.getUnifiedFeatures(this.#props.store)
+    this.#unifiedGeoJSON = GeometryFactory.getUnifiedFeatures(this.#props.store);
     const unifiedSource = this.#props.map.getSource(ESOURCES.UnifiedSource) as GeoJSONSource;
 
     if (unifiedSource) {

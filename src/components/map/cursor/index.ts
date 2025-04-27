@@ -47,7 +47,7 @@ export class Cursor {
     } else {
       this.set(CURSORS.CROSSHAIR);
     }
-  }, 10)
+  }, 10);
 
   handleFirstPointMouseEnter = debounce(() => {
     const { store, options } = this.#props;
@@ -55,7 +55,7 @@ export class Cursor {
     if (Spatial.canCloseGeometry(store, options)) {
       this.set(CURSORS.POINTER);
     }
-  }, 10)
+  }, 10);
 
   #initConsumers() {
     const { mouseEvents } = this.#props;

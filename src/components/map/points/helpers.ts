@@ -10,14 +10,14 @@ export const PointHelpers = {
   getMidpoint(p1: { lat: number; lng: number }, p2: { lat: number; lng: number }) {
     return {
       lat: (p1.lat + p2.lat) / 2,
-      lng: (p1.lng + p2.lng) / 2
+      lng: (p1.lng + p2.lng) / 2,
     };
   },
 
   createAuxiliaryPoint(p1: Step, p2: Step) {
     const mid = PointHelpers.getMidpoint(p1, p2);
-    const step = { lat: mid.lat, lng: mid.lng, isAuxiliary: true, id: uuidv4(), };
-    return step
+    const step = { lat: mid.lat, lng: mid.lng, isAuxiliary: true, id: uuidv4() };
+    return step;
   },
 
   addPointToMap(event: MapLayerMouseEvent, props: EventsProps) {
@@ -49,7 +49,7 @@ export const PointVisibility = {
       map.setLayoutProperty(ELAYERS.SinglePointLayer, "visibility", "none");
     }, 33);
   },
-}
+};
 
 export const PointsFilter = {
   default(map: CustomMap) {
@@ -57,14 +57,10 @@ export const PointsFilter = {
       "all",
       ["==", "$type", "Point"],
       ["==", "isFirst", false],
-      ["==", "isAuxiliary", false]
-    ])
+      ["==", "isAuxiliary", false],
+    ]);
   },
   closedGeometry(map: CustomMap) {
-    map.setFilter(ELAYERS.PointsLayer, [
-      "all",
-      ["==", "$type", "Point"],
-      ["==", "isAuxiliary", false]
-    ])
-  }
-}
+    map.setFilter(ELAYERS.PointsLayer, ["all", ["==", "$type", "Point"], ["==", "isAuxiliary", false]]);
+  },
+};

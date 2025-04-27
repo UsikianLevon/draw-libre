@@ -66,8 +66,8 @@ export class LineBreakEvents {
     tiles.render();
     store.notify({
       type: "STORE_DETACHED",
-      data: null
-    })
+      data: null,
+    });
     FireEvents.onLineBreak(map);
   };
 
@@ -83,7 +83,7 @@ export class LineBreakEvents {
       next = [line?.next?.next?.val?.lng, line?.next?.next?.val?.lat] as [number, number];
     }
     return { current, next };
-  }
+  };
 
   #getLinePoints = (line: ListNode | null) => {
     const { options } = this.props;
@@ -94,7 +94,7 @@ export class LineBreakEvents {
     }
 
     return this.#getAutoGenerationPoints(line);
-  }
+  };
 
   #onLineEnterBreak = (event: MapLayerMouseEvent) => {
     const { map, store } = this.props;

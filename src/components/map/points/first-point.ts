@@ -24,15 +24,15 @@ export class FirstPoint {
     this.#events = baseEvents;
     this.#tooltip = new Tooltip();
 
-    this.initLayer()
-    this.#initEvents()
+    this.initLayer();
+    this.#initEvents();
   }
 
   #initConsumers = () => {
     const { mode, store } = this.#props;
     mode.addObserver(this.#mapModeConsumer);
     store.addObserver(this.#storeConsumer);
-  }
+  };
 
   #removeConsumers = () => {
     const { mode, store } = this.#props;
@@ -97,10 +97,10 @@ export class FirstPoint {
     if (type === "MODE_CHANGED") {
       if (data === "line" && !options.modes.line.closeGeometry) {
         PointVisibility.setFirstPointHidden(map);
-        PointsFilter.closedGeometry(map)
+        PointsFilter.closedGeometry(map);
       } else {
         PointVisibility.setFirstPointVisible(map);
-        PointsFilter.default(map)
+        PointsFilter.default(map);
       }
     }
   };
@@ -116,7 +116,7 @@ export class FirstPoint {
         togglePointCircleRadius(map, "default");
       }
     }
-  }, 10)
+  }, 10);
 
   #onFirstPointClick = () => {
     const { store, map, mode, tiles, options } = this.#props;

@@ -48,13 +48,13 @@ export type SaveButton = Button & {
 
 type InitialSteps =
   | {
-    steps: Step[];
-    generateId?: boolean;
-  }
+      steps: Step[];
+      generateId?: boolean;
+    }
   | {
-    steps: LatLng[];
-    generateId: true;
-  };
+      steps: LatLng[];
+      generateId: true;
+    };
 
 export type Initial = InitialSteps & {
   geometry: "line" | "polygon";
@@ -83,7 +83,7 @@ interface Locale {
 }
 
 export interface DrawOptions {
-  pointGeneration?: "manual" | "auto"
+  pointGeneration?: "manual" | "auto";
   panel?: {
     size?: PanelImpl["size"];
     buttons?: PanelImpl["buttons"];

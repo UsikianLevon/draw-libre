@@ -161,8 +161,11 @@ export class StoreHelpers {
     });
   };
 
-
-  static buildStepSequence(initialSteps: Step[], closeGeometry: Initial['closeGeometry'], pointGeneration: RequiredDrawOptions['pointGeneration']): Store {
+  static buildStepSequence(
+    initialSteps: Step[],
+    closeGeometry: Initial["closeGeometry"],
+    pointGeneration: RequiredDrawOptions["pointGeneration"],
+  ): Store {
     const list = new Store();
     const steps = closeGeometry ? initialSteps.slice(0, -1) : initialSteps;
 
@@ -173,7 +176,7 @@ export class StoreHelpers {
       // we need to create an auxiliary point with the first point
       // to close the geometry
       if (pointGeneration === "auto") {
-        const isNextPointAvailable = steps[idx + 1]
+        const isNextPointAvailable = steps[idx + 1];
         if (isNextPointAvailable) {
           const auxPoint = PointHelpers.createAuxiliaryPoint(step, steps[idx + 1] as Step);
           list.push(auxPoint);
@@ -182,16 +185,12 @@ export class StoreHelpers {
           list.push(auxPoint);
         }
       }
-
     });
     return list;
   }
 
-  static fromArray(
-    initialOptions: Initial,
-    pointGeneration: RequiredDrawOptions['pointGeneration'],
-  ): Store | null {
-    const { steps: initialSteps, closeGeometry, generateId } = initialOptions
+  static fromArray(initialOptions: Initial, pointGeneration: RequiredDrawOptions["pointGeneration"]): Store | null {
+    const { steps: initialSteps, closeGeometry, generateId } = initialOptions;
     const steps = generateId ? this.#generateIdForSteps(initialSteps) : initialSteps;
     const list = this.buildStepSequence(steps as Step[], closeGeometry, pointGeneration);
 

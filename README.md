@@ -2,6 +2,8 @@
 
 # DrawLibre
 
+> Early supporter? Your ⭐ makes a difference! ❤️
+
 ## Features
 
 - Draw linestrings (including closed ones) and polygons
@@ -10,9 +12,11 @@
 - Event-driven architecture for easy integration
 
 ### Manual Point Generation (extra points are added when a line is clicked)
+
 <img src="https://i.giphy.com/media/v1.Y2lkPTc5MGI3NjExaDZscnowMHNndmtiZzcwb3Bvc2Y2b29qbHdndndndGE3Mzk5Z2Q0cSZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/m6lig0ZCfL45FZQo7b/giphy.gif" width="800" alt="Manual Point Generation">
 
 ### Automatic Point Generation (an auxiliary point is generated between every two primary points.)
+
 <img src="https://media2.giphy.com/media/v1.Y2lkPTc5MGI3NjExY2VieG1rd3ZkaWt5azVhYWpqaWEwZnVybGdjYW90d2xwNWwzeWtzayZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/6ohjkf9L1NWUESTaQA/giphy.gif" width="800" alt="Automatic Point Generation">
 </section>
 
@@ -135,13 +139,13 @@ Available events:
 ```javascript
 const draw = DrawLibre.getInstance();
 
-// Retrieves a step from the store by its ID. 
+// Retrieves a step from the store by its ID.
 draw.findStepById(id: string)
 
 // Retrieves a node from the store by its ID.
 draw.findNodeById(id: string)
 
-// Get all steps, optionally specifying the return type. Selecting 'linkedlist' will return a circular doubly linked list. Have fun. 
+// Get all steps, optionally specifying the return type. Selecting 'linkedlist' will return a circular doubly linked list. Have fun.
 draw.getAllSteps(type?: "array" | "linkedlist")
 
 // Set new steps. If ID is not provided, it will be generated automatically
@@ -173,4 +177,3 @@ draw.setOptions((options: RequiredDrawOptions) => {
 ## License
 
 This project is licensed under the [MIT License](https://opensource.org/licenses/MIT).
-

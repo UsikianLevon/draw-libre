@@ -92,7 +92,13 @@ export default class DrawLibre implements IControl {
     this.#tiles = new Tiles({ map, store: this.#store, options: this.#defaultOptions, mode: this.#mode });
     const control = new Control({ options: this.#defaultOptions, mode: this.#mode });
     this.#mouseEvents = new MouseEvents();
-    this.#cursor = new Cursor({ map, mode: this.#mode, mouseEvents: this.#mouseEvents, store: this.#store, options: this.#defaultOptions });
+    this.#cursor = new Cursor({
+      map,
+      mode: this.#mode,
+      mouseEvents: this.#mouseEvents,
+      store: this.#store,
+      options: this.#defaultOptions,
+    });
     this.#events = new Events({
       map,
       store: this.#store,
@@ -113,7 +119,7 @@ export default class DrawLibre implements IControl {
     this.#container = control.getContainer();
 
     return this.#container;
-  }
+  };
 
   /**
    * DO NOT USE IMPLICITLY. PASS TO map.removeControl().
@@ -139,7 +145,7 @@ export default class DrawLibre implements IControl {
     if (this.#container) {
       DOM.remove(this.#container);
     }
-  }
+  };
 
   /**
    * Adds a series of steps to the store. If a step ID is not provided, it will be automatically generated.
@@ -159,7 +165,7 @@ export default class DrawLibre implements IControl {
   };
 
   /**
-   * Retrieves a step from the store by its ID. 
+   * Retrieves a step from the store by its ID.
    *
    * @param id - The ID of the step to retrieve.
    * @returns The step with the specified ID, or null if not found.
@@ -169,7 +175,7 @@ export default class DrawLibre implements IControl {
   };
 
   /**
-   * Retrieves a node from the store by its ID. 
+   * Retrieves a node from the store by its ID.
    *
    * @param id - The ID of the node to retrieve.
    * @returns The node with the specified ID, or null if not found.
@@ -193,7 +199,6 @@ export default class DrawLibre implements IControl {
     }
     throw new Error("Invalid type specified. Use 'array' or 'linkedlist'.");
   };
-
 
   setOptions = (fn: (options: RequiredDrawOptions) => RequiredDrawOptions) => {
     this.#defaultOptions = fn(this.#defaultOptions);

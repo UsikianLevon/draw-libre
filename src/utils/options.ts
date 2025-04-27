@@ -98,9 +98,7 @@ function generateModeOptions(options: DrawOptions): RequiredDrawOptions["modes"]
         options?.modes?.line?.visible !== undefined
           ? options.modes.line.visible
           : options?.initial?.geometry === "line" || DEFAULT_OPTIONS.modes.line.visible,
-      closeGeometry:
-        options?.modes?.line?.closeGeometry ??
-        DEFAULT_OPTIONS.modes.line.closeGeometry,
+      closeGeometry: options?.modes?.line?.closeGeometry ?? DEFAULT_OPTIONS.modes.line.closeGeometry,
     },
     polygon: {
       visible:
@@ -144,12 +142,16 @@ function generateLayersOptions(options: DrawOptions): RequiredDrawOptions["layer
       ...options.layersPaint?.points,
     },
     auxiliaryPoint: {
-      "circle-radius": options.layersPaint?.auxiliaryPoint?.["circle-radius"] || AUXILIARY_POINT_PAINT_BASE["circle-radius"],
-      "circle-color": options.layersPaint?.auxiliaryPoint?.["circle-color"] || AUXILIARY_POINT_PAINT_BASE["circle-color"],
+      "circle-radius":
+        options.layersPaint?.auxiliaryPoint?.["circle-radius"] || AUXILIARY_POINT_PAINT_BASE["circle-radius"],
+      "circle-color":
+        options.layersPaint?.auxiliaryPoint?.["circle-color"] || AUXILIARY_POINT_PAINT_BASE["circle-color"],
       "circle-stroke-color":
-        options.layersPaint?.auxiliaryPoint?.["circle-stroke-color"] || AUXILIARY_POINT_PAINT_BASE["circle-stroke-color"],
+        options.layersPaint?.auxiliaryPoint?.["circle-stroke-color"] ||
+        AUXILIARY_POINT_PAINT_BASE["circle-stroke-color"],
       "circle-stroke-width":
-        options.layersPaint?.auxiliaryPoint?.["circle-stroke-width"] || AUXILIARY_POINT_PAINT_BASE["circle-stroke-width"],
+        options.layersPaint?.auxiliaryPoint?.["circle-stroke-width"] ||
+        AUXILIARY_POINT_PAINT_BASE["circle-stroke-width"],
       ...options.layersPaint?.auxiliaryPoint,
     },
     line: {

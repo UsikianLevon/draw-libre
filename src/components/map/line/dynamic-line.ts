@@ -19,7 +19,7 @@ export class DynamicLineEvents {
   #secondPoint: LatLng | null;
   #lineFeature: any;
   #throttledOnLineMove: (event: MapLayerMouseEvent) => void;
-  #debouncedDynamicLine: (data: StoreChangeEvent['data']) => void;
+  #debouncedDynamicLine: (data: StoreChangeEvent["data"]) => void;
 
   constructor(props: EventsProps) {
     this.#props = props;
@@ -70,13 +70,13 @@ export class DynamicLineEvents {
     }
   };
 
-  #dynamicLineVisibility = (data: StoreChangeEvent['data']) => {
+  #dynamicLineVisibility = (data: StoreChangeEvent["data"]) => {
     const { store, options } = this.#props;
     if (data?.tail?.val && !Spatial.isClosedGeometry(store, options)) {
       this.#firstPoint = store.tail?.val as Step;
       this.showDynamicLine();
     }
-  }
+  };
 
   #storeEventsConsumer = (event: StoreChangeEvent) => {
     if (event.type === "STORE_MUTATED") {
@@ -90,14 +90,14 @@ export class DynamicLineEvents {
   #mapModeConsumer = (event: DrawingModeChangeEvent) => {
     const { store } = this.#props;
 
-    const isClosed = event.data
+    const isClosed = event.data;
     if (event.type === "CLOSED_GEOMETRY_CHANGED") {
       if (isClosed) {
         this.hideDynamicLine();
       }
 
       if (!isClosed && store?.tail?.val) {
-        this.#firstPoint = store?.tail?.val
+        this.#firstPoint = store?.tail?.val;
         this.showDynamicLine();
       }
     }
@@ -123,7 +123,7 @@ export class DynamicLineEvents {
   };
 
   hideDynamicLine = () => {
-    const { map, } = this.#props;
+    const { map } = this.#props;
 
     this.#firstPoint = null;
     this.#secondPoint = null;
@@ -140,7 +140,13 @@ export class DynamicLineEvents {
   showDynamicLine = () => {
     const { map, store } = this.#props;
 
-    if (store.size && this.#firstPoint?.lat && this.#firstPoint.lng && this.#secondPoint?.lng && this.#secondPoint?.lat) {
+    if (
+      store.size &&
+      this.#firstPoint?.lat &&
+      this.#firstPoint.lng &&
+      this.#secondPoint?.lng &&
+      this.#secondPoint?.lat
+    ) {
       const current = [this.#firstPoint.lng, this.#firstPoint.lat] as [number, number];
       const next = [this.#secondPoint.lng, this.#secondPoint.lat] as [number, number];
 

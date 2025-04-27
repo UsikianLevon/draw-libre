@@ -14,6 +14,7 @@ import { StoreChangeEvent } from "#store/types";
 import { DrawingModeChangeEvent } from "../mode/types";
 import { PointState } from "./point-state";
 import { PointTopologyManager } from "./point-topology-manager";
+import { Tooltip } from "#components/tooltip";
 
 export interface PrimaryPointEvents {
   onPointMouseEnter: (event: MapLayerMouseEvent) => void;
@@ -25,11 +26,12 @@ export interface PrimaryPointEvents {
 
 export class PointEvents {
   private props: EventsProps;
-  private events: PrimaryPointEvents
+  private events: PrimaryPointEvents;
   private firstPoint: FirstPoint | null;
   private auxPoints: AuxPoints | null;
   private pointState: PointState;
   private topologyManager: PointTopologyManager;
+  private tooltip: Tooltip;
 
   constructor(props: EventsProps) {
     this.props = props;
@@ -44,17 +46,18 @@ export class PointEvents {
     };
     this.firstPoint = new FirstPoint(this.props, this.events);
     this.auxPoints = new AuxPoints(this.props, this.events);
+    this.tooltip = new Tooltip();
   }
 
   #initConsumers = () => {
     this.props.mode.addObserver(this.#mapModeConsumer);
     this.props.store.addObserver(this.#storeEventsConsumer);
-  }
+  };
 
   #removeConsumers = () => {
     this.props.mode.removeObserver(this.#mapModeConsumer);
     this.props.store.removeObserver(this.#storeEventsConsumer);
-  }
+  };
 
   initEvents = () => {
     const { map } = this.props;
@@ -118,7 +121,7 @@ export class PointEvents {
       const isPrimaryNode = !clickedNode?.val?.isAuxiliary;
 
       if (isPrimaryNode) {
-        FireEvents.pointRemoveRightClick({ ...clickedNode?.val as Step, total: store.size }, this.props.map);
+        FireEvents.pointRemoveRightClick({ ...(clickedNode?.val as Step), total: store.size }, this.props.map);
         Spatial.switchToLineModeIfCan(this.props);
       }
     }
@@ -147,7 +150,7 @@ export class PointEvents {
 
     FireEvents.addPoint({ ...addedStep, total: store.size }, map, mode);
     PointVisibility.setSinglePointHidden(event);
-    tiles.render()
+    tiles.render();
   };
 
   #onMoveLeftClickUp = (event: MapLayerMouseEvent) => {
@@ -301,7 +304,7 @@ export class PointEvents {
 
       store.notify({
         type: "STORE_MUTATED",
-        data: store
+        data: store,
       });
 
       panel?.showPanel();

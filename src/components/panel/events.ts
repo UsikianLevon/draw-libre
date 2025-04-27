@@ -5,7 +5,6 @@ import { DOM } from "#utils/dom";
 import { Tooltip } from "#components/tooltip";
 import { FireEvents } from "#components/map/helpers";
 import { Spatial } from "#utils/helpers";
-import { ELAYERS } from "#utils/geo_constants";
 import { PointHelpers } from "#components/map/points/helpers";
 import type { StoreChangeEvent } from "#store/types";
 import type { DrawingModeChangeEvent } from "#components/map/mode/types";
@@ -46,7 +45,7 @@ export class PanelEvents {
                 lng: current.tail.val.lng,
               });
             }
-            break
+            break;
           }
         }
       }
@@ -78,7 +77,7 @@ export class PanelEvents {
         "add",
         panel._undoButton,
         "mouseenter",
-        this.onMouseEnter as EventListenerOrEventListenerObject
+        this.onMouseEnter as EventListenerOrEventListenerObject,
       );
       DOM.manageEventListener("add", panel._undoButton, "mouseleave", this.onMouseLeave);
     }
@@ -89,7 +88,7 @@ export class PanelEvents {
         "add",
         panel._deleteButton,
         "mouseenter",
-        this.onMouseEnter as EventListenerOrEventListenerObject
+        this.onMouseEnter as EventListenerOrEventListenerObject,
       );
       DOM.manageEventListener("add", panel._deleteButton, "mouseleave", this.onMouseLeave);
     }
@@ -100,7 +99,7 @@ export class PanelEvents {
         "add",
         panel._saveButton,
         "mouseenter",
-        this.onMouseEnter as EventListenerOrEventListenerObject
+        this.onMouseEnter as EventListenerOrEventListenerObject,
       );
       DOM.manageEventListener("add", panel._saveButton, "mouseleave", this.onMouseLeave);
     }
@@ -200,7 +199,7 @@ export class PanelEvents {
         store.tail.next = store.head;
       }
     }
-  }
+  };
 
   #onUndoClick = (event: Event) => {
     const { store, map, tiles, options } = this.#props;
@@ -211,7 +210,7 @@ export class PanelEvents {
     this.#removeStep();
     Spatial.switchToLineModeIfCan(this.#props);
     this.#tooltip.remove();
-    const step = { ...store.tail?.val as Step, total: store.size };
+    const step = { ...(store.tail?.val as Step), total: store.size };
     FireEvents.undoPoint(step, map, event);
     tiles.render();
   };

@@ -4,7 +4,6 @@ import { Tooltip } from "#components/tooltip";
 import { CURSORS } from "#components/map/cursor/constants";
 
 import { addControlListeners, getButtonLabel, removeControlListeners } from "./helpers";
-import { ELAYERS } from "#utils/geo_constants";
 import { ControlObserver } from "./observer";
 
 export class ControlEvents {

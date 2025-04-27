@@ -83,7 +83,7 @@ export class Panel {
     const offset = 36;
 
     this.#panelPopup.style.left = `${x - offset}px`;
-    this.#panelPopup.style.top = `${y - offset}px`;
+    this.#panelPopup.style.top = `${y - offset - 4}px`;
   };
 
   #updatePanelPositionOnMapMove(coordinates: LatLng) {

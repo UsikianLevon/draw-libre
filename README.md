@@ -1,6 +1,6 @@
 <section >
 
-# Drawlibre
+# DrawLibre
 
 ## Features
 

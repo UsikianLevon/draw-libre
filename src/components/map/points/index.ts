@@ -64,6 +64,7 @@ export class PointEvents {
     map.on("mouseenter", ELAYERS.PointsLayer, this.#onPointMouseEnter);
     map.on("mouseleave", ELAYERS.PointsLayer, this.#onPointMouseLeave);
     map.on("mousedown", ELAYERS.PointsLayer, this.#onPointMouseDown);
+    map.on("click", ELAYERS.PointsLayer, this.#onPointClick);
     map.on("mouseup", ELAYERS.PointsLayer, this.#onPointMouseUp);
     map.on("touchend", ELAYERS.PointsLayer, this.#onPointMouseUp);
     map.on("touchstart", ELAYERS.PointsLayer, this.#onPointMouseDown);
@@ -80,6 +81,7 @@ export class PointEvents {
     map.off("mouseenter", ELAYERS.PointsLayer, this.#onPointMouseEnter);
     map.off("mouseleave", ELAYERS.PointsLayer, this.#onPointMouseLeave);
     map.off("mousedown", ELAYERS.PointsLayer, this.#onPointMouseDown);
+    map.off("click", ELAYERS.PointsLayer, this.#onPointClick);
     map.off("mouseup", ELAYERS.PointsLayer, this.#onPointMouseUp);
     map.off("touchend", ELAYERS.PointsLayer, this.#onPointMouseUp);
     map.off("touchstart", ELAYERS.PointsLayer, this.#onPointMouseDown);
@@ -87,6 +89,16 @@ export class PointEvents {
     this.firstPoint?.removeEvents();
     this.auxPoints?.removeEvents();
     this.#removeConsumers();
+  };
+
+  #onPointClick = (event: MapLayerMouseEvent) => {
+    const { mouseEvents, store, map, options } = this.props;
+    const id = MapUtils.queryPointId(map, event.point);
+
+    if (StoreHelpers.isLastPoint(store, options, id)) {
+      mouseEvents.lastPointMouseClick = true;
+      mouseEvents.lastPointMouseUp = false;
+    }
   };
 
   #onMapDblClick = (event: MapLayerMouseEvent) => {
@@ -261,12 +273,6 @@ export class PointEvents {
 
     if (mouseEvents) {
       mouseEvents.pointMouseDown = true;
-      const id = MapUtils.queryPointId(this.props.map, event.point);
-
-      if (StoreHelpers.isLastPoint(store, options, id)) {
-        mouseEvents.lastPointMouseClick = true;
-        mouseEvents.lastPointMouseUp = false;
-      }
     }
 
     this.pointState.setStartCoordinates(event.lngLat);

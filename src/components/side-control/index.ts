@@ -40,7 +40,7 @@ export class Control {
       button.setAttribute("disabled", "true");
       button.setAttribute("aria-disabled", "true");
     }
-    DOM.create("span", `icon ${type} icon-${size}`, button);
+    DOM.create("span", `icon ${type} icon-medium`, button);
     return button;
   };
 

@@ -1,19 +1,19 @@
-import type { CustomMap } from "#types/map";
+import type { UnifiedMap } from "#types/map";
 
 import { ELAYERS, FIRST_POINT_COLOR, generateLayersToRender, FIRST_POINT_RADIUS } from "#utils/geo_constants";
 import type { RequiredDrawOptions } from "#types/index";
 
-const firstPointCircleRadius = (map: CustomMap) => {
+const firstPointCircleRadius = (map: UnifiedMap) => {
   map.setPaintProperty(ELAYERS.FirstPointLayer, "circle-radius", FIRST_POINT_RADIUS.large);
   map.setPaintProperty(ELAYERS.FirstPointLayer, "circle-stroke-color", FIRST_POINT_COLOR.large);
 };
 
-const defaultPointCircleRadius = (map: CustomMap) => {
+const defaultPointCircleRadius = (map: UnifiedMap) => {
   map.setPaintProperty(ELAYERS.FirstPointLayer, "circle-radius", FIRST_POINT_RADIUS.default);
   map.setPaintProperty(ELAYERS.FirstPointLayer, "circle-stroke-color", FIRST_POINT_COLOR.default);
 };
 
-export const togglePointCircleRadius = (map: CustomMap, type: keyof typeof FIRST_POINT_RADIUS) => {
+export const togglePointCircleRadius = (map: UnifiedMap, type: keyof typeof FIRST_POINT_RADIUS) => {
   if (type === "large") {
     firstPointCircleRadius(map);
   } else {
@@ -21,13 +21,13 @@ export const togglePointCircleRadius = (map: CustomMap, type: keyof typeof FIRST
   }
 };
 
-export const removeTransparentLine = (map: CustomMap) => {
+export const removeTransparentLine = (map: UnifiedMap) => {
   if (map.getLayer(ELAYERS.LineLayerTransparent)) {
     map.removeLayer(ELAYERS.LineLayerTransparent);
   }
 };
 
-export const addTransparentLine = (map: CustomMap, options: RequiredDrawOptions) => {
+export const addTransparentLine = (map: UnifiedMap, options: RequiredDrawOptions) => {
   if (map.getLayer(ELAYERS.LineLayerTransparent)) return;
   const LAYERS_TO_RENDER = generateLayersToRender(options);
   const transparentLayer = LAYERS_TO_RENDER.find((layer) => layer.id === ELAYERS.LineLayerTransparent);

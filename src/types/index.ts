@@ -1,6 +1,6 @@
 import type { CircleLayerSpecification, FillLayerSpecification, LineLayerSpecification } from "maplibre-gl";
 
-import type { CustomMap } from "#types/map";
+import type { UnifiedMap } from "#types/map";
 
 import type { Control } from "#components/side-control";
 import type { Panel } from "#components/panel";
@@ -48,13 +48,13 @@ export type SaveButton = Button & {
 
 type InitialSteps =
   | {
-      steps: Step[];
-      generateId?: boolean;
-    }
+    steps: Step[];
+    generateId?: boolean;
+  }
   | {
-      steps: LatLng[];
-      generateId: true;
-    };
+    steps: LatLng[];
+    generateId: true;
+  };
 
 export type Initial = InitialSteps & {
   geometry: "line" | "polygon";
@@ -119,7 +119,7 @@ export interface ControlOptions {
 }
 
 export type EventsProps = {
-  map: CustomMap;
+  map: UnifiedMap;
   panel: Panel;
   store: Store;
   control: Control;

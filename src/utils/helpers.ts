@@ -1,6 +1,6 @@
 import type { MapLayerMouseEvent, MapMouseEvent } from "maplibre-gl";
 import type { LatLng, Point, Uuid, EventsProps, RequiredDrawOptions } from "#types/index";
-import type { CustomMap } from "#types/map";
+import type { UnifiedMap } from "#types/map";
 
 import type { ListNode, Store } from "#store/index";
 
@@ -15,12 +15,12 @@ export class MapUtils {
     return layers.some((layer) => layerIds.includes(layer.layer.id));
   }
 
-  static getPixelCoordinates = (map: CustomMap, coords: LatLng) => {
+  static getPixelCoordinates = (map: UnifiedMap, coords: LatLng) => {
     const { lat, lng } = coords;
     return map.project([lng, lat]);
   };
 
-  static queryPointId = (map: CustomMap, point: MapMouseEvent["point"]) => {
+  static queryPointId = (map: UnifiedMap, point: MapMouseEvent["point"]) => {
     const query = map.queryRenderedFeatures(point, {
       layers: [ELAYERS.PointsLayer, ELAYERS.FirstPointLayer, ELAYERS.AuxiliaryPointLayer, ELAYERS.SinglePointLayer],
     });
@@ -29,7 +29,7 @@ export class MapUtils {
     return id;
   };
 
-  static queryPoint = (map: CustomMap, point: MapMouseEvent["point"]) => {
+  static queryPoint = (map: UnifiedMap, point: MapMouseEvent["point"]) => {
     const query = map.queryRenderedFeatures(point, {
       layers: [ELAYERS.PointsLayer, ELAYERS.FirstPointLayer, ELAYERS.AuxiliaryPointLayer, ELAYERS.SinglePointLayer],
     });

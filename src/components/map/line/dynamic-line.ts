@@ -134,7 +134,9 @@ export class DynamicLineEvents {
     if (lineSource) {
       lineSource.setData(LINE_BASE as GeoJSON.FeatureCollection);
     }
-    map.setLayoutProperty(ELAYERS.LineDynamicLayer, "visibility", "none");
+    if (map.getLayer(ELAYERS.LineDynamicLayer)) {
+      map.setLayoutProperty(ELAYERS.LineDynamicLayer, "visibility", "none");
+    }
   };
 
   showDynamicLine = () => {

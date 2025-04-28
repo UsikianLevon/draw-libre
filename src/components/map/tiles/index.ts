@@ -1,7 +1,7 @@
 import type { GeoJSONSource } from "maplibre-gl";
 
 import type { LatLng, RequiredDrawOptions } from "#types/index";
-import type { CustomMap } from "#types/map";
+import type { UnifiedMap } from "#types/map";
 import type { Store } from "#store/index";
 import { ELAYERS, ESOURCES, generateLayersToRender } from "#utils/geo_constants";
 import { debounce, GeometryFactory, Spatial } from "#utils/helpers";
@@ -9,7 +9,7 @@ import type { DrawingMode } from "#components/map/mode";
 import type { StoreChangeEvent } from "#store/types";
 
 interface IProps {
-  map: CustomMap;
+  map: UnifiedMap;
   store: Store;
   options: RequiredDrawOptions;
   mode: DrawingMode;

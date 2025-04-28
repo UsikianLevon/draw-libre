@@ -1,4 +1,4 @@
-import type { CustomMap } from "#types/map";
+import type { UnifiedMap } from "#types/map";
 
 import { debounce, Spatial } from "#utils/helpers";
 import type { DrawingMode } from "#components/map/mode";
@@ -10,7 +10,7 @@ import { CURSORS, type TCursor } from "./constants";
 import type { RequiredDrawOptions } from "#types/index";
 
 interface CursorProps {
-  map: CustomMap;
+  map: UnifiedMap;
   mode: DrawingMode;
   mouseEvents: MouseEvents;
   store: Store;

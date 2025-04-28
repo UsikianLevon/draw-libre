@@ -4,7 +4,7 @@ import type { EventsProps, Step } from "#types/index";
 import { ELAYERS } from "#utils/geo_constants";
 import { uuidv4 } from "#utils/helpers";
 
-import { CustomMap } from "#types/map";
+import { UnifiedMap } from "#types/map";
 
 export const PointHelpers = {
   getMidpoint(p1: { lat: number; lng: number }, p2: { lat: number; lng: number }) {
@@ -30,11 +30,11 @@ export const PointHelpers = {
 };
 
 export const PointVisibility = {
-  setFirstPointVisible(map: CustomMap) {
+  setFirstPointVisible(map: UnifiedMap) {
     map.setLayoutProperty(ELAYERS.FirstPointLayer, "visibility", "visible");
   },
 
-  setFirstPointHidden(map: CustomMap) {
+  setFirstPointHidden(map: UnifiedMap) {
     map.setLayoutProperty(ELAYERS.FirstPointLayer, "visibility", "none");
   },
 
@@ -52,7 +52,7 @@ export const PointVisibility = {
 };
 
 export const PointsFilter = {
-  default(map: CustomMap) {
+  default(map: UnifiedMap) {
     map.setFilter(ELAYERS.PointsLayer, [
       "all",
       ["==", "$type", "Point"],
@@ -60,7 +60,7 @@ export const PointsFilter = {
       ["==", "isAuxiliary", false],
     ]);
   },
-  closedGeometry(map: CustomMap) {
+  closedGeometry(map: UnifiedMap) {
     map.setFilter(ELAYERS.PointsLayer, ["all", ["==", "$type", "Point"], ["==", "isAuxiliary", false]]);
   },
 };

@@ -1,6 +1,6 @@
 import type { MapLayerMouseEvent } from "maplibre-gl";
 import type { EventsProps, Step } from "#types/index";
-import type { CustomMap } from "#types/map";
+import type { UnifiedMap } from "#types/map";
 
 import type { Store } from "#store/index";
 import { ELAYERS } from "#utils/geo_constants";
@@ -14,7 +14,7 @@ export const isOnLine = (event: MapLayerMouseEvent, store: Store) => {
   while (current !== null) {
     if (visited.has(current)) break;
     if (current?.next?.val && current?.val) {
-      const map = event.target as CustomMap;
+      const map = event.target as UnifiedMap;
       const aPixel = MapUtils.getPixelCoordinates(map, current.val);
       const bPixel = MapUtils.getPixelCoordinates(map, current.next.val);
       const eventPixel = MapUtils.getPixelCoordinates(map, event.lngLat);

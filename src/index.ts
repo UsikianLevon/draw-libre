@@ -1,4 +1,4 @@
-import type { IControl, CustomMap } from "#types/map";
+import type { IControl, UnifiedMap } from "#types/map";
 
 import type { DrawOptions, LatLng, RequiredDrawOptions, Step, StepId } from "#types/index";
 import { Panel } from "#components/panel";
@@ -85,7 +85,7 @@ export default class DrawLibre implements IControl {
    * to the DOM: the map will insert the control's element into the DOM
    * as necessary.
    */
-  onAdd = (map: CustomMap) => {
+  onAdd = (map: UnifiedMap) => {
     this.#store = new Store(this.#defaultOptions);
     this.#mode = new DrawingMode(this.#defaultOptions);
     this.#panel = new Panel({ map, mode: this.#mode, options: this.#defaultOptions, store: this.#store });
@@ -195,7 +195,11 @@ export default class DrawLibre implements IControl {
       return StoreHelpers.toArray(this.#store.head);
     }
     if (type === "linkedlist") {
-      return this.#store;
+      return {
+        head: this.#store?.head,
+        tail: this.#store?.tail,
+        size: this.#store?.size,
+      };
     }
     throw new Error("Invalid type specified. Use 'array' or 'linkedlist'.");
   };
@@ -215,6 +219,7 @@ export default class DrawLibre implements IControl {
 }
 
 export type {
+  DrawOptions,
   RequiredDrawOptions,
   PointAddEvent,
   PointRightClickRemoveEvent,
@@ -225,4 +230,5 @@ export type {
   SaveEvent,
   UndoEvent,
   ModeChangeEvent,
+  UnifiedMap
 };

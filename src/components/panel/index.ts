@@ -1,4 +1,4 @@
-import type { CustomMap } from "#types/map";
+import type { UnifiedMap } from "#types/map";
 import type { LatLng, PanelImpl, Point, RequiredDrawOptions } from "#types/index";
 import { DOM } from "#utils/dom";
 import type { Store } from "#store/index";
@@ -6,7 +6,7 @@ import type { DrawingMode } from "#components/map/mode";
 import "./panel.css";
 
 interface IProps {
-  map: CustomMap;
+  map: UnifiedMap;
   mode: DrawingMode;
   options: RequiredDrawOptions;
   store: Store;
@@ -62,6 +62,32 @@ export class Panel {
     }
   };
 
+  #getHorizonalOffset = (size: PanelImpl["size"]) => {
+    switch (size) {
+      case "small":
+        return 6;
+      case "medium":
+        return 0;
+      case "large":
+        return -6;
+      default:
+        return 0;
+    }
+  }
+
+  #getVerticalOffset = (size: PanelImpl["size"]) => {
+    switch (size) {
+      case "small":
+        return 0;
+      case "medium":
+        return -6;
+      case "large":
+        return -8;
+      default:
+        return 0;
+    }
+  }
+
   setPanelLocation = (coordinates: LatLng) => {
     if (!this.#panelPopup) return;
     if (this.#isHidden) {
@@ -72,6 +98,7 @@ export class Panel {
     this.#updatePanelPositionOnMapMove(coordinates);
   };
 
+  // TODO this whole logic needs to be revamped
   #pointPositionUpdate = (point: Point) => {
     if (this.#isHidden || !this.#panelPopup) return;
 
@@ -80,10 +107,13 @@ export class Panel {
 
     const x = mapRect.left + point.x;
     const y = mapRect.top + point.y;
-    const offset = 36;
+    const basicOffset = 36;
 
-    this.#panelPopup.style.left = `${x - offset}px`;
-    this.#panelPopup.style.top = `${y - offset - 4}px`;
+    const offsetX = this.#getHorizonalOffset(this.#props.options.panel.size);
+    const offsetY = this.#getVerticalOffset(this.#props.options.panel.size);
+
+    this.#panelPopup.style.left = `${x - basicOffset + offsetX}px`;
+    this.#panelPopup.style.top = `${y - basicOffset + offsetY}px`;
   };
 
   #updatePanelPositionOnMapMove(coordinates: LatLng) {

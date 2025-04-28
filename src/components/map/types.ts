@@ -1,5 +1,5 @@
 import type { LatLng, Step, Uuid } from "#types/index";
-import type { CustomMap } from "#types/map";
+import type { UnifiedMap } from "#types/map";
 import type { Mode } from "./mode/types";
 
 interface ModeEvent {
@@ -13,14 +13,14 @@ export interface UndoEvent {
   id: Uuid;
   total: number;
   timestamp: number;
-  target: CustomMap;
+  target: UnifiedMap;
   type: "mdl:undo";
 }
 
 export interface RemoveAllEvent {
   originalEvent: MouseEvent;
   type: "mdl:removeall";
-  target: CustomMap;
+  target: UnifiedMap;
 }
 
 export interface SaveEvent {
@@ -28,7 +28,7 @@ export interface SaveEvent {
   timestamp: number;
   steps: Step[];
   mode: ModeEvent;
-  target: CustomMap;
+  target: UnifiedMap;
   type: "mdl:save";
 }
 
@@ -36,7 +36,7 @@ export interface PointRightClickRemoveEvent {
   id: Uuid;
   total: number;
   timestamp: number;
-  target: CustomMap;
+  target: UnifiedMap;
   coordinates: LatLng;
   type: "mdl:rightclickremove";
 }
@@ -45,7 +45,7 @@ export interface PointAddEvent {
   id: Uuid;
   total: number;
   timestamp: number;
-  target: CustomMap;
+  target: UnifiedMap;
   coordinates: LatLng;
   mode: ModeEvent;
   type: "mdl:add";
@@ -57,7 +57,7 @@ export interface PointMoveEvent {
   id: Uuid;
   total: number;
   timestamp: number;
-  target: CustomMap;
+  target: UnifiedMap;
   type: "mdl:moveend";
 }
 
@@ -66,7 +66,7 @@ export interface PointEnterEvent {
   id: Uuid;
   total: number;
   timestamp: number;
-  target: CustomMap;
+  target: UnifiedMap;
   type: "mdl:pointenter";
 }
 
@@ -75,12 +75,12 @@ export interface PointLeaveEvent {
   id: Uuid;
   total: number;
   timestamp: number;
-  target: CustomMap;
+  target: UnifiedMap;
   type: "mdl:pointleave";
 }
 
 export interface ModeChangeEvent {
   mode: Mode | "break";
-  target: CustomMap;
+  target: UnifiedMap;
   type: "mdl:modechanged";
 }

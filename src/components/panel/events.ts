@@ -1,13 +1,14 @@
-import { StoreHelpers } from "#store/index";
-import type { ButtonType, EventsProps, Step, StepId } from "#types/index";
-import type { HTMLEvent } from "#types/helpers";
-import { DOM } from "#utils/dom";
+import { type ListNode, StoreHelpers } from "#app/store/index";
+import type { ButtonType, EventsProps, Step, StepId } from "#app/types/index";
+import type { HTMLEvent } from "#app/types/helpers";
+import { DOM } from "#app/utils/dom";
 import { Tooltip } from "#components/tooltip";
 import { FireEvents } from "#components/map/helpers";
-import { Spatial } from "#utils/helpers";
+import { Spatial } from "#app/utils/helpers";
 import { PointHelpers } from "#components/map/points/helpers";
-import type { StoreChangeEvent } from "#store/types";
+import type { StoreChangeEvent } from "#app/store/types";
 import type { DrawingModeChangeEvent } from "#components/map/mode/types";
+import { timeline } from "#app/history";
 
 export class PanelEvents {
   #props: EventsProps;
@@ -31,7 +32,7 @@ export class PanelEvents {
   #storeEventsConsumer = (event: StoreChangeEvent) => {
     if (event.type === "STORE_MUTATED") {
       const { data } = event;
-      if (data.size === 0) {
+      if (data?.size === 0) {
         this.#props.panel.hidePanel();
       } else {
         let current = Object.assign({}, data);
@@ -80,6 +81,17 @@ export class PanelEvents {
         this.onMouseEnter as EventListenerOrEventListenerObject,
       );
       DOM.manageEventListener("add", panel._undoButton, "mouseleave", this.onMouseLeave);
+    }
+
+    if (panel._redoButton) {
+      DOM.manageEventListener("add", panel._redoButton, "click", this.#onRedoClick);
+      DOM.manageEventListener(
+        "add",
+        panel._redoButton,
+        "mouseenter",
+        this.onMouseEnter as EventListenerOrEventListenerObject,
+      );
+      DOM.manageEventListener("add", panel._redoButton, "mouseleave", this.onMouseLeave);
     }
 
     if (panel._deleteButton) {
@@ -182,38 +194,43 @@ export class PanelEvents {
     FireEvents.removeAllPoints(map, event);
   };
 
-  #removeStep = () => {
-    const { store, options } = this.#props;
 
-    // Remove the last point
-    store.removeNodeById(store.tail?.val?.id as StepId);
-    // if we are in aux mode then remove 2 aux points and then add 1 aux point between the 2 points
-    if (options.pointGeneration === "auto") {
-      store.removeNodeById(store.tail?.val?.id as StepId);
-      if (store.tail?.val?.isAuxiliary) {
-        store.removeNodeById(store.tail?.val?.id);
-        if (!Spatial.canBreakClosedGeometry(store, options)) {
-          const auxPoint = PointHelpers.createAuxiliaryPoint(store.tail.val, store.head?.val as Step);
-          store.push(auxPoint);
-        }
-        store.tail.next = store.head;
-      }
-    }
-  };
+
 
   #onUndoClick = (event: Event) => {
-    const { store, map, tiles, options } = this.#props;
+    const { store, map, tiles } = this.#props;
     if (store.size == 1) {
       store.reset();
+    } else {
+      // удаляет главную точку, там остаются только 2 вспомогательные
+      timeline.undo();
+      if (store.tail) {
+        store.notify({
+          type: "STORE_UNDO",
+          data: {
+            node: store.tail,
+          }
+        })
+      }
+      Spatial.switchToLineModeIfCan(this.#props);
+      this.#tooltip.remove();
+      const step = { ...(store.tail?.val as Step), total: store.size };
+      FireEvents.undoPoint(step, map, event);
+      tiles.render();
     }
-
-    this.#removeStep();
-    Spatial.switchToLineModeIfCan(this.#props);
-    this.#tooltip.remove();
-    const step = { ...(store.tail?.val as Step), total: store.size };
-    FireEvents.undoPoint(step, map, event);
-    tiles.render();
   };
+
+  #onRedoClick = () => {
+    const { tiles, store } = this.#props;
+
+    const cmd = timeline.redo();
+    if (cmd && cmd.type === "STORE_POINT_ADDED") {
+      store.notify({
+        type: "STORE_POINT_ADDED",
+      })
+    }
+    tiles.render();
+  }
 
   onSaveClick = (event: Event) => {
     const { store, options } = this.#props;

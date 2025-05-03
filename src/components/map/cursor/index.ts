@@ -1,13 +1,13 @@
-import type { UnifiedMap } from "#types/map";
+import type { UnifiedMap } from "#app/types/map";
 
-import { debounce, Spatial } from "#utils/helpers";
+import { debounce, Spatial } from "#app/utils/helpers";
 import type { DrawingMode } from "#components/map/mode";
-import type { Store } from "#store/index";
+import type { Store } from "#app/store/index";
 
 import type { MouseEvents } from "../mouse-events";
 import type { MouseEventsChangeEvent } from "../mouse-events/types";
 import { CURSORS, type TCursor } from "./constants";
-import type { RequiredDrawOptions } from "#types/index";
+import type { RequiredDrawOptions } from "#app/types/index";
 
 interface CursorProps {
   map: UnifiedMap;

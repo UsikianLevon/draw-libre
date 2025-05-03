@@ -1,8 +1,8 @@
 import type { MapLayerMouseEvent, MapMouseEvent } from "maplibre-gl";
-import type { LatLng, Point, Uuid, EventsProps, RequiredDrawOptions } from "#types/index";
-import type { UnifiedMap } from "#types/map";
+import type { LatLng, Point, Uuid, EventsProps, RequiredDrawOptions } from "#app/types/index";
+import type { UnifiedMap } from "#app/types/map";
 
-import type { ListNode, Store } from "#store/index";
+import type { ListNode, Store } from "#app/store/index";
 
 import type { DrawingMode } from "#components/map/mode";
 import { ELAYERS } from "./geo_constants";
@@ -253,7 +253,7 @@ export class Spatial {
   };
 
   static switchToLineModeIfCan = (args: EventsProps) => {
-    const { store, map, mode, options } = args;
+    const { store, mode, options } = args;
 
     const isCircle = store.tail?.next === store.head;
     const canBreakGeometry = Spatial.canBreakClosedGeometry(store, options);

@@ -1,6 +1,6 @@
-import type { UnifiedMap } from "#types/map";
-import type { LatLng, StepId, Step, EventsProps } from "#types/index";
-import { EVENTS } from "#utils/constants";
+import type { UnifiedMap } from "#app/types/map";
+import type { LatLng, StepId, Step, EventsProps } from "#app/types/index";
+import { EVENTS } from "#app/utils/constants";
 import type { DrawingMode } from "./mode";
 import type { Mode } from "./mode/types";
 

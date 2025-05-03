@@ -1,7 +1,7 @@
 import { PointHelpers } from "#components/map/points/helpers";
-import type { Initial, LatLng, RequiredDrawOptions, Step, StepId } from "#types/index";
-import { uuidv4 } from "#utils/helpers";
-import { Observable } from "#utils/observable";
+import type { Initial, LatLng, RequiredDrawOptions, Step, StepId } from "#app/types/index";
+import { uuidv4 } from "#app/utils/helpers";
+import { Observable } from "#app/utils/observable";
 
 import { ERRORS } from "./errors";
 import { StoreChangeEvent } from "./types";
@@ -116,7 +116,9 @@ export class Store extends Observable<StoreChangeEvent> {
     this.tail = null;
     this.size = 0;
     this.map.clear();
-    this.pingConsumers();
+    this.notify({
+      type: "STORE_CLEARED",
+    })
   }
 
   pingConsumers = () => {

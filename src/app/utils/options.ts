@@ -1,5 +1,5 @@
-import { ERRORS } from "#store/errors";
-import { Initial, DrawOptions, RequiredDrawOptions } from "#types/index";
+import { ERRORS } from "#app/store/errors";
+import { Initial, DrawOptions, RequiredDrawOptions } from "#app/types/index";
 import { DEFAULT_OPTIONS } from "./constants";
 import {
   ON_LINE_POINT_PAINT_BASE,

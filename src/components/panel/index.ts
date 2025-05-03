@@ -1,7 +1,7 @@
-import type { UnifiedMap } from "#types/map";
-import type { LatLng, PanelImpl, Point, RequiredDrawOptions } from "#types/index";
-import { DOM } from "#utils/dom";
-import type { Store } from "#store/index";
+import type { UnifiedMap } from "#app/types/map";
+import type { LatLng, PanelImpl, Point, RequiredDrawOptions } from "#app/types/index";
+import { DOM } from "#app/utils/dom";
+import type { Store } from "#app/store/index";
 import type { DrawingMode } from "#components/map/mode";
 import "./panel.css";
 
@@ -17,6 +17,7 @@ export class Panel {
   #isHidden: boolean;
   #panelPopup: HTMLElement | undefined;
   _undoButton: HTMLElement | undefined;
+  _redoButton: HTMLElement | undefined;
   _deleteButton: HTMLElement | undefined;
   _saveButton: HTMLElement | undefined;
   _container: HTMLElement | undefined;
@@ -172,7 +173,7 @@ export class Panel {
   };
 
   #createButton = (
-    type: "undo" | "save" | "delete",
+    type: "undo" | "redo" | "save" | "delete",
     title: string,
     size: PanelImpl["size"],
     container: HTMLElement,
@@ -195,6 +196,7 @@ export class Panel {
     if (undo.visible) {
       this._undoButton = this.#createButton("undo", locale.undo, panelSize, container);
     }
+    this._redoButton = this.#createButton("redo", locale.undo, panelSize, container);
     if (deleteButton.visible) {
       this._deleteButton = this.#createButton("delete", locale.delete, panelSize, container);
     }

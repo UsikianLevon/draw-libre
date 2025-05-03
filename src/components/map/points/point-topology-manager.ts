@@ -1,11 +1,12 @@
 import type { MapLayerMouseEvent } from "maplibre-gl";
 
-import type { ListNode } from "#store/index";
-import type { EventsProps, LatLng, Step } from "#types/index";
-import { uuidv4 } from "#utils/helpers";
+import type { ListNode } from "#app/store/index";
+import type { EventsProps, LatLng, Step } from "#app/types/index";
 
 import { PointHelpers } from "./helpers";
 import type { PointState } from "./point-state";
+import { AddPointCommand } from "./commands/add-point";
+import { timeline } from "#app/history";
 
 export class PointTopologyManager {
   private props: EventsProps;
@@ -73,17 +74,12 @@ export class PointTopologyManager {
     return null;
   };
 
-  addPointToStore(event: MapLayerMouseEvent): Step {
-    const { store, options } = this.props;
-    const nextStep = { ...event.lngLat, id: uuidv4() };
+  addPoint(event: MapLayerMouseEvent): Step {
+    const { store } = this.props;
 
-    if (options.pointGeneration === "auto" && store?.tail?.val && store.size >= 1) {
-      const auxPoint = PointHelpers.createAuxiliaryPoint(store.tail.val, nextStep);
-      store.push(auxPoint);
-    }
-
-    const addedStep = PointHelpers.addPointToMap(event, this.props);
-    return addedStep;
+    const cmd = new AddPointCommand(store, event.lngLat)
+    timeline.commit(cmd);
+    return cmd.getStep();
   }
 
   private recalculateAuxiliaryPoints(clickedNode: ListNode | null): void {
@@ -109,7 +105,7 @@ export class PointTopologyManager {
     }
   }
 
-  removePointFromStore(id: string): void {
+  removePoint(id: string): void {
     const { store, options } = this.props;
 
     if (store.size === 1) {

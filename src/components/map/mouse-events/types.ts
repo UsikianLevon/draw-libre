@@ -1,4 +1,4 @@
-import { ChangeEvent } from "#utils/observable";
+import { ChangeEvent } from "#app/utils/observable";
 
 type MouseEvent =
   | "firstPointMouseEnter"

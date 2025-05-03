@@ -1,5 +1,5 @@
-import { HTMLEvent } from "#types/helpers";
-import { DOM } from "#utils/dom";
+import { HTMLEvent } from "#app/types/helpers";
+import { DOM } from "#app/utils/dom";
 import "./tooltip.css";
 
 interface CreateOptions {

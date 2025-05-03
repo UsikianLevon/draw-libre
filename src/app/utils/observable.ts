@@ -3,7 +3,7 @@ type Func<T> = (event: T) => any;
 export type ChangeEvent<T> = {
   [K in keyof T]: {
     type: K;
-    data: T[K];
+    data?: T[K];
   };
 }[keyof T];
 

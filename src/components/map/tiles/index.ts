@@ -1,12 +1,12 @@
 import type { GeoJSONSource } from "maplibre-gl";
 
-import type { LatLng, RequiredDrawOptions } from "#types/index";
-import type { UnifiedMap } from "#types/map";
-import type { Store } from "#store/index";
-import { ELAYERS, ESOURCES, generateLayersToRender } from "#utils/geo_constants";
-import { debounce, GeometryFactory, Spatial } from "#utils/helpers";
+import type { LatLng, RequiredDrawOptions } from "#app/types/index";
+import type { UnifiedMap } from "#app/types/map";
+import type { Store } from "#app/store/index";
+import { ELAYERS, ESOURCES, generateLayersToRender } from "#app/utils/geo_constants";
+import { debounce, GeometryFactory, Spatial } from "#app/utils/helpers";
 import type { DrawingMode } from "#components/map/mode";
-import type { StoreChangeEvent } from "#store/types";
+import type { StoreChangeEvent } from "#app/store/types";
 
 interface IProps {
   map: UnifiedMap;
@@ -50,10 +50,11 @@ export class Tiles {
   };
 
   #polygonVisibility = debounce((event: StoreChangeEvent) => {
-    if (event.type === "STORE_MUTATED" || event.type === "STORE_DETACHED") {
+    if (event.type === "STORE_MUTATED" || event.type === "STORE_CLOSE_GEOMETRY") {
       const { map, mode, options, store } = this.#props;
       const isPolygon = mode.getMode() === "polygon";
-      if (isPolygon && Spatial.isClosedGeometry(store, options)) {
+
+      if (isPolygon && store.size && Spatial.isClosedGeometry(store, options)) {
         map.setLayoutProperty(ELAYERS.PolygonLayer, "visibility", "visible");
       } else {
         map.setLayoutProperty(ELAYERS.PolygonLayer, "visibility", "none");

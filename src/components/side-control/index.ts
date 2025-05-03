@@ -1,5 +1,5 @@
-import type { RequiredDrawOptions } from "#types/index";
-import { DOM } from "#utils/dom";
+import type { RequiredDrawOptions } from "#app/types/index";
+import { DOM } from "#app/utils/dom";
 import { DrawingMode } from "#components/map/mode";
 import "./control.css";
 

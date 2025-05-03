@@ -1,4 +1,4 @@
-import { ChangeEvent } from "#utils/observable";
+import { ChangeEvent } from "#app/utils/observable";
 
 export type Mode = "line" | "polygon" | null;
 interface EventData {

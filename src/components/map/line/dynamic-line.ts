@@ -1,10 +1,10 @@
 import type { GeoJSONSource, MapLayerMouseEvent, PointLike } from "maplibre-gl";
 
-import type { EventsProps, LatLng, Step } from "#types/index";
-import { ELAYERS, ESOURCES, LINE_BASE } from "#utils/geo_constants";
-import type { StoreChangeEvent } from "#store/types";
-import { GeometryFactory, MapUtils, Spatial, throttle, debounce } from "#utils/helpers";
-import { EVENTS } from "#utils/constants";
+import type { EventsProps, LatLng, Step } from "#app/types/index";
+import { ELAYERS, ESOURCES, LINE_BASE } from "#app/utils/geo_constants";
+import type { StoreChangeEvent } from "#app/store/types";
+import { GeometryFactory, MapUtils, Spatial, throttle, debounce } from "#app/utils/helpers";
+import { EVENTS } from "#app/utils/constants";
 
 import type { DrawingModeChangeEvent } from "../mode/types";
 import type { MouseEventsChangeEvent } from "../mouse-events/types";
@@ -72,7 +72,7 @@ export class DynamicLineEvents {
 
   #dynamicLineVisibility = (data: StoreChangeEvent["data"]) => {
     const { store, options } = this.#props;
-    if (data?.tail?.val && !Spatial.isClosedGeometry(store, options)) {
+    if (data && "tail" in data && data?.tail?.val && !Spatial.isClosedGeometry(store, options)) {
       this.#firstPoint = store.tail?.val as Step;
       this.showDynamicLine();
     }
@@ -81,7 +81,7 @@ export class DynamicLineEvents {
   #storeEventsConsumer = (event: StoreChangeEvent) => {
     if (event.type === "STORE_MUTATED") {
       this.#debouncedDynamicLine(event.data);
-      if (!event.data.size) {
+      if (!event.data?.size) {
         this.hideDynamicLine();
       }
     }

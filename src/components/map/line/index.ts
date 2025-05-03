@@ -1,5 +1,5 @@
-import type { EventsProps } from "#types/index";
-import { MOBILE_WIDTH } from "#utils/constants";
+import type { EventsProps } from "#app/types/index";
+import { MOBILE_WIDTH } from "#app/utils/constants";
 import { DrawingModeChangeEvent } from "../mode/types";
 import { MouseEventsChangeEvent } from "../mouse-events/types";
 import { LineBreakEvents } from "./break-line";

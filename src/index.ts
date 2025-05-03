@@ -1,6 +1,6 @@
-import type { IControl, UnifiedMap } from "#types/map";
+import type { IControl, UnifiedMap } from "#app/types/map";
 
-import type { DrawOptions, LatLng, RequiredDrawOptions, Step, StepId } from "#types/index";
+import type { DrawOptions, LatLng, RequiredDrawOptions, Step, StepId } from "#app/types/index";
 import { Panel } from "#components/panel";
 import { Tiles } from "#components/map/tiles";
 import { Events } from "#components/map";
@@ -8,10 +8,10 @@ import { Control } from "#components/side-control";
 import { DrawingMode } from "#components/map/mode";
 import { Cursor } from "#components/map/cursor";
 import { MouseEvents } from "#components/map/mouse-events/index";
-import { uuidv4 } from "#utils/helpers";
-import { DOM } from "#utils/dom";
-import { Store, StoreHelpers } from "#store/index";
-import { Options } from "#utils/options";
+import { uuidv4 } from "#app/utils/helpers";
+import { DOM } from "#app/utils/dom";
+import { Store, StoreHelpers } from "#app/store/index";
+import { Options } from "#app/utils/options";
 
 import type {
   UndoEvent,

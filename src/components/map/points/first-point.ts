@@ -1,16 +1,17 @@
-import type { EventsProps } from "#types/index";
+import type { EventsProps } from "#app/types/index";
 import type { MapLayerMouseEvent } from "maplibre-gl";
 
-import { uuidv4, Spatial, debounce } from "#utils/helpers";
-import { ELAYERS } from "#utils/geo_constants";
+import { Spatial, debounce } from "#app/utils/helpers";
+import { ELAYERS } from "#app/utils/geo_constants";
 import { Tooltip } from "#components/tooltip";
 import { togglePointCircleRadius } from "#components/map/tiles/helpers";
 
-import { FireEvents } from "../helpers";
 import type { DrawingModeChangeEvent } from "../mode/types";
-import { PointHelpers, PointsFilter, PointVisibility } from "./helpers";
+import { PointsFilter, PointVisibility } from "./helpers";
 import type { PrimaryPointEvents } from ".";
-import type { StoreChangeEvent } from "#store/types";
+import type { StoreChangeEvent } from "#app/store/types";
+import { timeline } from "#app/history";
+import { CloseGeometryCommand } from "./commands/close-geometry";
 
 export class FirstPoint {
   #mouseDown: boolean;
@@ -107,9 +108,9 @@ export class FirstPoint {
 
   #storeConsumer = debounce((event: StoreChangeEvent) => {
     const { map, store, options } = this.#props;
-
     const { type } = event;
-    if (type === "STORE_MUTATED" || type === "STORE_DETACHED") {
+
+    if (type === "STORE_MUTATED" || type === "STORE_POINT_ADDED" || type === "STORE_CLOSE_GEOMETRY" || type === "STORE_UNDO") {
       if (Spatial.canCloseGeometry(store, options)) {
         togglePointCircleRadius(map, "large");
       } else {
@@ -119,19 +120,10 @@ export class FirstPoint {
   }, 10);
 
   #onFirstPointClick = () => {
-    const { store, map, mode, tiles, options } = this.#props;
+    const { store, mode, tiles, options } = this.#props;
 
     if (Spatial.canCloseGeometry(store, options)) {
-      const step = Object.assign({}, store.head?.val, {
-        id: uuidv4(),
-        total: store.size,
-      });
-      if (options.pointGeneration === "auto" && store.tail?.val) {
-        const auxPoint = PointHelpers.createAuxiliaryPoint(store.tail?.val, step);
-        store.push(auxPoint);
-      }
-      Spatial.closeGeometry(store, mode);
-      FireEvents.addPoint(step, map, mode);
+      timeline.commit(new CloseGeometryCommand(store, mode));
       tiles.render();
     }
   };

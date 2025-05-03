@@ -1,5 +1,5 @@
-import { ControlType, RequiredDrawOptions } from "#types/index";
-import { DOM } from "#utils/dom";
+import { ControlType, RequiredDrawOptions } from "#app/types/index";
+import { DOM } from "#app/utils/dom";
 
 export const addControlListeners = (
   element: HTMLElement,

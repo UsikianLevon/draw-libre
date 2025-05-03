@@ -1,12 +1,12 @@
 import type { CircleLayerSpecification, FillLayerSpecification, LineLayerSpecification } from "maplibre-gl";
 
-import type { UnifiedMap } from "#types/map";
+import type { UnifiedMap } from "#app/types/map";
 
 import type { Control } from "#components/side-control";
 import type { Panel } from "#components/panel";
 import type { Tiles } from "#components/map/tiles";
 import type { MouseEvents } from "#components/map/mouse-events/index";
-import type { Store } from "#store/index";
+import type { Store } from "#app/store/index";
 
 import type { DrawingMode } from "#components/map/mode";
 import type { DeepRequired } from "./helpers";

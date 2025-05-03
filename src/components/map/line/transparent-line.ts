@@ -1,8 +1,8 @@
 import type { GeoJSONSource, MapLayerMouseEvent } from "maplibre-gl";
 
-import type { EventsProps } from "#types/index";
-import { ELAYERS, ESOURCES } from "#utils/geo_constants";
-import { MapUtils, throttle } from "#utils/helpers";
+import type { EventsProps } from "#app/types/index";
+import { ELAYERS, ESOURCES } from "#app/utils/geo_constants";
+import { MapUtils, throttle } from "#app/utils/helpers";
 import { FireEvents } from "../helpers";
 import { PointVisibility } from "../points/helpers";
 import { checkIfPointClicked, insertStepIfOnLine, updateUIAfterInsert } from "./utils";

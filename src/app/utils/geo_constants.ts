@@ -1,4 +1,4 @@
-import type { RequiredDrawOptions } from "#types/index";
+import type { RequiredDrawOptions } from "#app/types/index";
 import type { AddLayerObject } from "maplibre-gl";
 
 export const POLYGON_BASE = {

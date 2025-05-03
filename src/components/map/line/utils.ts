@@ -1,10 +1,10 @@
 import type { MapLayerMouseEvent } from "maplibre-gl";
-import type { EventsProps, Step } from "#types/index";
-import type { UnifiedMap } from "#types/map";
+import type { EventsProps, Step } from "#app/types/index";
+import type { UnifiedMap } from "#app/types/map";
 
-import type { Store } from "#store/index";
-import { ELAYERS } from "#utils/geo_constants";
-import { MapUtils, Spatial, uuidv4 } from "#utils/helpers";
+import type { Store } from "#app/store/index";
+import { ELAYERS } from "#app/utils/geo_constants";
+import { MapUtils, Spatial, uuidv4 } from "#app/utils/helpers";
 import { PointVisibility } from "../points/helpers";
 
 export const isOnLine = (event: MapLayerMouseEvent, store: Store) => {

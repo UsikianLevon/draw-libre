@@ -1,5 +1,5 @@
-import type { EventsProps, ControlType } from "#types/index";
-import { HTMLEvent } from "#types/helpers";
+import type { EventsProps, ControlType } from "#app/types/index";
+import { HTMLEvent } from "#app/types/helpers";
 import { Tooltip } from "#components/tooltip";
 import { CURSORS } from "#components/map/cursor/constants";
 

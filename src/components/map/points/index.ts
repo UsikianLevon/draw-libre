@@ -1,20 +1,20 @@
-import type { EventsProps, LatLng, Step } from "#types/index";
+import type { EventsProps, LatLng, Step } from "#app/types/index";
 import type { MapLayerMouseEvent, MapTouchEvent } from "maplibre-gl";
 
-import { MapUtils, Spatial, throttle } from "#utils/helpers";
-import { ELAYERS } from "#utils/geo_constants";
-import { StoreHelpers } from "#store/index";
+import { MapUtils, Spatial, throttle } from "#app/utils/helpers";
+import { ELAYERS } from "#app/utils/geo_constants";
+import { StoreHelpers } from "#app/store/index";
 
 import { FireEvents } from "../helpers";
 import { PointVisibility } from "./helpers";
 import { FirstPoint } from "./first-point";
 import { removeTransparentLine, addTransparentLine } from "../tiles/helpers";
 import { AuxPoints } from "./aux-points";
-import { StoreChangeEvent } from "#store/types";
+import { StoreChangeEvent } from "#app/store/types";
 import { DrawingModeChangeEvent } from "../mode/types";
 import { PointState } from "./point-state";
 import { PointTopologyManager } from "./point-topology-manager";
-import { Tooltip } from "#components/tooltip";
+import { AuxiliaryPointManager } from "./aux-manager";
 
 export interface PrimaryPointEvents {
   onPointMouseEnter: (event: MapLayerMouseEvent) => void;
@@ -31,12 +31,14 @@ export class PointEvents {
   private auxPoints: AuxPoints | null;
   private pointState: PointState;
   private topologyManager: PointTopologyManager;
-  private tooltip: Tooltip;
+  private auxManager: AuxiliaryPointManager;
 
   constructor(props: EventsProps) {
     this.props = props;
     this.pointState = new PointState();
     this.topologyManager = new PointTopologyManager(props, this.pointState);
+    this.auxManager = new AuxiliaryPointManager(props.store, props.options);
+
     this.events = {
       onPointMouseEnter: this.#onPointMouseEnter,
       onPointMouseLeave: this.#onPointMouseLeave,
@@ -46,7 +48,6 @@ export class PointEvents {
     };
     this.firstPoint = new FirstPoint(this.props, this.events);
     this.auxPoints = new AuxPoints(this.props, this.events);
-    this.tooltip = new Tooltip();
   }
 
   #initConsumers = () => {
@@ -57,6 +58,7 @@ export class PointEvents {
   #removeConsumers = () => {
     this.props.mode.removeObserver(this.#mapModeConsumer);
     this.props.store.removeObserver(this.#storeEventsConsumer);
+    this.auxManager.removeConsumers();
   };
 
   initEvents = () => {
@@ -116,7 +118,7 @@ export class PointEvents {
       const id = MapUtils.queryPointId(this.props.map, event.point);
       const clickedNode = store.findNodeById(id);
 
-      this.topologyManager.removePointFromStore(id);
+      this.topologyManager.removePoint(id);
 
       const isPrimaryNode = !clickedNode?.val?.isAuxiliary;
 
@@ -146,8 +148,13 @@ export class PointEvents {
       mouseEvents.lastPointMouseClick = false;
     }
     map.getCanvasContainer().style.cursor = "grab";
-    const addedStep = this.topologyManager.addPointToStore(event);
-
+    const addedStep = this.topologyManager.addPoint(event);
+    store.notify({
+      type: "STORE_POINT_ADDED",
+      data: {
+        node: addedStep,
+      },
+    })
     FireEvents.addPoint({ ...addedStep, total: store.size }, map, mode);
     PointVisibility.setSinglePointHidden(event);
     tiles.render();
@@ -219,7 +226,7 @@ export class PointEvents {
 
   #storeEventsConsumer = (event: StoreChangeEvent) => {
     if (event.type === "STORE_MUTATED") {
-      if (event.data.size === 0) {
+      if (event.data?.size === 0) {
         this.pointState.reset();
       }
     }

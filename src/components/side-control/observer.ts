@@ -1,6 +1,6 @@
 import { FireEvents } from "#components/map/helpers";
 import { DrawingModeChangeEvent, Mode } from "#components/map/mode/types";
-import { EventsProps } from "#types/index";
+import { EventsProps } from "#app/types/index";
 
 export class ControlObserver {
   #props: EventsProps;

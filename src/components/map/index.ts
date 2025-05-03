@@ -1,4 +1,4 @@
-import type { EventsProps } from "#types/index";
+import type { EventsProps } from "#app/types/index";
 import { Tiles } from "#components/map/tiles";
 import { ControlEvents } from "#components/side-control/events";
 import { PanelEvents } from "#components/panel/events";

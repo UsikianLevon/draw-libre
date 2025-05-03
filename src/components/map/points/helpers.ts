@@ -1,10 +1,10 @@
 import type { MapLayerMouseEvent } from "maplibre-gl";
-import type { EventsProps, Step } from "#types/index";
+import type { EventsProps, Step } from "#app/types/index";
 
-import { ELAYERS } from "#utils/geo_constants";
-import { uuidv4 } from "#utils/helpers";
+import { ELAYERS } from "#app/utils/geo_constants";
+import { uuidv4 } from "#app/utils/helpers";
 
-import { UnifiedMap } from "#types/map";
+import { UnifiedMap } from "#app/types/map";
 
 export const PointHelpers = {
   getMidpoint(p1: { lat: number; lng: number }, p2: { lat: number; lng: number }) {

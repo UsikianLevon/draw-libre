@@ -9,13 +9,7 @@ import { AddPointCommand } from "./commands/add-point";
 import { timeline } from "#app/history";
 
 export class PointTopologyManager {
-  private props: EventsProps;
-  private state: PointState;
-
-  constructor(props: EventsProps, state: PointState) {
-    this.props = props;
-    this.state = state;
-  }
+  constructor(private readonly props: EventsProps, private readonly state: PointState) { }
 
   private updateMainPoint(node: ListNode, event: MapLayerMouseEvent): void {
     if (node.val) {
@@ -47,7 +41,7 @@ export class PointTopologyManager {
   }
 
   // we've got the reference to the selected node from the store and just updating the lat/lng when mouse up event happens
-  updateStore = () => {
+  public updateStore = () => {
     const lastEvent = this.state.getLastEvent();
     const selectedNode = this.state.getSelectedNode();
 
@@ -57,7 +51,7 @@ export class PointTopologyManager {
     this.updateAuxiliaryPoints(selectedNode, lastEvent);
   };
 
-  getAuxPointsLatLng = (event: MapLayerMouseEvent) => {
+  public getAuxPointsLatLng = (event: MapLayerMouseEvent) => {
     const selectedNode = this.state.getSelectedNode();
     if (!selectedNode) return null;
 
@@ -74,7 +68,7 @@ export class PointTopologyManager {
     return null;
   };
 
-  addPoint(event: MapLayerMouseEvent): Step {
+  public addPoint(event: MapLayerMouseEvent): Step {
     const { store } = this.props;
 
     const cmd = new AddPointCommand(store, event.lngLat)
@@ -105,7 +99,7 @@ export class PointTopologyManager {
     }
   }
 
-  removePoint(id: string): void {
+  public removePoint(id: string): void {
     const { store, options } = this.props;
 
     if (store.size === 1) {

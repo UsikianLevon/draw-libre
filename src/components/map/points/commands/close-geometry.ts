@@ -5,21 +5,22 @@ import { DrawingMode } from "#components/map/mode";
 export class CloseGeometryCommand implements Command {
     type: string;
 
-    constructor(private store: Store, private mode: DrawingMode) {
+    constructor(private readonly store: Store, private readonly mode: DrawingMode) {
         this.type = "STORE_CLOSE_GEOMETRY";
     }
 
-    execute = () => {
-        // добавляем auxPoint в tail
+    public execute = () => {
+        // adding auxPoint as the tail
         this.store.notify({ type: "STORE_CLOSE_GEOMETRY" });
-        // закрываем геометрию
+        // closing the geometry
         if (this.store.tail?.val && this.store.head?.val) {
             this.store.tail.next = this.store.head;
             this.store.head.prev = this.store.tail;
         }
         this.mode.setClosedGeometry(true);
     }
-    undo = () => {
+
+    public undo = () => {
         if (this.store.tail?.val && this.store.head?.val) {
             this.store.tail.next = null;
             this.store.head.prev = null;

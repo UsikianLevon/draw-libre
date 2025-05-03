@@ -23,9 +23,8 @@ export interface PrimaryPointEvents {
   onPointMouseUp: () => void;
   onMapMouseMove: (event: MapLayerMouseEvent) => void;
 }
-
+// TODO messy: clean this up
 export class PointEvents {
-  private props: EventsProps;
   private events: PrimaryPointEvents;
   private firstPoint: FirstPoint | null;
   private auxPoints: AuxPoints | null;
@@ -33,70 +32,69 @@ export class PointEvents {
   private topologyManager: PointTopologyManager;
   private auxManager: AuxiliaryPointManager;
 
-  constructor(props: EventsProps) {
-    this.props = props;
+  constructor(private readonly props: EventsProps) {
     this.pointState = new PointState();
     this.topologyManager = new PointTopologyManager(props, this.pointState);
     this.auxManager = new AuxiliaryPointManager(props.store, props.options);
 
     this.events = {
-      onPointMouseEnter: this.#onPointMouseEnter,
-      onPointMouseLeave: this.#onPointMouseLeave,
-      onPointMouseDown: this.#onPointMouseDown,
-      onPointMouseUp: this.#onPointMouseUp,
-      onMapMouseMove: this.#onMapMouseMove,
+      onPointMouseEnter: this.onPointMouseEnter,
+      onPointMouseLeave: this.onPointMouseLeave,
+      onPointMouseDown: this.onPointMouseDown,
+      onPointMouseUp: this.onPointMouseUp,
+      onMapMouseMove: this.onMapMouseMove,
     };
     this.firstPoint = new FirstPoint(this.props, this.events);
     this.auxPoints = new AuxPoints(this.props, this.events);
   }
 
-  #initConsumers = () => {
-    this.props.mode.addObserver(this.#mapModeConsumer);
-    this.props.store.addObserver(this.#storeEventsConsumer);
+  private initConsumers = () => {
+    this.props.mode.addObserver(this.mapModeConsumer);
+    this.props.store.addObserver(this.storeEventsConsumer);
   };
 
-  #removeConsumers = () => {
-    this.props.mode.removeObserver(this.#mapModeConsumer);
-    this.props.store.removeObserver(this.#storeEventsConsumer);
+  private removeConsumers = () => {
+    this.props.mode.removeObserver(this.mapModeConsumer);
+    this.props.store.removeObserver(this.storeEventsConsumer);
     this.auxManager.removeConsumers();
   };
 
-  initEvents = () => {
+  public initEvents = () => {
     const { map } = this.props;
-    map.on("click", this.#onMapClick);
-    map.on("dblclick", this.#onMapDblClick);
+    map.on("click", this.onMapClick);
+    map.on("dblclick", this.onMapDblClick);
 
-    map.on("mouseenter", ELAYERS.PointsLayer, this.#onPointMouseEnter);
-    map.on("mouseleave", ELAYERS.PointsLayer, this.#onPointMouseLeave);
-    map.on("mousedown", ELAYERS.PointsLayer, this.#onPointMouseDown);
-    map.on("click", ELAYERS.PointsLayer, this.#onPointClick);
-    map.on("mouseup", ELAYERS.PointsLayer, this.#onPointMouseUp);
-    map.on("touchend", ELAYERS.PointsLayer, this.#onPointMouseUp);
-    map.on("touchstart", ELAYERS.PointsLayer, this.#onPointMouseDown);
+    map.on("mouseenter", ELAYERS.PointsLayer, this.onPointMouseEnter);
+    map.on("mouseleave", ELAYERS.PointsLayer, this.onPointMouseLeave);
+    map.on("mousedown", ELAYERS.PointsLayer, this.onPointMouseDown);
+    map.on("click", ELAYERS.PointsLayer, this.onPointClick);
+    map.on("mouseup", ELAYERS.PointsLayer, this.onPointMouseUp);
+    map.on("touchend", ELAYERS.PointsLayer, this.onPointMouseUp);
+    map.on("touchstart", ELAYERS.PointsLayer, this.onPointMouseDown);
 
-    this.#initConsumers();
+    this.initConsumers();
   };
 
-  removeEvents = () => {
+  public removeEvents = () => {
     const { map } = this.props;
-    map.off("click", this.#onMapClick);
-    map.off("dblclick", this.#onMapDblClick);
-    map.off("mousemove", this.#onMapMouseMove);
+    map.off("click", this.onMapClick);
+    map.off("dblclick", this.onMapDblClick);
+    map.off("mousemove", this.onMapMouseMove);
 
-    map.off("mouseenter", ELAYERS.PointsLayer, this.#onPointMouseEnter);
-    map.off("mouseleave", ELAYERS.PointsLayer, this.#onPointMouseLeave);
-    map.off("mousedown", ELAYERS.PointsLayer, this.#onPointMouseDown);
-    map.off("click", ELAYERS.PointsLayer, this.#onPointClick);
-    map.off("mouseup", ELAYERS.PointsLayer, this.#onPointMouseUp);
-    map.off("touchend", ELAYERS.PointsLayer, this.#onPointMouseUp);
-    map.off("touchstart", ELAYERS.PointsLayer, this.#onPointMouseDown);
+    map.off("mouseenter", ELAYERS.PointsLayer, this.onPointMouseEnter);
+    map.off("mouseleave", ELAYERS.PointsLayer, this.onPointMouseLeave);
+    map.off("mousedown", ELAYERS.PointsLayer, this.onPointMouseDown);
+    map.off("click", ELAYERS.PointsLayer, this.onPointClick);
+    map.off("mouseup", ELAYERS.PointsLayer, this.onPointMouseUp);
+    map.off("touchend", ELAYERS.PointsLayer, this.onPointMouseUp);
+    map.off("touchstart", ELAYERS.PointsLayer, this.onPointMouseDown);
 
     this.firstPoint?.removeEvents();
     this.auxPoints?.removeEvents();
-    this.#removeConsumers();
+    this.removeConsumers();
   };
 
-  #onPointClick = (event: MapLayerMouseEvent) => {
+  private onPointClick = (event: MapLayerMouseEvent) => {
     const { mouseEvents, store, map, options } = this.props;
     const id = MapUtils.queryPointId(map, event.point);
 
@@ -106,11 +104,11 @@ export class PointEvents {
     }
   };
 
-  #onMapDblClick = (event: MapLayerMouseEvent) => {
+  private onMapDblClick = (event: MapLayerMouseEvent) => {
     event.preventDefault();
   };
 
-  #onPointRemove = (event: MapLayerMouseEvent | MapTouchEvent) => {
+  private onPointRemove = (event: MapLayerMouseEvent | MapTouchEvent) => {
     const { store, tiles } = this.props;
     if (store.size === 1) {
       store.reset();
@@ -130,7 +128,7 @@ export class PointEvents {
     tiles.render();
   };
 
-  #onOwnGeometryLayersClick = (event: MapLayerMouseEvent) => {
+  private onOwnGeometryLayersClick = (event: MapLayerMouseEvent) => {
     return MapUtils.isFeatureTriggered(event, [
       ELAYERS.PointsLayer,
       ELAYERS.FirstPointLayer,
@@ -139,11 +137,11 @@ export class PointEvents {
     ]);
   };
 
-  #onMapClick = (event: MapLayerMouseEvent) => {
+  private onMapClick = (event: MapLayerMouseEvent) => {
     const { mode, mouseEvents, map, store, tiles } = this.props;
 
     if (mode.getClosedGeometry()) return;
-    if (this.#onOwnGeometryLayersClick(event)) return;
+    if (this.onOwnGeometryLayersClick(event)) return;
     if (mouseEvents.lastPointMouseClick) {
       mouseEvents.lastPointMouseClick = false;
     }
@@ -160,14 +158,14 @@ export class PointEvents {
     tiles.render();
   };
 
-  #onMoveLeftClickUp = (event: MapLayerMouseEvent) => {
+  private onMoveLeftClickUp = (event: MapLayerMouseEvent) => {
     const mouseLeftClickUp = event.originalEvent.buttons === 0;
     if (mouseLeftClickUp) {
-      this.#onPointMouseUp();
+      this.onPointMouseUp();
     }
   };
 
-  #onMapMouseMove = throttle((event: MapLayerMouseEvent) => {
+  private onMapMouseMove = throttle((event: MapLayerMouseEvent) => {
     const { mouseEvents } = this.props;
 
     if (mouseEvents.pointMouseDown) {
@@ -176,13 +174,13 @@ export class PointEvents {
       if (!this.pointState.getSelectedNode()) return;
 
       const { tiles } = this.props;
-      this.#onMoveLeftClickUp(this.pointState.getLastEvent() as MapLayerMouseEvent);
+      this.onMoveLeftClickUp(this.pointState.getLastEvent() as MapLayerMouseEvent);
       const auxPoints = this.topologyManager.getAuxPointsLatLng(this.pointState.getLastEvent() as MapLayerMouseEvent);
       tiles.renderOnMouseMove(this.pointState.getSelectedIdx() as number, event.lngLat, auxPoints);
     }
   }, 17);
 
-  #onPointMouseEnter = (event: MapLayerMouseEvent) => {
+  private onPointMouseEnter = (event: MapLayerMouseEvent) => {
     const { mouseEvents, map, store, options } = this.props;
     if (mouseEvents) {
       mouseEvents.pointMouseEnter = true;
@@ -201,7 +199,7 @@ export class PointEvents {
     }
   };
 
-  #onPointMouseLeave = (event: MapLayerMouseEvent) => {
+  private onPointMouseLeave = (event: MapLayerMouseEvent) => {
     const { mouseEvents, store, map, options } = this.props;
 
     if (mouseEvents) {
@@ -224,7 +222,7 @@ export class PointEvents {
     );
   };
 
-  #storeEventsConsumer = (event: StoreChangeEvent) => {
+  private storeEventsConsumer = (event: StoreChangeEvent) => {
     if (event.type === "STORE_MUTATED") {
       if (event.data?.size === 0) {
         this.pointState.reset();
@@ -232,13 +230,13 @@ export class PointEvents {
     }
   };
 
-  #mapModeConsumer = (event: DrawingModeChangeEvent) => {
+  private mapModeConsumer = (event: DrawingModeChangeEvent) => {
     if (event.type === "BREAK_CHANGED" || event.type === "MODE_CHANGED") {
       this.pointState.reset();
     }
   };
 
-  #hideLastPointPanel = () => {
+  private hideLastPointPanel = () => {
     const { store, panel, options } = this.props;
     const selectedNode = this.pointState.getSelectedNode();
 
@@ -249,7 +247,7 @@ export class PointEvents {
     }
   };
 
-  #setSelectedNode = (event: MapLayerMouseEvent | MapTouchEvent) => {
+  private setSelectedNode = (event: MapLayerMouseEvent | MapTouchEvent) => {
     const { store, map } = this.props;
 
     const id = MapUtils.queryPointId(map, event.point);
@@ -260,7 +258,7 @@ export class PointEvents {
     }
   };
 
-  #onPointMouseDown = (event: MapLayerMouseEvent | MapTouchEvent) => {
+  private onPointMouseDown = (event: MapLayerMouseEvent | MapTouchEvent) => {
     event.preventDefault();
 
     this.pointState.clearLastEvent();
@@ -268,14 +266,14 @@ export class PointEvents {
     const { mouseEvents, map, store, options } = this.props;
 
     if ((event.originalEvent as { button: number }).button === 2) {
-      this.#onPointRemove(event);
+      this.onPointRemove(event);
       return;
     }
 
-    this.#setSelectedNode(event);
+    this.setSelectedNode(event);
 
     removeTransparentLine(map);
-    this.#hideLastPointPanel();
+    this.hideLastPointPanel();
 
     const point = MapUtils.queryPoint(map, event.point);
     const geometryIndex = Spatial.getGeometryIndex(store, point?.properties.id);
@@ -287,15 +285,15 @@ export class PointEvents {
 
     this.pointState.setStartCoordinates(event.lngLat);
 
-    map.on("mousemove", this.#onMapMouseMove);
-    map.on("touchmove", this.#onMapMouseMove);
+    map.on("mousemove", this.onMapMouseMove);
+    map.on("touchmove", this.onMapMouseMove);
   };
 
-  #onPointMouseUp = () => {
+  private onPointMouseUp = () => {
     const { mouseEvents, store, panel, map, options } = this.props;
 
-    map.off("mousemove", this.#onMapMouseMove);
-    map.off("touchmove", this.#onMapMouseMove);
+    map.off("mousemove", this.onMapMouseMove);
+    map.off("touchmove", this.onMapMouseMove);
 
     mouseEvents.pointMouseUp = true;
 

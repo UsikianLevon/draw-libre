@@ -1,17 +1,11 @@
-import { Store } from "#app/store";
+import type { Store } from "#app/store";
 import type { StoreChangeEvent } from "#app/store/types";
 import type { RequiredDrawOptions, Step, StepId } from "#app/types";
-import { Spatial, uuidv4 } from "#app/utils/helpers";
+import { Spatial } from "#app/utils/helpers";
 import { PointHelpers } from "../helpers";
 
 export class AuxiliaryPointManager {
-    private readonly store: Store;
-    private readonly options: RequiredDrawOptions;
-
-    constructor(store: Store, options: RequiredDrawOptions) {
-        this.store = store;
-        this.options = options;
-
+    constructor(private readonly store: Store, private readonly options: RequiredDrawOptions) {
         if (options.pointGeneration === "auto") {
             this.initConsumers();
         }
@@ -21,7 +15,7 @@ export class AuxiliaryPointManager {
         this.store.addObserver(this.rebuildAuxPoints);
     };
 
-    removeConsumers = () => {
+    public removeConsumers = () => {
         this.store.removeObserver(this.rebuildAuxPoints);
     };
 
@@ -29,8 +23,6 @@ export class AuxiliaryPointManager {
         if (event.type === "STORE_POINT_ADDED") {
             if (this.store.tail?.val && this.store.tail?.prev?.val) {
                 const auxPoint = PointHelpers.createAuxiliaryPoint(this.store.tail?.val, this.store.tail.prev.val);
-                console.log("auxPoint", auxPoint);
-
                 this.store.insert(auxPoint, this.store.tail.prev);
             }
         }

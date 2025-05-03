@@ -9,51 +9,51 @@ export class PointState {
   private enteredStep: Step | null = null;
   private lastEvent: MapLayerMouseEvent | null = null;
 
-  getSelectedNode(): ListNode | null {
+  public getSelectedNode(): ListNode | null {
     return this.selectedNode;
   }
 
-  getSelectedIdx(): number | null {
+  public getSelectedIdx(): number | null {
     return this.selectedIdx;
   }
 
-  getStartCoordinates(): LatLng | null {
+  public getStartCoordinates(): LatLng | null {
     return this.startCoordinates;
   }
 
-  getEnteredStep(): Step | null {
+  public getEnteredStep(): Step | null {
     return this.enteredStep;
   }
 
-  getLastEvent(): MapLayerMouseEvent | null {
+  public getLastEvent(): MapLayerMouseEvent | null {
     return this.lastEvent;
   }
 
-  setSelectedNode(node: ListNode | null): void {
+  public setSelectedNode(node: ListNode | null): void {
     this.selectedNode = node;
   }
 
-  setSelectedIdx(idx: number | null): void {
+  public setSelectedIdx(idx: number | null): void {
     this.selectedIdx = idx;
   }
 
-  setStartCoordinates(coordinates: LatLng | null): void {
+  public setStartCoordinates(coordinates: LatLng | null): void {
     this.startCoordinates = coordinates;
   }
 
-  setEnteredStep(step: Step | null): void {
+  public setEnteredStep(step: Step | null): void {
     this.enteredStep = step;
   }
 
-  setLastEvent(event: MapLayerMouseEvent | null): void {
+  public setLastEvent(event: MapLayerMouseEvent | null): void {
     this.lastEvent = event;
   }
 
-  clearLastEvent(): void {
+  public clearLastEvent(): void {
     this.lastEvent = null;
   }
 
-  reset(): void {
+  public reset(): void {
     this.selectedNode = null;
     this.selectedIdx = null;
     this.startCoordinates = null;
@@ -61,7 +61,7 @@ export class PointState {
     this.lastEvent = null;
   }
 
-  partialReset(): void {
+  public partialReset(): void {
     this.selectedNode = null;
     this.selectedIdx = null;
     this.startCoordinates = null;

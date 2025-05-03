@@ -8,7 +8,7 @@ export class AddPointCommand implements Command {
     payload: { node: Step };
     private readonly step: Step;
 
-    constructor(private store: Store, coord: LatLng) {
+    constructor(private readonly store: Store, coord: LatLng) {
         this.type = "STORE_POINT_ADDED";
         this.step = { id: uuidv4(), isAuxiliary: false, ...coord };
         this.payload = { node: this.step };

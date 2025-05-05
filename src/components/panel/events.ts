@@ -8,7 +8,7 @@ import { disableButton, enableButton, Spatial } from "#app/utils/helpers";
 import type { StoreChangeEvent } from "#app/store/types";
 import type { DrawingModeChangeEvent } from "#components/map/mode/types";
 import { timeline } from "#app/history";
-import { HistoryChangeEvent } from "#app/history/types";
+import { TimelineChangeEvent } from "#app/history/types";
 
 export class PanelEvents {
   private tooltip: Tooltip;
@@ -29,7 +29,7 @@ export class PanelEvents {
     timeline.removeObserver(this.timelineConsumer);
   }
 
-  private timelineConsumer = (event: HistoryChangeEvent) => {
+  private timelineConsumer = (event: TimelineChangeEvent) => {
     const { type, data } = event;
     if (type === "REDO_STACK_CHANGED") {
       if (!data) {
@@ -247,6 +247,11 @@ export class PanelEvents {
     if (cmd && cmd.type === "STORE_POINT_ADDED") {
       store.notify({
         type: "STORE_POINT_ADDED",
+      })
+    }
+    if (cmd && cmd.type === "STORE_POINT_INSERTED") {
+      store.notify({
+        type: "STORE_POINT_INSERTED",
       })
     }
     renderer.render();

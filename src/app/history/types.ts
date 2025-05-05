@@ -5,4 +5,4 @@ interface EventData {
   UNDO_STACK_CHANGED: number;
 }
 
-export type HistoryChangeEvent = ChangeEvent<EventData>;
+export type TimelineChangeEvent = ChangeEvent<EventData>;

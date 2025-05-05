@@ -9,7 +9,7 @@ import { togglePointCircleRadius } from "#components/map/tiles/helpers";
 import type { DrawingModeChangeEvent } from "../mode/types";
 import { PointsFilter, PointVisibility } from "./helpers";
 import type { PrimaryPointEvents } from ".";
-import type { StoreChangeEvent } from "#app/store/types";
+import type { StoreChangeEvent, StoreChangeEventKeys } from "#app/store/types";
 import { timeline } from "#app/history";
 import { CloseGeometryCommand } from "./commands/close-geometry";
 
@@ -106,7 +106,14 @@ export class FirstPoint {
     const { map, store, options } = this.props;
     const { type } = event;
 
-    const events = ["STORE_MUTATED", "STORE_POINT_ADDED", "STORE_CLOSE_GEOMETRY", "STORE_BREAK_GEOMETRY", "STORE_UNDO"];
+    const events = [
+      "STORE_MUTATED",
+      "STORE_POINT_ADDED",
+      "STORE_POINT_INSERTED",
+      "STORE_CLOSE_GEOMETRY",
+      "STORE_BREAK_GEOMETRY",
+      "STORE_UNDO"
+    ] as StoreChangeEventKeys[];
     if (events.includes(type)) {
       if (Spatial.canCloseGeometry(store, options)) {
         togglePointCircleRadius(map, "large");

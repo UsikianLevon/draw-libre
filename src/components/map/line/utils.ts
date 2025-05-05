@@ -6,6 +6,8 @@ import type { Store } from "#app/store/index";
 import { ELAYERS } from "#app/utils/geo_constants";
 import { MapUtils, Spatial, uuidv4 } from "#app/utils/helpers";
 import { PointVisibility } from "../points/helpers";
+import { timeline } from "#app/history";
+import { InsertPointCommand } from "../points/commands/insert-point";
 
 export const isOnLine = (event: MapLayerMouseEvent, store: Store) => {
   let current = store.head;
@@ -29,15 +31,23 @@ export const isOnLine = (event: MapLayerMouseEvent, store: Store) => {
 };
 
 export const insertStepIfOnLine = (event: MapLayerMouseEvent, store: Store): Step | null => {
-  const currentStep = isOnLine(event, store);
+  const segmentStart = isOnLine(event, store);
 
-  if (currentStep) {
+  if (segmentStart) {
     const step = { ...event.lngLat, isAuxiliary: false, id: uuidv4() };
-    store.insert(step, currentStep);
+    timeline.commit(new InsertPointCommand(store, step, segmentStart))
+    store.notify({
+      type: "STORE_POINT_INSERTED",
+      data: {
+        node: step,
+      },
+    })
     return step;
   }
   return null;
 };
+
+
 
 export const updateUIAfterInsert = (event: MapLayerMouseEvent, context: EventsCtx) => {
   const { store, renderer } = context;

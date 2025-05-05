@@ -1,5 +1,5 @@
 import { Observable } from "#app/utils/observable";
-import type { HistoryChangeEvent } from "./types";
+import type { TimelineChangeEvent } from "./types";
 
 export interface Command {
     type: string;
@@ -8,14 +8,14 @@ export interface Command {
     undo(): void;
 }
 
-export class History extends Observable<HistoryChangeEvent> {
+export class Timeline extends Observable<TimelineChangeEvent> {
     private undoStack: Command[] = [];
     private redoStack: Command[] = [];
-    private static instance: History | null = null;
+    private static instance: Timeline | null = null;
 
-    static getInstance(): History {
-        if (!History.instance) History.instance = new History();
-        return History.instance;
+    static getInstance(): Timeline {
+        if (!Timeline.instance) Timeline.instance = new Timeline();
+        return Timeline.instance;
     }
 
     commit = (cmd: Command) => {
@@ -55,4 +55,4 @@ export class History extends Observable<HistoryChangeEvent> {
     }
 }
 
-export const timeline = History.getInstance();
+export const timeline = Timeline.getInstance();

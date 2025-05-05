@@ -6,6 +6,8 @@ import { MapUtils, throttle } from "#app/utils/helpers";
 import { FireEvents } from "../helpers";
 import { PointVisibility } from "../points/helpers";
 import { checkIfPointClicked, insertStepIfOnLine, updateUIAfterInsert } from "./utils";
+import { timeline } from "#app/history";
+import { AddPointCommand } from "../points/commands/add-point";
 
 export const LINE_TRANSPARENT_THROTTLE_TIME = 22;
 
@@ -19,20 +21,20 @@ export class TransparentLineEvents {
   }
 
   initEvents() {
-    this.ctx.map.on("click", ELAYERS.LineLayerTransparent, this.onLineAdd);
+    this.ctx.map.on("click", ELAYERS.LineLayerTransparent, this.onLineClick);
     this.ctx.map.on("mousemove", ELAYERS.LineLayerTransparent, this.onLineMove);
     this.ctx.map.on("mouseenter", ELAYERS.LineLayerTransparent, this.onLineEnter);
     this.ctx.map.on("mouseleave", ELAYERS.LineLayerTransparent, this.onLineLeave);
   }
 
   removeEvents() {
-    this.ctx.map.off("click", ELAYERS.LineLayerTransparent, this.onLineAdd);
+    this.ctx.map.off("click", ELAYERS.LineLayerTransparent, this.onLineClick);
     this.ctx.map.off("mousemove", ELAYERS.LineLayerTransparent, this.onLineMove);
     this.ctx.map.off("mouseenter", ELAYERS.LineLayerTransparent, this.onLineEnter);
     this.ctx.map.off("mouseleave", ELAYERS.LineLayerTransparent, this.onLineLeave);
   }
 
-  private onLineAdd = (event: MapLayerMouseEvent) => {
+  private onLineClick = (event: MapLayerMouseEvent) => {
     const { store, map, mode } = this.ctx;
     if (checkIfPointClicked(event)) return;
     const step = insertStepIfOnLine(event, store);

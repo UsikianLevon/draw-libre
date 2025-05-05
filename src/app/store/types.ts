@@ -15,7 +15,10 @@ interface EventData {
   };
   STORE_POINT_ADDED: {
     node: ListNode['val'];
-  }
+  };
+  STORE_POINT_INSERTED: {
+    node: ListNode['val'];
+  };
   STORE_REMOVED: { // random node removed
     node: ListNode;
   };

@@ -1,5 +1,5 @@
 import type { MapLayerMouseEvent } from "maplibre-gl";
-import type { EventsProps, Step } from "#app/types/index";
+import type { EventsCtx, Step } from "#app/types/index";
 
 import { ELAYERS } from "#app/utils/geo_constants";
 import { uuidv4 } from "#app/utils/helpers";
@@ -20,7 +20,7 @@ export const PointHelpers = {
     return step;
   },
 
-  addPointToMap(event: MapLayerMouseEvent, props: EventsProps) {
+  addPointToMap(event: MapLayerMouseEvent, props: EventsCtx) {
     const { store } = props;
 
     const step = { ...event.lngLat, isAuxiliary: false, id: uuidv4() };

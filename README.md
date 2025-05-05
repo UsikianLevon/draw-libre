@@ -82,6 +82,7 @@ const draw = DrawLibre.getInstance({
     polygon: "Polygon",
     save: "Save",
     undo: "Undo",
+    redo: "Redo",
   },
   layersPaint: {
     // Customize layer styles here. Refer to MapLibre's layer specifications for options.

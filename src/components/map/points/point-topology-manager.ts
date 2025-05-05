@@ -1,7 +1,7 @@
 import type { MapLayerMouseEvent } from "maplibre-gl";
 
 import type { ListNode } from "#app/store/index";
-import type { EventsProps, LatLng, Step } from "#app/types/index";
+import type { EventsCtx, LatLng, Step } from "#app/types/index";
 
 import { PointHelpers } from "./helpers";
 import type { PointState } from "./point-state";
@@ -9,7 +9,7 @@ import { AddPointCommand } from "./commands/add-point";
 import { timeline } from "#app/history";
 
 export class PointTopologyManager {
-  constructor(private readonly props: EventsProps, private readonly state: PointState) { }
+  constructor(private readonly props: EventsCtx, private readonly state: PointState) { }
 
   private updateMainPoint(node: ListNode, event: MapLayerMouseEvent): void {
     if (node.val) {

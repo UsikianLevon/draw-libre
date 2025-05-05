@@ -1,7 +1,7 @@
 import { GeoJSONSource, MapLayerMouseEvent } from "maplibre-gl";
 
-import { ListNode } from "#app/store/index";
-import type { EventsProps, Uuid } from "#app/types/index";
+import type { ListNode } from "#app/store/index";
+import type { EventsCtx } from "#app/types/index";
 import { ELAYERS, ESOURCES } from "#app/utils/geo_constants";
 import { GeometryFactory, Spatial, throttle } from "#app/utils/helpers";
 
@@ -11,67 +11,56 @@ import { FireEvents } from "../helpers";
 const LINE_BREAK_THROTTLE_TIME = 15;
 
 export class LineBreakEvents {
-  props: EventsProps;
-  #current: ListNode | null;
-  #throttledOnLineEnter: (event: MapLayerMouseEvent) => void;
+  private current: ListNode | null;
+  private throttledOnLineEnter: (event: MapLayerMouseEvent) => void;
 
-  constructor(props: EventsProps) {
-    this.props = props;
-    this.#current = null;
-    this.#throttledOnLineEnter = throttle(this.#onLineEnterBreak, LINE_BREAK_THROTTLE_TIME);
+  constructor(private readonly ctx: EventsCtx) {
+    this.current = null;
+    this.throttledOnLineEnter = throttle(this.onLineEnterBreak, LINE_BREAK_THROTTLE_TIME);
   }
 
-  initBreakEvents = () => {
-    const { map } = this.props;
-
-    map.on("click", ELAYERS.LineLayerTransparent, this.#geometryBreakOnClick);
-    map.on("mouseenter", ELAYERS.LineLayerTransparent, this.#throttledOnLineEnter);
-    map.on("mousemove", ELAYERS.LineLayerTransparent, this.#throttledOnLineEnter);
-    map.on("mouseleave", ELAYERS.LineLayerTransparent, this.#onLineLeave);
+  public initBreakEvents = () => {
+    this.ctx.map.on("click", ELAYERS.LineLayerTransparent, this.geometryBreakOnClick);
+    this.ctx.map.on("mouseenter", ELAYERS.LineLayerTransparent, this.throttledOnLineEnter);
+    this.ctx.map.on("mousemove", ELAYERS.LineLayerTransparent, this.throttledOnLineEnter);
+    this.ctx.map.on("mouseleave", ELAYERS.LineLayerTransparent, this.onLineLeave);
   };
 
-  removeBreakEvents = () => {
-    const { map } = this.props;
-
-    map.off("click", ELAYERS.LineLayerTransparent, this.#geometryBreakOnClick);
-    map.off("mouseenter", ELAYERS.LineLayerTransparent, this.#throttledOnLineEnter);
-    map.off("mousemove", ELAYERS.LineLayerTransparent, this.#throttledOnLineEnter);
-    map.off("mouseleave", ELAYERS.LineLayerTransparent, this.#onLineLeave);
+  public removeBreakEvents = () => {
+    this.ctx.map.off("click", ELAYERS.LineLayerTransparent, this.geometryBreakOnClick);
+    this.ctx.map.off("mouseenter", ELAYERS.LineLayerTransparent, this.throttledOnLineEnter);
+    this.ctx.map.off("mousemove", ELAYERS.LineLayerTransparent, this.throttledOnLineEnter);
+    this.ctx.map.off("mouseleave", ELAYERS.LineLayerTransparent, this.onLineLeave);
   };
 
-  hideBreakLine = () => {
-    const { map } = this.props;
-
-    if (map.getLayoutProperty(ELAYERS.LineLayerBreak, "visibility") !== "none") {
-      map.setLayoutProperty(ELAYERS.LineLayerBreak, "visibility", "none");
+  public hideBreakLine = () => {
+    if (this.ctx.map.getLayoutProperty(ELAYERS.LineLayerBreak, "visibility") !== "none") {
+      this.ctx.map.setLayoutProperty(ELAYERS.LineLayerBreak, "visibility", "none");
     }
   };
 
-  showBreakLine = () => {
-    const { map } = this.props;
-
-    if (map.getLayoutProperty(ELAYERS.LineLayerBreak, "visibility") !== "visible") {
-      map.setLayoutProperty(ELAYERS.LineLayerBreak, "visibility", "visible");
+  public showBreakLine = () => {
+    if (this.ctx.map.getLayoutProperty(ELAYERS.LineLayerBreak, "visibility") !== "visible") {
+      this.ctx.map.setLayoutProperty(ELAYERS.LineLayerBreak, "visibility", "visible");
     }
   };
 
-  #geometryBreakOnClick = () => {
-    const { store, mode, map, tiles, options } = this.props;
+  private geometryBreakOnClick = () => {
+    const { store, mode, map, renderer, options } = this.ctx;
 
-    if (!this.#current) return;
+    if (!this.current) return;
 
-    Spatial.breakGeometry(store, options, this.#current);
-    this.#onLineLeave();
+    Spatial.breakGeometry(store, options, this.current);
+    this.onLineLeave();
     mode.reset();
-    tiles.render();
     store.notify({
-      type: "STORE_DETACHED",
-      data: null,
+      type: "STORE_BREAK_GEOMETRY",
     });
+    renderer.render();
     FireEvents.onLineBreak(map);
   };
 
-  #getAutoGenerationPoints = (line: ListNode | null) => {
+  private getAutoGenerationPoints = (line: ListNode | null) => {
     let current: [number, number] | null = null;
     let next: [number, number] | null = null;
 
@@ -85,27 +74,26 @@ export class LineBreakEvents {
     return { current, next };
   };
 
-  #getLinePoints = (line: ListNode | null) => {
-    const { options } = this.props;
-    if (options.pointGeneration === "manual") {
+  private getLinePoints = (line: ListNode | null) => {
+    if (this.ctx.options.pointGeneration === "manual") {
       const current = [line?.val?.lng, line?.val?.lat] as [number, number];
       const next = [line?.next?.val?.lng, line?.next?.val?.lat] as [number, number];
       return { current, next };
     }
 
-    return this.#getAutoGenerationPoints(line);
+    return this.getAutoGenerationPoints(line);
   };
 
-  #onLineEnterBreak = (event: MapLayerMouseEvent) => {
-    const { map, store } = this.props;
+  private onLineEnterBreak = (event: MapLayerMouseEvent) => {
+    const { map, store } = this.ctx;
 
     const line = isOnLine(event, store);
-    if (line?.val?.id !== this.#current?.val?.id) {
-      this.#current = line;
+    if (line?.val?.id !== this.current?.val?.id) {
+      this.current = line;
     }
 
     const lineSource = map.getSource(ESOURCES.LineSourceBreak) as GeoJSONSource;
-    const { current, next } = this.#getLinePoints(this.#current);
+    const { current, next } = this.getLinePoints(this.current);
 
     const lineBreakData = GeometryFactory.getLine(current, next);
     if (!lineBreakData) return;
@@ -114,7 +102,7 @@ export class LineBreakEvents {
     this.showBreakLine();
   };
 
-  #onLineLeave = () => {
+  private onLineLeave = () => {
     setTimeout(() => {
       this.hideBreakLine();
     }, LINE_BREAK_THROTTLE_TIME + 10);

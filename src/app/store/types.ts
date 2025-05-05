@@ -22,3 +22,4 @@ interface EventData {
 }
 
 export type StoreChangeEvent = ChangeEvent<EventData>;
+export type StoreChangeEventKeys = keyof EventData;

@@ -1,6 +1,6 @@
 import type { UnifiedMap } from "#app/types/map";
 
-import { ELAYERS, FIRST_POINT_COLOR, generateLayersToRender, FIRST_POINT_RADIUS } from "#app/utils/geo_constants";
+import { ELAYERS, FIRST_POINT_COLOR, FIRST_POINT_RADIUS, generateLayersToRender } from "#app/utils/geo_constants";
 import type { RequiredDrawOptions } from "#app/types/index";
 
 const firstPointCircleRadius = (map: UnifiedMap) => {

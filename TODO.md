@@ -1,4 +1,4 @@
-- [ ] Tile class needs to be cut in half
+- [x] Tile class needs to be cut in half
 - [ ] add an option to export dots with or without aux points
 - [x] when 3 primary dots are added and the middle one is deleted, an aux point is not added between 2 primaries that are left
 - [x] panel size offset

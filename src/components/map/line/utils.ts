@@ -1,5 +1,5 @@
 import type { MapLayerMouseEvent } from "maplibre-gl";
-import type { EventsProps, Step } from "#app/types/index";
+import type { EventsCtx, Step } from "#app/types/index";
 import type { UnifiedMap } from "#app/types/map";
 
 import type { Store } from "#app/store/index";
@@ -39,11 +39,11 @@ export const insertStepIfOnLine = (event: MapLayerMouseEvent, store: Store): Ste
   return null;
 };
 
-export const updateUIAfterInsert = (event: MapLayerMouseEvent, context: EventsProps) => {
-  const { store, tiles } = context;
+export const updateUIAfterInsert = (event: MapLayerMouseEvent, context: EventsCtx) => {
+  const { store, renderer } = context;
   if (store.tail?.val) {
     PointVisibility.setSinglePointHidden(event);
-    tiles.render();
+    renderer.render();
   }
 };
 

@@ -1,4 +1,4 @@
-import type { EventsProps, LatLng, Step } from "#app/types/index";
+import type { EventsCtx, LatLng, Step } from "#app/types/index";
 import type { MapLayerMouseEvent, MapTouchEvent } from "maplibre-gl";
 
 import { MapUtils, Spatial, throttle } from "#app/utils/helpers";
@@ -32,7 +32,7 @@ export class PointEvents {
   private topologyManager: PointTopologyManager;
   private auxManager: AuxiliaryPointManager;
 
-  constructor(private readonly props: EventsProps) {
+  constructor(private readonly props: EventsCtx) {
     this.pointState = new PointState();
     this.topologyManager = new PointTopologyManager(props, this.pointState);
     this.auxManager = new AuxiliaryPointManager(props.store, props.options);
@@ -109,7 +109,7 @@ export class PointEvents {
   };
 
   private onPointRemove = (event: MapLayerMouseEvent | MapTouchEvent) => {
-    const { store, tiles } = this.props;
+    const { store, renderer } = this.props;
     if (store.size === 1) {
       store.reset();
     } else {
@@ -125,7 +125,7 @@ export class PointEvents {
         Spatial.switchToLineModeIfCan(this.props);
       }
     }
-    tiles.render();
+    renderer.render();
   };
 
   private onOwnGeometryLayersClick = (event: MapLayerMouseEvent) => {
@@ -138,10 +138,11 @@ export class PointEvents {
   };
 
   private onMapClick = (event: MapLayerMouseEvent) => {
-    const { mode, mouseEvents, map, store, tiles } = this.props;
+    const { mode, mouseEvents, map, store, renderer } = this.props;
 
     if (mode.getClosedGeometry()) return;
     if (this.onOwnGeometryLayersClick(event)) return;
+
     if (mouseEvents.lastPointMouseClick) {
       mouseEvents.lastPointMouseClick = false;
     }
@@ -155,7 +156,7 @@ export class PointEvents {
     })
     FireEvents.addPoint({ ...addedStep, total: store.size }, map, mode);
     PointVisibility.setSinglePointHidden(event);
-    tiles.render();
+    renderer.render();
   };
 
   private onMoveLeftClickUp = (event: MapLayerMouseEvent) => {
@@ -173,10 +174,10 @@ export class PointEvents {
 
       if (!this.pointState.getSelectedNode()) return;
 
-      const { tiles } = this.props;
+      const { renderer } = this.props;
       this.onMoveLeftClickUp(this.pointState.getLastEvent() as MapLayerMouseEvent);
       const auxPoints = this.topologyManager.getAuxPointsLatLng(this.pointState.getLastEvent() as MapLayerMouseEvent);
-      tiles.renderOnMouseMove(this.pointState.getSelectedIdx() as number, event.lngLat, auxPoints);
+      renderer.renderOnMouseMove(this.pointState.getSelectedIdx() as number, event.lngLat, auxPoints);
     }
   }, 17);
 

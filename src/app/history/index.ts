@@ -1,3 +1,6 @@
+import { Observable } from "#app/utils/observable";
+import type { HistoryChangeEvent } from "./types";
+
 export interface Command {
     type: string;
     payload?: any;
@@ -5,7 +8,7 @@ export interface Command {
     undo(): void;
 }
 
-export class History {
+export class History extends Observable<HistoryChangeEvent> {
     private undoStack: Command[] = [];
     private redoStack: Command[] = [];
     private static instance: History | null = null;
@@ -24,6 +27,9 @@ export class History {
             payload: cmd.payload,
         });
         this.redoStack.length = 0;
+        console.log("undoStack");
+
+        this.notify({ type: "REDO_STACK_CHANGED", data: 0 });
     }
 
     undo = () => {
@@ -31,6 +37,9 @@ export class History {
         if (!cmd) return;
         cmd.undo();
         this.redoStack.push(cmd);
+        console.log("undoStack2",);
+
+        this.notify({ type: "REDO_STACK_CHANGED", data: this.redoStack.length });
         return cmd
     }
 
@@ -39,6 +48,9 @@ export class History {
         if (!cmd) return null;
         cmd.execute();
         this.undoStack.push(cmd);
+        console.log("undoStack3",);
+
+        this.notify({ type: "REDO_STACK_CHANGED", data: this.redoStack.length });
         return cmd
     }
 }

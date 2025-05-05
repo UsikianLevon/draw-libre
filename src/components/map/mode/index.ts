@@ -16,23 +16,23 @@ function getInitialMode(options: RequiredDrawOptions): Mode {
 }
 
 export class DrawingMode extends Observable<DrawingModeChangeEvent> {
-  #mode: Mode;
-  #break: boolean;
-  #closedGeometry: boolean;
+  private mode: Mode;
+  private break: boolean;
+  private closedGeometry: boolean;
 
   constructor(options: RequiredDrawOptions) {
     super();
-    this.#mode = getInitialMode(options);
-    this.#break = false;
-    this.#closedGeometry = options.initial?.closeGeometry ?? false;
+    this.mode = getInitialMode(options);
+    this.break = false;
+    this.closedGeometry = options.initial?.closeGeometry ?? false;
   }
 
   getMode = (): Mode => {
-    return this.#mode;
+    return this.mode;
   };
 
   setMode = (newMode: Mode) => {
-    this.#mode = newMode;
+    this.mode = newMode;
     this.setBreak(false);
     this.notify({
       type: "MODE_CHANGED",
@@ -41,11 +41,11 @@ export class DrawingMode extends Observable<DrawingModeChangeEvent> {
   };
 
   getBreak = (): boolean => {
-    return this.#break;
+    return this.break;
   };
 
   setBreak = (value: boolean) => {
-    this.#break = value;
+    this.break = value;
     this.notify({
       type: "BREAK_CHANGED",
       data: value,
@@ -53,19 +53,19 @@ export class DrawingMode extends Observable<DrawingModeChangeEvent> {
   };
 
   getClosedGeometry = (): boolean => {
-    return this.#closedGeometry;
+    return this.closedGeometry;
   };
 
   setClosedGeometry = (value: boolean) => {
-    this.#closedGeometry = value;
+    this.closedGeometry = value;
     this.notify({
       type: "CLOSED_GEOMETRY_CHANGED",
-      data: this.#closedGeometry,
+      data: this.closedGeometry,
     });
   };
 
   isPolygon = () => {
-    return this.#mode === "polygon" && this.getClosedGeometry();
+    return this.mode === "polygon" && this.getClosedGeometry();
   };
 
   reset = () => {

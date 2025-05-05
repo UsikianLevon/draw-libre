@@ -1,5 +1,5 @@
 import type { MapLayerMouseEvent, MapMouseEvent } from "maplibre-gl";
-import type { LatLng, Point, Uuid, EventsProps, RequiredDrawOptions } from "#app/types/index";
+import type { LatLng, Point, Uuid, EventsCtx, RequiredDrawOptions } from "#app/types/index";
 import type { UnifiedMap } from "#app/types/map";
 
 import type { ListNode, Store } from "#app/store/index";
@@ -252,8 +252,8 @@ export class Spatial {
     return store.size <= 2;
   };
 
-  static switchToLineModeIfCan = (args: EventsProps) => {
-    const { store, mode, options } = args;
+  static switchToLineModeIfCan = (ctx: EventsCtx) => {
+    const { store, mode, options } = ctx;
 
     const isCircle = store.tail?.next === store.head;
     const canBreakGeometry = Spatial.canBreakClosedGeometry(store, options);
@@ -364,4 +364,14 @@ export const debounce = (fn: (...args: any) => void, delay: number) => {
       fn(...args);
     }, delay);
   };
+};
+
+export const disableButton = (button: HTMLButtonElement) => {
+  button.setAttribute("disabled", "true");
+  button.setAttribute("aria-disabled", "true");
+};
+
+export const enableButton = (button: HTMLButtonElement) => {
+  button.removeAttribute("disabled");
+  button.removeAttribute("aria-disabled");
 };

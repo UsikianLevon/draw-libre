@@ -29,6 +29,7 @@ export const DEFAULT_OPTIONS: RequiredDrawOptions = {
     size: "medium",
     buttons: {
       undo: { visible: true },
+      redo: { visible: true },
       delete: { visible: true },
       save: { visible: true, clearOnSave: true },
     },
@@ -60,6 +61,7 @@ export const DEFAULT_OPTIONS: RequiredDrawOptions = {
     save: "Save",
     delete: "Delete all",
     undo: "Undo",
+    redo: "Redo",
     line: "Line",
     polygon: "Polygon",
     break: "Split",

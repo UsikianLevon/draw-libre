@@ -4,13 +4,13 @@ import type { UnifiedMap } from "#app/types/map";
 
 import type { Control } from "#components/side-control";
 import type { Panel } from "#components/panel";
-import type { Tiles } from "#components/map/tiles";
 import type { MouseEvents } from "#components/map/mouse-events/index";
 import type { Store } from "#app/store/index";
 
 import type { DrawingMode } from "#components/map/mode";
 import type { DeepRequired } from "./helpers";
 import type { Mode } from "#components/map/mode/types";
+import type { Renderer } from "#components/map/renderer";
 
 export type LatLng = {
   lat: number;
@@ -34,6 +34,7 @@ export interface PanelImpl {
   buttons?: {
     delete?: Button;
     undo?: Button;
+    redo?: Button;
     save?: SaveButton;
   };
 }
@@ -75,6 +76,7 @@ interface Locale {
   save?: string;
   delete?: string;
   undo?: string;
+  redo?: string;
   line?: string;
   polygon?: string;
   break?: string;
@@ -118,7 +120,7 @@ export interface ControlOptions {
   parent: HTMLElement;
 }
 
-export type EventsProps = {
+export type EventsCtx = {
   map: UnifiedMap;
   panel: Panel;
   store: Store;
@@ -126,8 +128,8 @@ export type EventsProps = {
   options: RequiredDrawOptions;
   mouseEvents: MouseEvents;
   mode: DrawingMode;
-  tiles: Tiles;
+  renderer: Renderer;
 };
 
-export type ButtonType = "undo" | "delete" | "save";
+export type ButtonType = keyof Required<NonNullable<PanelImpl["buttons"]>>;
 export type ControlType = "line" | "polygon" | "break";

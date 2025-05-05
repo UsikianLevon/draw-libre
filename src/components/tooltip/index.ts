@@ -16,35 +16,35 @@ type Position = {
 };
 
 export class Tooltip {
-  _container: HTMLElement | undefined;
-  _label: HTMLElement | undefined;
+  private container: HTMLElement | undefined;
+  public label: HTMLElement | undefined;
 
   constructor() {
-    this._container = undefined;
+    this.container = undefined;
   }
 
   create = (options: CreateOptions) => {
     const container = DOM.create("div", "popup-container", document.body);
     const span = DOM.create("span", `popup-text popup-text-${options.placement}`, container);
     span.textContent = options.label;
-    this._container = container;
-    this._label = span;
+    this.container = container;
+    this.label = span;
     return this;
   };
 
   #activateAnimation = () => {
-    const notActive = !this._label?.classList.value.includes("popup-text-active");
+    const notActive = !this.label?.classList.value.includes("popup-text-active");
     if (notActive) {
-      this._label?.classList.add("popup-text-active");
+      this.label?.classList.add("popup-text-active");
     }
   };
 
   #getLabelDimensions = () => {
-    if (!this._label) return { width: 0, height: 0 };
+    if (!this.label) return { width: 0, height: 0 };
 
     return {
-      width: this._label.clientWidth,
-      height: this._label.clientHeight,
+      width: this.label.clientWidth,
+      height: this.label.clientHeight,
     };
   };
 
@@ -79,16 +79,16 @@ export class Tooltip {
 
   setPosition = (pos: Position) => {
     const { x, y } = pos;
-    if (this._container) {
-      this._container.style.left = `${x}px`;
-      this._container.style.top = `${y}px`;
+    if (this.container) {
+      this.container.style.left = `${x}px`;
+      this.container.style.top = `${y}px`;
     }
     this.#activateAnimation();
   };
 
   remove = () => {
-    if (this._container) {
-      DOM.remove(this._container);
+    if (this.container) {
+      DOM.remove(this.container);
     }
   };
 }

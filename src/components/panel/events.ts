@@ -1,39 +1,50 @@
-import { type ListNode, StoreHelpers } from "#app/store/index";
-import type { ButtonType, EventsProps, Step, StepId } from "#app/types/index";
+import { StoreHelpers } from "#app/store/index";
+import type { ButtonType, EventsCtx, Step } from "#app/types/index";
 import type { HTMLEvent } from "#app/types/helpers";
 import { DOM } from "#app/utils/dom";
 import { Tooltip } from "#components/tooltip";
 import { FireEvents } from "#components/map/helpers";
-import { Spatial } from "#app/utils/helpers";
-import { PointHelpers } from "#components/map/points/helpers";
+import { disableButton, enableButton, Spatial } from "#app/utils/helpers";
 import type { StoreChangeEvent } from "#app/store/types";
 import type { DrawingModeChangeEvent } from "#components/map/mode/types";
 import { timeline } from "#app/history";
+import { HistoryChangeEvent } from "#app/history/types";
 
 export class PanelEvents {
-  #props: EventsProps;
-  #tooltip: Tooltip;
+  private tooltip: Tooltip;
 
-  constructor(props: EventsProps) {
-    this.#props = props;
-    this.#tooltip = new Tooltip();
+  constructor(private readonly props: EventsCtx) {
+    this.tooltip = new Tooltip();
   }
 
-  initConsumers() {
-    this.#props.store.addObserver(this.#storeEventsConsumer);
-    this.#props.mode?.addObserver(this.#mapModeConsumer);
+  public initConsumers() {
+    this.props.store.addObserver(this.storeEventsConsumer);
+    this.props.mode?.addObserver(this.mapModeConsumer);
+    timeline.addObserver(this.timelineConsumer);
   }
 
-  removeConsumers() {
-    this.#props.store.removeObserver(this.#storeEventsConsumer);
-    this.#props.mode?.removeObserver(this.#mapModeConsumer);
+  public removeConsumers() {
+    this.props.store.removeObserver(this.storeEventsConsumer);
+    this.props.mode?.removeObserver(this.mapModeConsumer);
+    timeline.removeObserver(this.timelineConsumer);
   }
 
-  #storeEventsConsumer = (event: StoreChangeEvent) => {
+  private timelineConsumer = (event: HistoryChangeEvent) => {
+    const { type, data } = event;
+    if (type === "REDO_STACK_CHANGED") {
+      if (!data) {
+        disableButton(this.props.panel.redoButton as HTMLButtonElement);
+      } else {
+        enableButton(this.props.panel.redoButton as HTMLButtonElement);
+      }
+    }
+  }
+
+  private storeEventsConsumer = (event: StoreChangeEvent) => {
     if (event.type === "STORE_MUTATED") {
       const { data } = event;
       if (data?.size === 0) {
-        this.#props.panel.hidePanel();
+        this.props.panel.hidePanel();
       } else {
         let current = Object.assign({}, data);
         while (current.tail) {
@@ -41,7 +52,7 @@ export class PanelEvents {
             current.tail = current.tail?.prev;
           } else {
             if (current.tail?.val) {
-              this.#props.panel.setPanelLocation({
+              this.props.panel.setPanelLocation({
                 lat: current.tail.val.lat,
                 lng: current.tail.val.lng,
               });
@@ -53,15 +64,15 @@ export class PanelEvents {
     }
   };
 
-  #mapModeConsumer = (event: DrawingModeChangeEvent) => {
-    const { store } = this.#props;
+  private mapModeConsumer = (event: DrawingModeChangeEvent) => {
+    const { store } = this.props;
     const { type, data } = event;
     if (type === "MODE_CHANGED" && !data) {
-      this.#props.panel.hidePanel();
+      this.props.panel.hidePanel();
     }
     if (type === "MODE_CHANGED" && data) {
       if (store.tail?.val) {
-        this.#props.panel.setPanelLocation({
+        this.props.panel.setPanelLocation({
           lat: store.tail?.val?.lat,
           lng: store.tail?.val?.lng,
         });
@@ -69,96 +80,108 @@ export class PanelEvents {
     }
   };
 
-  initEvents() {
-    const { panel } = this.#props;
+  public initEvents() {
+    const { panel } = this.props;
 
-    if (panel._undoButton) {
-      DOM.manageEventListener("add", panel._undoButton, "click", this.#onUndoClick);
+    if (panel.undoButton) {
+      DOM.manageEventListener("add", panel.undoButton, "click", this.onUndoClick);
       DOM.manageEventListener(
         "add",
-        panel._undoButton,
+        panel.undoButton,
         "mouseenter",
         this.onMouseEnter as EventListenerOrEventListenerObject,
       );
-      DOM.manageEventListener("add", panel._undoButton, "mouseleave", this.onMouseLeave);
+      DOM.manageEventListener("add", panel.undoButton, "mouseleave", this.onMouseLeave);
     }
 
-    if (panel._redoButton) {
-      DOM.manageEventListener("add", panel._redoButton, "click", this.#onRedoClick);
+    if (panel.redoButton) {
+      DOM.manageEventListener("add", panel.redoButton, "click", this.onRedoClick);
       DOM.manageEventListener(
         "add",
-        panel._redoButton,
+        panel.redoButton,
         "mouseenter",
         this.onMouseEnter as EventListenerOrEventListenerObject,
       );
-      DOM.manageEventListener("add", panel._redoButton, "mouseleave", this.onMouseLeave);
+      DOM.manageEventListener("add", panel.redoButton, "mouseleave", this.onMouseLeave);
     }
 
-    if (panel._deleteButton) {
-      DOM.manageEventListener("add", panel._deleteButton, "click", this.#onRemoveAll);
+    if (panel.deleteButton) {
+      DOM.manageEventListener("add", panel.deleteButton, "click", this.onRemoveAll);
       DOM.manageEventListener(
         "add",
-        panel._deleteButton,
+        panel.deleteButton,
         "mouseenter",
         this.onMouseEnter as EventListenerOrEventListenerObject,
       );
-      DOM.manageEventListener("add", panel._deleteButton, "mouseleave", this.onMouseLeave);
+      DOM.manageEventListener("add", panel.deleteButton, "mouseleave", this.onMouseLeave);
     }
 
-    if (panel._saveButton) {
-      DOM.manageEventListener("add", panel._saveButton, "click", this.onSaveClick);
+    if (panel.saveButton) {
+      DOM.manageEventListener("add", panel.saveButton, "click", this.onSaveClick);
       DOM.manageEventListener(
         "add",
-        panel._saveButton,
+        panel.saveButton,
         "mouseenter",
         this.onMouseEnter as EventListenerOrEventListenerObject,
       );
-      DOM.manageEventListener("add", panel._saveButton, "mouseleave", this.onMouseLeave);
+      DOM.manageEventListener("add", panel.saveButton, "mouseleave", this.onMouseLeave);
     }
   }
 
-  removeEvents() {
-    const { panel } = this.#props;
+  public removeEvents() {
+    const { panel } = this.props;
 
-    if (panel._undoButton) {
-      DOM.manageEventListener("remove", panel._undoButton, "click", this.#onUndoClick);
+    if (panel.undoButton) {
+      DOM.manageEventListener("remove", panel.undoButton, "click", this.onUndoClick);
       DOM.manageEventListener(
         "remove",
-        panel._undoButton,
+        panel.undoButton,
         "mouseenter",
         this.onMouseEnter as EventListenerOrEventListenerObject,
       );
-      DOM.manageEventListener("remove", panel._undoButton, "mouseleave", this.onMouseLeave);
+      DOM.manageEventListener("remove", panel.undoButton, "mouseleave", this.onMouseLeave);
     }
 
-    if (panel._deleteButton) {
-      DOM.manageEventListener("remove", panel._deleteButton, "click", this.#onRemoveAll);
+    if (panel.deleteButton) {
+      DOM.manageEventListener("remove", panel.deleteButton, "click", this.onRemoveAll);
       DOM.manageEventListener(
         "remove",
-        panel._deleteButton,
+        panel.deleteButton,
         "mouseenter",
         this.onMouseEnter as EventListenerOrEventListenerObject,
       );
-      DOM.manageEventListener("remove", panel._deleteButton, "mouseleave", this.onMouseLeave);
+      DOM.manageEventListener("remove", panel.deleteButton, "mouseleave", this.onMouseLeave);
     }
 
-    if (panel._saveButton) {
-      DOM.manageEventListener("remove", panel._saveButton, "click", this.onSaveClick);
+    if (panel.redoButton) {
+      DOM.manageEventListener("remove", panel.redoButton, "click", this.onRedoClick);
       DOM.manageEventListener(
         "remove",
-        panel._saveButton,
+        panel.redoButton,
         "mouseenter",
         this.onMouseEnter as EventListenerOrEventListenerObject,
       );
-      DOM.manageEventListener("remove", panel._saveButton, "mouseleave", this.onMouseLeave);
+      DOM.manageEventListener("remove", panel.redoButton, "mouseleave", this.onMouseLeave);
+    }
+
+    if (panel.saveButton) {
+      DOM.manageEventListener("remove", panel.saveButton, "click", this.onSaveClick);
+      DOM.manageEventListener(
+        "remove",
+        panel.saveButton,
+        "mouseenter",
+        this.onMouseEnter as EventListenerOrEventListenerObject,
+      );
+      DOM.manageEventListener("remove", panel.saveButton, "mouseleave", this.onMouseLeave);
     }
   }
 
-  #getButtonLabel = (type: ButtonType) => {
-    const { options } = this.#props;
+  private getButtonLabel = (type: ButtonType) => {
+    const { options } = this.props;
 
     const LABELS: Record<ButtonType, string> = {
       undo: options.locale.undo,
+      redo: options.locale.redo,
       delete: options.locale.delete,
       save: options.locale.save,
     };
@@ -166,43 +189,40 @@ export class PanelEvents {
     return LABELS[type];
   };
 
-  onMouseEnter = (event: HTMLEvent<HTMLButtonElement>) => {
+  private onMouseEnter = (event: HTMLEvent<HTMLButtonElement>) => {
     const type = event.target.getAttribute("data-type") as ButtonType;
     if (type) {
-      const label = this.#getButtonLabel(type);
+      const label = this.getButtonLabel(type);
 
-      this.#tooltip
+      this.tooltip
         .create({
           label: label,
           placement: "bottom",
         })
-        .setPosition(this.#tooltip.getPosition(event, "bottom"));
+        .setPosition(this.tooltip.getPosition(event, "bottom"));
     }
   };
 
-  onMouseLeave = () => {
-    this.#tooltip.remove();
+  private onMouseLeave = () => {
+    this.tooltip.remove();
   };
 
-  #onRemoveAll = (event: Event) => {
-    const { tiles, mode, panel, store, map } = this.#props;
+  private onRemoveAll = (event: Event) => {
+    const { renderer, mode, panel, store, map } = this.props;
     store.reset();
     panel.hidePanel();
     mode.reset();
-    this.#tooltip.remove();
-    tiles.resetGeometries();
+    this.tooltip.remove();
+    renderer.resetGeometries();
     FireEvents.removeAllPoints(map, event);
   };
 
-
-
-
-  #onUndoClick = (event: Event) => {
-    const { store, map, tiles } = this.#props;
+  private onUndoClick = (event: Event) => {
+    const { store, map, renderer } = this.props;
     if (store.size == 1) {
       store.reset();
     } else {
-      // удаляет главную точку, там остаются только 2 вспомогательные
+      // deletes the primary point (!)
       timeline.undo();
       if (store.tail) {
         store.notify({
@@ -212,16 +232,16 @@ export class PanelEvents {
           }
         })
       }
-      Spatial.switchToLineModeIfCan(this.#props);
-      this.#tooltip.remove();
+      Spatial.switchToLineModeIfCan(this.props);
+      this.tooltip.remove();
       const step = { ...(store.tail?.val as Step), total: store.size };
       FireEvents.undoPoint(step, map, event);
-      tiles.render();
+      renderer.render();
     }
   };
 
-  #onRedoClick = () => {
-    const { tiles, store } = this.#props;
+  private onRedoClick = () => {
+    const { renderer, store } = this.props;
 
     const cmd = timeline.redo();
     if (cmd && cmd.type === "STORE_POINT_ADDED") {
@@ -229,16 +249,16 @@ export class PanelEvents {
         type: "STORE_POINT_ADDED",
       })
     }
-    tiles.render();
+    renderer.render();
   }
 
-  onSaveClick = (event: Event) => {
-    const { store, options } = this.#props;
+  private onSaveClick = (event: Event) => {
+    const { store, options } = this.props;
 
-    FireEvents.onSaveClick(this.#props, StoreHelpers.toArray(store.head), event);
-    this.#tooltip.remove();
+    FireEvents.onSaveClick(this.props, StoreHelpers.toArray(store.head), event);
+    this.tooltip.remove();
     if (options.panel.buttons.save.clearOnSave) {
-      this.#onRemoveAll(event);
+      this.onRemoveAll(event);
     }
   };
 }

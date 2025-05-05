@@ -1,5 +1,5 @@
 import { ListNode } from "#app/store/index";
-import type { EventsProps, Step } from "#app/types/index";
+import type { EventsCtx, Step } from "#app/types/index";
 import { ELAYERS } from "#app/utils/geo_constants";
 import { MapUtils } from "#app/utils/helpers";
 import type { MapLayerMouseEvent, MapTouchEvent } from "maplibre-gl";
@@ -7,7 +7,7 @@ import { PointHelpers } from "./helpers";
 import type { PrimaryPointEvents } from ".";
 
 export class AuxPoints {
-  constructor(private readonly props: EventsProps, private readonly baseEvents: PrimaryPointEvents) {
+  constructor(private readonly props: EventsCtx, private readonly baseEvents: PrimaryPointEvents) {
     this.initEvents();
   }
 
@@ -79,7 +79,7 @@ export class AuxPoints {
   };
 
   private onMouseDown = (event: MapLayerMouseEvent | MapTouchEvent) => {
-    const { store, tiles, map } = this.props;
+    const { store, renderer, map } = this.props;
     // right click TODO
     if ((event.originalEvent as { button: number }).button === 2) {
       return;
@@ -90,6 +90,6 @@ export class AuxPoints {
       node.val.isAuxiliary = false;
       this.addTwoAuxiliaryPoints(node);
     }
-    tiles.render();
+    renderer.render();
   };
 }

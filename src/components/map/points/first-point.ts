@@ -1,4 +1,4 @@
-import type { EventsProps } from "#app/types/index";
+import type { EventsCtx } from "#app/types/index";
 import type { MapLayerMouseEvent } from "maplibre-gl";
 
 import { Spatial, debounce } from "#app/utils/helpers";
@@ -17,7 +17,7 @@ export class FirstPoint {
   #mouseDown: boolean;
   #tooltip: Tooltip;
 
-  constructor(private readonly props: EventsProps, private readonly baseEvents: PrimaryPointEvents) {
+  constructor(private readonly props: EventsCtx, private readonly baseEvents: PrimaryPointEvents) {
     this.#mouseDown = false;
     this.#tooltip = new Tooltip();
 
@@ -106,7 +106,8 @@ export class FirstPoint {
     const { map, store, options } = this.props;
     const { type } = event;
 
-    if (type === "STORE_MUTATED" || type === "STORE_POINT_ADDED" || type === "STORE_CLOSE_GEOMETRY" || type === "STORE_UNDO") {
+    const events = ["STORE_MUTATED", "STORE_POINT_ADDED", "STORE_CLOSE_GEOMETRY", "STORE_BREAK_GEOMETRY", "STORE_UNDO"];
+    if (events.includes(type)) {
       if (Spatial.canCloseGeometry(store, options)) {
         togglePointCircleRadius(map, "large");
       } else {
@@ -116,11 +117,11 @@ export class FirstPoint {
   }, 10);
 
   private onFirstPointClick = () => {
-    const { store, mode, tiles, options } = this.props;
+    const { store, mode, renderer, options } = this.props;
 
     if (Spatial.canCloseGeometry(store, options)) {
       timeline.commit(new CloseGeometryCommand(store, mode));
-      tiles.render();
+      renderer.render();
     }
   };
 
@@ -167,7 +168,7 @@ export class FirstPoint {
 
         this.#tooltip.create({ label: this.getTitle(), placement: "bottom" });
 
-        const X_OFFSET = this.#tooltip._label ? this.#tooltip._label.clientWidth / 2 : 0;
+        const X_OFFSET = this.#tooltip.label ? this.#tooltip.label.clientWidth / 2 : 0;
         this.#tooltip.setPosition({ x: x - X_OFFSET, y: y + Y_OFFSET });
       }
     }

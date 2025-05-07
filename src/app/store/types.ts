@@ -10,7 +10,7 @@ interface EventData {
   STORE_BREAK_GEOMETRY: null;
   STORE_CLOSE_GEOMETRY: null;
   STORE_CLEARED: null;
-  STORE_UNDO: {
+  STORE_LAST_POINT_REMOVED: {
     // the last node removed
     node: ListNode;
   };

@@ -10,11 +10,11 @@ export class InsertPointCommand implements Command {
 
   constructor(
     private readonly store: Store,
-    step: LatLng,
+    readonly coords: LatLng,
     private readonly segmentStart: ListNode,
   ) {
     this.type = "STORE_POINT_INSERTED";
-    this.step = { id: uuidv4(), isAuxiliary: false, ...step };
+    this.step = { id: uuidv4(), isAuxiliary: false, ...coords };
     this.payload = { node: this.step };
   }
 
@@ -27,7 +27,9 @@ export class InsertPointCommand implements Command {
       },
     });
   };
+
   undo = () => {
     this.store.removeNodeById(this.step.id);
   };
+
 }

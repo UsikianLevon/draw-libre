@@ -32,10 +32,10 @@ export class PointEvents {
   private topologyManager: PointTopologyManager;
   private auxManager: AuxiliaryPointManager;
 
-  constructor(private readonly props: EventsCtx) {
+  constructor(private readonly ctx: EventsCtx) {
     this.pointState = new PointState();
-    this.topologyManager = new PointTopologyManager(props, this.pointState);
-    this.auxManager = new AuxiliaryPointManager(props.store, props.options);
+    this.topologyManager = new PointTopologyManager(ctx, this.pointState);
+    this.auxManager = new AuxiliaryPointManager(ctx.store, ctx.options);
 
     this.events = {
       onPointMouseEnter: this.onPointMouseEnter,
@@ -44,23 +44,23 @@ export class PointEvents {
       onPointMouseUp: this.onPointMouseUp,
       onMapMouseMove: this.onMapMouseMove,
     };
-    this.firstPoint = new FirstPoint(this.props, this.events);
-    this.auxPoints = new AuxPoints(this.props, this.events);
+    this.firstPoint = new FirstPoint(this.ctx, this.events);
+    this.auxPoints = new AuxPoints(this.ctx, this.events);
   }
 
   private initConsumers = () => {
-    this.props.mode.addObserver(this.mapModeConsumer);
-    this.props.store.addObserver(this.storeEventsConsumer);
+    this.ctx.mode.addObserver(this.mapModeConsumer);
+    this.ctx.store.addObserver(this.storeEventsConsumer);
   };
 
   private removeConsumers = () => {
-    this.props.mode.removeObserver(this.mapModeConsumer);
-    this.props.store.removeObserver(this.storeEventsConsumer);
+    this.ctx.mode.removeObserver(this.mapModeConsumer);
+    this.ctx.store.removeObserver(this.storeEventsConsumer);
     this.auxManager.removeConsumers();
   };
 
   public initEvents = () => {
-    const { map } = this.props;
+    const { map } = this.ctx;
     map.on("click", this.onMapClick);
     map.on("dblclick", this.onMapDblClick);
 
@@ -76,7 +76,7 @@ export class PointEvents {
   };
 
   public removeEvents = () => {
-    const { map } = this.props;
+    const { map } = this.ctx;
     map.off("click", this.onMapClick);
     map.off("dblclick", this.onMapDblClick);
     map.off("mousemove", this.onMapMouseMove);
@@ -95,7 +95,7 @@ export class PointEvents {
   };
 
   private onPointClick = (event: MapLayerMouseEvent) => {
-    const { mouseEvents, store, map, options } = this.props;
+    const { mouseEvents, store, map, options } = this.ctx;
     const id = MapUtils.queryPointId(map, event.point);
 
     if (StoreHelpers.isLastPoint(store, options, id)) {
@@ -109,11 +109,11 @@ export class PointEvents {
   };
 
   private onPointRemove = (event: MapLayerMouseEvent | MapTouchEvent) => {
-    const { store, renderer } = this.props;
+    const { store, renderer } = this.ctx;
     if (store.size === 1) {
       store.reset();
     } else {
-      const id = MapUtils.queryPointId(this.props.map, event.point);
+      const id = MapUtils.queryPointId(this.ctx.map, event.point);
       const clickedNode = store.findNodeById(id);
 
       this.topologyManager.removePoint(id);
@@ -121,8 +121,8 @@ export class PointEvents {
       const isPrimaryNode = !clickedNode?.val?.isAuxiliary;
 
       if (isPrimaryNode) {
-        FireEvents.pointRemoveRightClick({ ...(clickedNode?.val as Step), total: store.size }, this.props.map);
-        Spatial.switchToLineModeIfCan(this.props);
+        FireEvents.pointRemoveRightClick({ ...(clickedNode?.val as Step), total: store.size }, this.ctx.map);
+        Spatial.switchToLineModeIfCan(this.ctx);
       }
     }
     renderer.render();
@@ -138,7 +138,7 @@ export class PointEvents {
   };
 
   private onMapClick = (event: MapLayerMouseEvent) => {
-    const { mode, mouseEvents, map, store, renderer } = this.props;
+    const { mode, mouseEvents, map, store, renderer } = this.ctx;
 
     if (mode.getClosedGeometry()) return;
     if (this.onOwnGeometryLayersClick(event)) return;
@@ -161,14 +161,14 @@ export class PointEvents {
   };
 
   private onMapMouseMove = throttle((event: MapLayerMouseEvent) => {
-    const { mouseEvents } = this.props;
+    const { mouseEvents } = this.ctx;
 
     if (mouseEvents.pointMouseDown) {
       this.pointState.setLastEvent(event);
 
       if (!this.pointState.getSelectedNode()) return;
 
-      const { renderer } = this.props;
+      const { renderer } = this.ctx;
       this.onMoveLeftClickUp(this.pointState.getLastEvent() as MapLayerMouseEvent);
       const auxPoints = this.topologyManager.getAuxPointsLatLng(this.pointState.getLastEvent() as MapLayerMouseEvent);
       renderer.renderOnMouseMove(this.pointState.getSelectedIdx() as number, event.lngLat, auxPoints);
@@ -176,7 +176,7 @@ export class PointEvents {
   }, 17);
 
   private onPointMouseEnter = (event: MapLayerMouseEvent) => {
-    const { mouseEvents, map, store, options } = this.props;
+    const { mouseEvents, map, store, options } = this.ctx;
     if (mouseEvents) {
       mouseEvents.pointMouseEnter = true;
       if (mouseEvents.pointMouseDown) return;
@@ -195,7 +195,7 @@ export class PointEvents {
   };
 
   private onPointMouseLeave = (event: MapLayerMouseEvent) => {
-    const { mouseEvents, store, map, options } = this.props;
+    const { mouseEvents, store, map, options } = this.ctx;
 
     if (mouseEvents) {
       mouseEvents.pointMouseEnter = false;
@@ -232,7 +232,7 @@ export class PointEvents {
   };
 
   private hideLastPointPanel = () => {
-    const { store, panel, options } = this.props;
+    const { store, panel, options } = this.ctx;
     const selectedNode = this.pointState.getSelectedNode();
 
     if (!selectedNode?.val) return;
@@ -243,7 +243,7 @@ export class PointEvents {
   };
 
   private setSelectedNode = (event: MapLayerMouseEvent | MapTouchEvent) => {
-    const { store, map } = this.props;
+    const { store, map } = this.ctx;
 
     const id = MapUtils.queryPointId(map, event.point);
     const node = store.findNodeById(id);
@@ -258,7 +258,7 @@ export class PointEvents {
 
     this.pointState.clearLastEvent();
 
-    const { mouseEvents, map, store, options } = this.props;
+    const { mouseEvents, map, store, options } = this.ctx;
 
     if ((event.originalEvent as { button: number }).button === 2) {
       this.onPointRemove(event);
@@ -285,7 +285,7 @@ export class PointEvents {
   };
 
   private onPointMouseUp = () => {
-    const { mouseEvents, store, panel, map, options } = this.props;
+    const { mouseEvents, store, panel, map, options } = this.ctx;
 
     map.off("mousemove", this.onMapMouseMove);
     map.off("touchmove", this.onMapMouseMove);

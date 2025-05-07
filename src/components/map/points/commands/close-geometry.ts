@@ -34,5 +34,6 @@ export class CloseGeometryCommand implements Command {
       this.store.head.prev = null;
     }
     this.mode.setClosedGeometry(false);
+    this.store.notify({ type: "STORE_BREAK_GEOMETRY" })
   };
 }

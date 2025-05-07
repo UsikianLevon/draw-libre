@@ -86,9 +86,6 @@ export class Panel {
     this.show();
   };
 
-  public show = () => this.toggleVisibility(true);
-  public hide = () => this.toggleVisibility(false);
-
   private measureAnchor = () => {
     const { width, height } = this.panelPopup.getBoundingClientRect();
     this.anchor = { dx: -width / 2, dy: -height - OFFSET_Y };
@@ -111,6 +108,9 @@ export class Panel {
     this.isHidden = !visible;
     this.panelPopup.classList.toggle("hidden", !visible);
   }
+
+  public show = () => this.toggleVisibility(true);
+  public hide = () => this.toggleVisibility(false);
 
   private createButton(type: ButtonType, title: string, size: PanelImpl["size"], container: HTMLElement) {
     const button = DOM.create("button", `panel-button panel-button-${size}`, container);

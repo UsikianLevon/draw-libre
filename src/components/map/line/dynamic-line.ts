@@ -95,8 +95,6 @@ export class DynamicLineEvents {
       }
 
       if (!isClosed && store?.tail?.val) {
-        console.log("DynamicLineEvents", event);
-
         this.firstPoint = store?.tail?.val;
         this.showDynamicLine();
       }

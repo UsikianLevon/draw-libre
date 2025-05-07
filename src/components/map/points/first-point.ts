@@ -115,7 +115,7 @@ export class FirstPoint {
       "STORE_POINT_INSERTED",
       "STORE_CLOSE_GEOMETRY",
       "STORE_BREAK_GEOMETRY",
-      "STORE_UNDO",
+      "STORE_LAST_POINT_REMOVED",
     ] as StoreChangeEventKeys[];
     if (events.includes(type)) {
       if (Spatial.canCloseGeometry(store, options)) {

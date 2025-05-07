@@ -6,8 +6,6 @@ import { MapUtils, throttle } from "#app/utils/helpers";
 import { FireEvents } from "../helpers";
 import { PointVisibility } from "../points/helpers";
 import { checkIfPointClicked, insertStepIfOnLine, updateUIAfterInsert } from "./utils";
-import { timeline } from "#app/history";
-import { AddPointCommand } from "../points/commands/add-point";
 
 export const LINE_TRANSPARENT_THROTTLE_TIME = 22;
 

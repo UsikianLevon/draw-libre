@@ -4,7 +4,7 @@ import { debounce, Spatial } from "#app/utils/helpers";
 import type { Context } from ".";
 
 export class Layers {
-  constructor(private readonly ctx: Context) {}
+  constructor(private readonly ctx: Context) { }
 
   public init() {
     this.add();
@@ -26,14 +26,17 @@ export class Layers {
   };
 
   private onStoreChange = debounce((event: StoreChangeEvent) => {
+    console.log(event);
+
     const events = [
       "STORE_MUTATED",
-      "STORE_UNDO",
+      "STORE_LAST_POINT_REMOVED",
       "STORE_CLOSE_GEOMETRY",
       "STORE_BREAK_GEOMETRY",
-    ] as StoreChangeEventKeys[];
+    ] as string[];
     if (events.includes(event.type)) {
       const { map, options, store } = this.ctx;
+
       if (store.size && Spatial.isClosedGeometry(store, options)) {
         map.setLayoutProperty(ELAYERS.PolygonLayer, "visibility", "visible");
       } else {

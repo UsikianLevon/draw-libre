@@ -1,5 +1,5 @@
 import { StoreHelpers } from "#app/store/index";
-import type { ButtonType, EventsCtx, Step } from "#app/types/index";
+import type { ButtonType, EventsCtx } from "#app/types/index";
 import type { HTMLEvent } from "#app/types/helpers";
 import { DOM } from "#app/utils/dom";
 import { Tooltip } from "#components/tooltip";
@@ -18,14 +18,14 @@ export class PanelEvents {
   }
 
   public initConsumers() {
-    this.props.store.addObserver(this.storeEventsConsumer);
-    this.props.mode?.addObserver(this.mapModeConsumer);
+    this.props.store.addObserver(this.onStoreChangeConsumer);
+    this.props.mode?.addObserver(this.onMapModeConsumer);
     timeline.addObserver(this.timelineConsumer);
   }
 
   public removeConsumers() {
-    this.props.store.removeObserver(this.storeEventsConsumer);
-    this.props.mode?.removeObserver(this.mapModeConsumer);
+    this.props.store.removeObserver(this.onStoreChangeConsumer);
+    this.props.mode?.removeObserver(this.onMapModeConsumer);
     timeline.removeObserver(this.timelineConsumer);
   }
 
@@ -38,13 +38,13 @@ export class PanelEvents {
         enableButton(this.props.panel.redoButton as HTMLButtonElement);
       }
     }
-  }
+  };
 
-  private storeEventsConsumer = (event: StoreChangeEvent) => {
+  private onStoreChangeConsumer = (event: StoreChangeEvent) => {
     if (event.type === "STORE_MUTATED") {
       const { data } = event;
       if (data?.size === 0) {
-        this.props.panel.hidePanel();
+        this.props.panel.hide();
       } else {
         let current = Object.assign({}, data);
         while (current.tail) {
@@ -64,11 +64,11 @@ export class PanelEvents {
     }
   };
 
-  private mapModeConsumer = (event: DrawingModeChangeEvent) => {
+  private onMapModeConsumer = (event: DrawingModeChangeEvent) => {
     const { store } = this.props;
     const { type, data } = event;
     if (type === "MODE_CHANGED" && !data) {
-      this.props.panel.hidePanel();
+      this.props.panel.hide();
     }
     if (type === "MODE_CHANGED" && data) {
       if (store.tail?.val) {
@@ -210,7 +210,7 @@ export class PanelEvents {
   private onRemoveAll = (event: Event) => {
     const { renderer, mode, panel, store, map } = this.props;
     store.reset();
-    panel.hidePanel();
+    panel.hide();
     mode.reset();
     this.tooltip.remove();
     renderer.resetGeometries();
@@ -238,15 +238,15 @@ export class PanelEvents {
     if (cmd && cmd.type === "STORE_POINT_ADDED") {
       store.notify({
         type: cmd.type,
-      })
+      });
     }
     if (cmd && cmd.type === "STORE_POINT_INSERTED") {
       store.notify({
         type: "STORE_POINT_INSERTED",
-      })
+      });
     }
     renderer.render();
-  }
+  };
 
   private onSaveClick = (event: Event) => {
     const { store, options } = this.props;

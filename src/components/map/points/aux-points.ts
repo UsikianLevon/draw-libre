@@ -7,7 +7,10 @@ import { PointHelpers } from "./helpers";
 import type { PrimaryPointEvents } from ".";
 
 export class AuxPoints {
-  constructor(private readonly props: EventsCtx, private readonly baseEvents: PrimaryPointEvents) {
+  constructor(
+    private readonly props: EventsCtx,
+    private readonly baseEvents: PrimaryPointEvents,
+  ) {
     this.initEvents();
   }
 

@@ -10,16 +10,18 @@ interface EventData {
   STORE_BREAK_GEOMETRY: null;
   STORE_CLOSE_GEOMETRY: null;
   STORE_CLEARED: null;
-  STORE_UNDO: { // the last node removed
+  STORE_UNDO: {
+    // the last node removed
     node: ListNode;
   };
   STORE_POINT_ADDED: {
-    node: ListNode['val'];
+    node: ListNode["val"];
   };
   STORE_POINT_INSERTED: {
-    node: ListNode['val'];
+    node: ListNode["val"];
   };
-  STORE_REMOVED: { // random node removed
+  STORE_REMOVED: {
+    // random node removed
     node: ListNode;
   };
 }

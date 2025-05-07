@@ -35,13 +35,11 @@ export const insertStepIfOnLine = (event: MapLayerMouseEvent, store: Store): Ste
 
   if (segmentStart) {
     const step = { ...event.lngLat, isAuxiliary: false, id: uuidv4() };
-    timeline.commit(new InsertPointCommand(store, step, segmentStart))
+    timeline.commit(new InsertPointCommand(store, step, segmentStart));
     return step;
   }
   return null;
 };
-
-
 
 export const updateUIAfterInsert = (event: MapLayerMouseEvent, context: EventsCtx) => {
   const { store, renderer } = context;

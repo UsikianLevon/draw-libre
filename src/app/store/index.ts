@@ -118,7 +118,7 @@ export class Store extends Observable<StoreChangeEvent> {
     this.map.clear();
     this.notify({
       type: "STORE_CLEARED",
-    })
+    });
   }
 
   pingConsumers = () => {

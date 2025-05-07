@@ -17,7 +17,10 @@ export class FirstPoint {
   #mouseDown: boolean;
   #tooltip: Tooltip;
 
-  constructor(private readonly props: EventsCtx, private readonly baseEvents: PrimaryPointEvents) {
+  constructor(
+    private readonly props: EventsCtx,
+    private readonly baseEvents: PrimaryPointEvents,
+  ) {
     this.#mouseDown = false;
     this.#tooltip = new Tooltip();
 
@@ -112,7 +115,7 @@ export class FirstPoint {
       "STORE_POINT_INSERTED",
       "STORE_CLOSE_GEOMETRY",
       "STORE_BREAK_GEOMETRY",
-      "STORE_UNDO"
+      "STORE_UNDO",
     ] as StoreChangeEventKeys[];
     if (events.includes(type)) {
       if (Spatial.canCloseGeometry(store, options)) {

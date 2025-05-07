@@ -90,7 +90,6 @@ export class DynamicLineEvents {
 
     const isClosed = event.data;
     if (event.type === "CLOSED_GEOMETRY_CHANGED") {
-
       if (isClosed) {
         this.hideDynamicLine();
       }
@@ -143,13 +142,7 @@ export class DynamicLineEvents {
   public showDynamicLine = () => {
     const { map, store } = this.ctx;
 
-    if (
-      store.size &&
-      this.firstPoint?.lat &&
-      this.firstPoint.lng &&
-      this.secondPoint?.lng &&
-      this.secondPoint?.lat
-    ) {
+    if (store.size && this.firstPoint?.lat && this.firstPoint.lng && this.secondPoint?.lng && this.secondPoint?.lat) {
       const current = [this.firstPoint.lng, this.firstPoint.lat] as [number, number];
       const next = [this.secondPoint.lng, this.secondPoint.lat] as [number, number];
 

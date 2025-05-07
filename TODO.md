@@ -4,3 +4,5 @@
 - [x] panel size offset
 - [x] getAllSteps("linkedlist")
 - [x] fix the bug where the panel causes scrolling when it's outside the viewport.
+- [ ] Panel class needs to be cut in half
+- [ ] Check the Events class logic. Why did you decide to put eveything in one place. 

@@ -142,7 +142,7 @@ export default class DrawLibre implements IControl {
     this.#cursor?.removeConsumers();
     this.#tiles?.remove();
     this.#events?.removeMapEventsAndConsumers();
-    this.#panel?.removePanel();
+    this.#panel?.destroy();
     this.#store?.reset();
     this.#mode?.unsubscribe();
 
@@ -217,7 +217,7 @@ export default class DrawLibre implements IControl {
    */
   removeAllSteps = () => {
     this.#store?.reset();
-    this.#panel?.removePanel();
+    this.#panel?.destroy();
     this.#renderer?.render();
   };
 }
@@ -234,5 +234,5 @@ export type {
   SaveEvent,
   UndoEvent,
   ModeChangeEvent,
-  UnifiedMap
+  UnifiedMap,
 };

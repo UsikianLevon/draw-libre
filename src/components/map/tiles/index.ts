@@ -5,30 +5,30 @@ import { Layers } from "./layers";
 import { Sources } from "./sources";
 
 export interface Context {
-    map: UnifiedMap
-    store: Store;
-    options: RequiredDrawOptions
+  map: UnifiedMap;
+  store: Store;
+  options: RequiredDrawOptions;
 }
 
 export class Tiles {
-    private sources: Sources;
-    private layers: Layers;
+  private sources: Sources;
+  private layers: Layers;
 
-    constructor(private readonly ctx: Context) {
-        this.sources = new Sources(this.ctx);
-        this.layers = new Layers(this.ctx);
-        this.init();
-    }
+  constructor(private readonly ctx: Context) {
+    this.sources = new Sources(this.ctx);
+    this.layers = new Layers(this.ctx);
+    this.init();
+  }
 
-    private init = () => {
-        // first add the sources then all the layers
-        this.sources.init();
-        this.layers.init();
-    }
+  private init = () => {
+    // first add the sources then all the layers
+    this.sources.init();
+    this.layers.init();
+  };
 
-    public remove = () => {
-        // first remove the layers then all the sources
-        this.layers.remove();
-        this.sources.remove();
-    };
+  public remove = () => {
+    // first remove the layers then all the sources
+    this.layers.remove();
+    this.sources.remove();
+  };
 }

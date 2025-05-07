@@ -238,7 +238,7 @@ export class PointEvents {
     if (!selectedNode?.val) return;
 
     if (StoreHelpers.isLastPoint(store, options, selectedNode.val.id)) {
-      panel.hidePanel();
+      panel.hide();
     }
   };
 
@@ -307,7 +307,7 @@ export class PointEvents {
         data: store,
       });
 
-      panel?.showPanel();
+      panel?.show();
 
       FireEvents.movePoint(
         {

@@ -3,10 +3,7 @@
   "_version": "20.1.0",
   "compilerOptions": {
     "baseUrl": ".",
-    "lib": [
-      "DOM",
-      "es2023"
-    ],
+    "lib": ["DOM", "es2023"],
     "target": "es2022",
     "noUncheckedIndexedAccess": true,
     "noImplicitOverride": true,
@@ -24,15 +21,9 @@
     "noImplicitAny": true,
     "moduleResolution": "bundler",
     "paths": {
-      "#components/*": [
-        "src/components/*"
-      ],
-      "#app/*": [
-        "src/app/*"
-      ],
+      "#components/*": ["src/components/*"],
+      "#app/*": ["src/app/*"]
     }
   },
-  "include": [
-    "src"
-  ]
+  "include": ["src"]
 }

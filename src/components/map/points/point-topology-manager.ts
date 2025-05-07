@@ -9,7 +9,10 @@ import { AddPointCommand } from "./commands/add-point";
 import { timeline } from "#app/history";
 
 export class PointTopologyManager {
-  constructor(private readonly props: EventsCtx, private readonly state: PointState) { }
+  constructor(
+    private readonly props: EventsCtx,
+    private readonly state: PointState,
+  ) {}
 
   private updateMainPoint(node: ListNode, event: MapLayerMouseEvent): void {
     if (node.val) {
@@ -71,7 +74,7 @@ export class PointTopologyManager {
   public addPoint(event: MapLayerMouseEvent): Step {
     const { store } = this.props;
 
-    const cmd = new AddPointCommand(store, event.lngLat)
+    const cmd = new AddPointCommand(store, event.lngLat);
     timeline.commit(cmd);
     return cmd.getStep();
   }

@@ -28,6 +28,8 @@ export class AuxiliaryPointManager {
         }
 
         if (event.type === "STORE_UNDO") {
+            console.log("STORE_UNDO");
+
             this.store.removeNodeById(this.store.tail?.val?.id as StepId);
             if (this.store.tail?.val?.isAuxiliary) {
                 this.store.removeNodeById(this.store.tail?.val?.id);
@@ -41,6 +43,8 @@ export class AuxiliaryPointManager {
 
         if (event.type === "STORE_CLOSE_GEOMETRY") {
             if (this.options.pointGeneration === "auto" && this.store.tail?.val) {
+                console.log("STORE_CLOSE_GEOMETRY", this.store.tail.val.id, this.store.head?.val?.id);
+
                 const auxPoint = PointHelpers.createAuxiliaryPoint(this.store.tail?.val, this.store.head?.val as Step);
                 this.store.push(auxPoint);
             }

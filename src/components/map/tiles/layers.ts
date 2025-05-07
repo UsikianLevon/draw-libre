@@ -26,10 +26,14 @@ export class Layers {
     };
 
     private onStoreChange = debounce((event: StoreChangeEvent) => {
-        const events = ["STORE_MUTATED", "STORE_UNDO", "STORE_CLOSE_GEOMETRY", "STORE_BREAK_GEOMETRY"] as StoreChangeEventKeys[];
+        const events = [
+            "STORE_MUTATED",
+            "STORE_UNDO",
+            "STORE_CLOSE_GEOMETRY",
+            "STORE_BREAK_GEOMETRY",
+        ] as StoreChangeEventKeys[];
         if (events.includes(event.type)) {
             const { map, options, store } = this.ctx;
-
             if (store.size && Spatial.isClosedGeometry(store, options)) {
                 map.setLayoutProperty(ELAYERS.PolygonLayer, "visibility", "visible");
             } else {

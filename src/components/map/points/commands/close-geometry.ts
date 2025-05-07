@@ -1,11 +1,16 @@
-import { Command } from "#app/history";
+import type { Command } from "#app/history";
 import { Store } from "#app/store";
-import { DrawingMode } from "#components/map/mode";
+import type { RequiredDrawOptions, StepId } from "#app/types";
+import type { DrawingMode } from "#components/map/mode";
 
 export class CloseGeometryCommand implements Command {
     type: string;
 
-    constructor(private readonly store: Store, private readonly mode: DrawingMode) {
+    constructor(
+        private readonly store: Store,
+        private readonly mode: DrawingMode,
+        private readonly options: RequiredDrawOptions
+    ) {
         this.type = "STORE_CLOSE_GEOMETRY";
     }
 
@@ -21,6 +26,9 @@ export class CloseGeometryCommand implements Command {
     }
 
     public undo = () => {
+        if (this.options.pointGeneration === "auto") {
+            this.store.removeNodeById(this.store.tail?.val?.id as StepId);
+        }
         if (this.store.tail?.val && this.store.head?.val) {
             this.store.tail.next = null;
             this.store.head.prev = null;

@@ -3,10 +3,12 @@ import { GeoJSONSource, MapLayerMouseEvent } from "maplibre-gl";
 import type { ListNode } from "#app/store/index";
 import type { EventsCtx } from "#app/types/index";
 import { ELAYERS, ESOURCES } from "#app/utils/geo_constants";
-import { GeometryFactory, Spatial, throttle } from "#app/utils/helpers";
+import { GeometryFactory, throttle } from "#app/utils/helpers";
 
 import { isOnLine } from "./utils";
 import { FireEvents } from "../helpers";
+import { timeline } from "#app/history";
+import { BreakGeometryCommand } from "./commands/break-geometry";
 
 const LINE_BREAK_THROTTLE_TIME = 15;
 
@@ -20,17 +22,17 @@ export class LineBreakEvents {
   }
 
   public initBreakEvents = () => {
-    this.ctx.map.on("click", ELAYERS.LineLayerTransparent, this.geometryBreakOnClick);
-    this.ctx.map.on("mouseenter", ELAYERS.LineLayerTransparent, this.throttledOnLineEnter);
-    this.ctx.map.on("mousemove", ELAYERS.LineLayerTransparent, this.throttledOnLineEnter);
-    this.ctx.map.on("mouseleave", ELAYERS.LineLayerTransparent, this.onLineLeave);
+    this.ctx.map.on("click", ELAYERS.LineLayer, this.geometryBreakOnClick);
+    this.ctx.map.on("mouseenter", ELAYERS.LineLayer, this.throttledOnLineEnter);
+    this.ctx.map.on("mousemove", ELAYERS.LineLayer, this.throttledOnLineEnter);
+    this.ctx.map.on("mouseleave", ELAYERS.LineLayer, this.onLineLeave);
   };
 
   public removeBreakEvents = () => {
-    this.ctx.map.off("click", ELAYERS.LineLayerTransparent, this.geometryBreakOnClick);
-    this.ctx.map.off("mouseenter", ELAYERS.LineLayerTransparent, this.throttledOnLineEnter);
-    this.ctx.map.off("mousemove", ELAYERS.LineLayerTransparent, this.throttledOnLineEnter);
-    this.ctx.map.off("mouseleave", ELAYERS.LineLayerTransparent, this.onLineLeave);
+    this.ctx.map.off("click", ELAYERS.LineLayer, this.geometryBreakOnClick);
+    this.ctx.map.off("mouseenter", ELAYERS.LineLayer, this.throttledOnLineEnter);
+    this.ctx.map.off("mousemove", ELAYERS.LineLayer, this.throttledOnLineEnter);
+    this.ctx.map.off("mouseleave", ELAYERS.LineLayer, this.onLineLeave);
   };
 
   public hideBreakLine = () => {
@@ -49,13 +51,9 @@ export class LineBreakEvents {
     const { store, mode, map, renderer, options } = this.ctx;
 
     if (!this.current) return;
-
-    Spatial.breakGeometry(store, options, this.current);
+    timeline.commit(new BreakGeometryCommand(store, options, mode, this.current));
     this.onLineLeave();
     mode.reset();
-    store.notify({
-      type: "STORE_BREAK_GEOMETRY",
-    });
     renderer.render();
     FireEvents.onLineBreak(map);
   };

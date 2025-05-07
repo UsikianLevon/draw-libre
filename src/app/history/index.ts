@@ -27,8 +27,6 @@ export class Timeline extends Observable<TimelineChangeEvent> {
             payload: cmd.payload,
         });
         this.redoStack.length = 0;
-        console.log("undoStack");
-
         this.notify({ type: "REDO_STACK_CHANGED", data: 0 });
     }
 
@@ -37,8 +35,6 @@ export class Timeline extends Observable<TimelineChangeEvent> {
         if (!cmd) return;
         cmd.undo();
         this.redoStack.push(cmd);
-        console.log("undoStack2",);
-
         this.notify({ type: "REDO_STACK_CHANGED", data: this.redoStack.length });
         return cmd
     }
@@ -48,8 +44,6 @@ export class Timeline extends Observable<TimelineChangeEvent> {
         if (!cmd) return null;
         cmd.execute();
         this.undoStack.push(cmd);
-        console.log("undoStack3",);
-
         this.notify({ type: "REDO_STACK_CHANGED", data: this.redoStack.length });
         return cmd
     }

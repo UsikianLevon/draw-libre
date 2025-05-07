@@ -127,7 +127,7 @@ export class FirstPoint {
     const { store, mode, renderer, options } = this.props;
 
     if (Spatial.canCloseGeometry(store, options)) {
-      timeline.commit(new CloseGeometryCommand(store, mode));
+      timeline.commit(new CloseGeometryCommand(store, mode, options));
       renderer.render();
     }
   };

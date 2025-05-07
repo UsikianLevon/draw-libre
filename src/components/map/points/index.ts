@@ -148,12 +148,6 @@ export class PointEvents {
     }
     map.getCanvasContainer().style.cursor = "grab";
     const addedStep = this.topologyManager.addPoint(event);
-    store.notify({
-      type: "STORE_POINT_ADDED",
-      data: {
-        node: addedStep,
-      },
-    })
     FireEvents.addPoint({ ...addedStep, total: store.size }, map, mode);
     PointVisibility.setSinglePointHidden(event);
     renderer.render();

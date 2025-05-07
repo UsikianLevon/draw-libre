@@ -3,3 +3,4 @@
 - [x] when 3 primary dots are added and the middle one is deleted, an aux point is not added between 2 primaries that are left
 - [x] panel size offset
 - [x] getAllSteps("linkedlist")
+- [x] fix the bug where the panel causes scrolling when it's outside the viewport.

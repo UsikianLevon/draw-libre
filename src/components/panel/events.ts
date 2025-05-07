@@ -218,24 +218,15 @@ export class PanelEvents {
   };
 
   private onUndoClick = (event: Event) => {
-    const { store, map, renderer } = this.props;
+    const { store, renderer } = this.props;
     if (store.size == 1) {
       store.reset();
     } else {
-      // deletes the primary point (!)
       timeline.undo();
-      if (store.tail) {
-        store.notify({
-          type: "STORE_UNDO",
-          data: {
-            node: store.tail,
-          }
-        })
-      }
       Spatial.switchToLineModeIfCan(this.props);
       this.tooltip.remove();
-      const step = { ...(store.tail?.val as Step), total: store.size };
-      FireEvents.undoPoint(step, map, event);
+      // const step = { ...(store.tail?.val as Step), total: store.size };
+      // FireEvents.undoPoint(step, map, event);
       renderer.render();
     }
   };
@@ -246,7 +237,7 @@ export class PanelEvents {
     const cmd = timeline.redo();
     if (cmd && cmd.type === "STORE_POINT_ADDED") {
       store.notify({
-        type: "STORE_POINT_ADDED",
+        type: cmd.type,
       })
     }
     if (cmd && cmd.type === "STORE_POINT_INSERTED") {

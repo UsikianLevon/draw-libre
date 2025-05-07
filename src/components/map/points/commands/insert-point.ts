@@ -16,6 +16,12 @@ export class InsertPointCommand implements Command {
 
     execute = () => {
         this.store.insert(this.step, this.segmentStart);
+        this.store.notify({
+            type: "STORE_POINT_INSERTED",
+            data: {
+                node: this.step,
+            },
+        })
     }
     undo = () => { this.store.removeNodeById(this.step.id); }
 }

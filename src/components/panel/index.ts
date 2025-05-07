@@ -32,7 +32,6 @@ export class Panel {
   private applyPanelStyles = () => {
     if (!this.panelPopup) return;
 
-    this.panelPopup.className = "dashboard-container";
     this.panelPopup.style.position = "absolute";
     this.panelPopup.style.zIndex = "1000000";
     this.panelPopup.style.pointerEvents = "auto";
@@ -44,7 +43,7 @@ export class Panel {
 
     this.createPanel();
 
-    this.panelPopup = document.createElement("div");
+    this.panelPopup = DOM.create("div", "dashboard-container");
     this.applyPanelStyles();
 
     if (this.container) {
@@ -52,6 +51,7 @@ export class Panel {
     }
 
     document.body.appendChild(this.panelPopup);
+    this.props.map.getContainer().appendChild(this.panelPopup as HTMLElement);
 
     if (store.tail?.val) {
       this.setPanelLocation({
@@ -61,31 +61,30 @@ export class Panel {
     }
   };
 
-  private getHorizonalOffset = (size: PanelImpl["size"]) => {
-    switch (size) {
-      case "small":
-        return 6;
-      case "medium":
-        return 0;
-      case "large":
-        return -6;
-      default:
-        return 0;
-    }
-  }
+  private calcAnchorOffset = () => {
+    if (!this.panelPopup) return { dx: 0, dy: 0 };
 
-  private getVerticalOffset = (size: PanelImpl["size"]) => {
-    switch (size) {
-      case "small":
-        return 0;
-      case "medium":
-        return -6;
-      case "large":
-        return -8;
-      default:
-        return 0;
+    const wasHidden = this.panelPopup.style.display === "none";
+    if (wasHidden) {
+      this.panelPopup.style.visibility = "hidden";
+      this.panelPopup.style.display = "block";
     }
-  }
+
+    const { width, height } = this.panelPopup.getBoundingClientRect();
+
+    if (wasHidden) {
+      this.panelPopup.style.display = "none";
+      this.panelPopup.style.visibility = "";
+    }
+
+    const GAP = 20;
+
+    return {
+      dx: -width / 2,
+      dy: -height - GAP,
+    };
+  };
+
 
   public setPanelLocation = (coordinates: LatLng) => {
     if (!this.panelPopup) return;
@@ -97,22 +96,18 @@ export class Panel {
     this.updatePanelPositionOnMapMove(coordinates);
   };
 
-  // TODO this whole logic needs to be revamped
   private pointPositionUpdate = (point: Point) => {
     if (this.isHidden || !this.panelPopup) return;
 
-    const mapContainer = this.props.map.getContainer();
-    const mapRect = mapContainer.getBoundingClientRect();
+    const { dx, dy } = this.calcAnchorOffset();
 
-    const x = mapRect.left + point.x;
-    const y = mapRect.top + point.y;
-    const basicOffset = 36;
+    this.panelPopup.style.left = '0'
+    this.panelPopup.style.top = '0'
 
-    const offsetX = this.getHorizonalOffset(this.props.options.panel.size);
-    const offsetY = this.getVerticalOffset(this.props.options.panel.size);
+    this.panelPopup.style.transform =
+      `translate3d(${point.x + dx}px, ${point.y + dy}px, 0)`;
 
-    this.panelPopup.style.left = `${x - basicOffset + offsetX}px`;
-    this.panelPopup.style.top = `${y - basicOffset + offsetY}px`;
+    this.panelPopup.style.willChange = "transform";
   };
 
   private updatePanelPositionOnMapMove = (coordinates: LatLng) => {
@@ -160,7 +155,8 @@ export class Panel {
     }
 
     if (this.panelPopup) {
-      document.body.removeChild(this.panelPopup);
+      // безопаснее так: parentNode может быть любым
+      this.panelPopup.remove();
       this.panelPopup = undefined;
     }
 

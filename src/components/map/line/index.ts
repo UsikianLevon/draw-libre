@@ -65,7 +65,7 @@ export class LineEvents {
     this.transparent?.removeEvents();
     if (this.ctx.options.dynamicLine) {
       this.dynamic?.removeEvents();
-      this.dynamic?.removeLine();
+      this.dynamic?.hide();
     }
   }
 

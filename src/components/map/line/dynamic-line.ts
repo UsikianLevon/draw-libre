@@ -14,19 +14,17 @@ const LINE_DYNAMIC_THROTTLE_TIME = 10;
 
 export class DynamicLineEvents {
   private visible: boolean;
-  private firstPoint: LatLng | null;
-  private secondPoint: LatLng | null;
+  private firstPoint: LatLng | null = null;
+  private secondPoint: LatLng | null = null;
   private lineFeature: any;
-  private throttledOnLineMove: (event: MapLayerMouseEvent) => void;
-  private debouncedDynamicLine: (data: StoreChangeEvent["data"]) => void;
+  private onMouseMoveThrottled: (event: MapLayerMouseEvent) => void;
+  private onStoreDebounced: (data: StoreChangeEvent["data"]) => void;
 
   constructor(private readonly ctx: EventsCtx) {
     this.visible = this.ctx.options.dynamicLine;
-    this.firstPoint = null;
-    this.secondPoint = null;
     this.initConsumers();
-    this.throttledOnLineMove = throttle(this.onLineMove, LINE_DYNAMIC_THROTTLE_TIME);
-    this.debouncedDynamicLine = debounce(this.dynamicLineVisibility, 10);
+    this.onMouseMoveThrottled = throttle(this.onLineMove, LINE_DYNAMIC_THROTTLE_TIME);
+    this.onStoreDebounced = debounce(this.evaluateVisibility, 10);
   }
 
   private initConsumers() {
@@ -34,10 +32,6 @@ export class DynamicLineEvents {
     this.ctx.mode.addObserver(this.onMapModeConsumer);
     this.ctx.mouseEvents.addObserver(this.onMouseEventsConsumer);
   }
-
-  removeLine = () => {
-    this.hideDynamicLine();
-  };
 
   removeConsumers = () => {
     this.ctx.store.removeObserver(this.onStoreEventsConsumer);
@@ -49,38 +43,44 @@ export class DynamicLineEvents {
     const { mode } = this.ctx;
     if (mode.getClosedGeometry()) return;
 
-    if (event.type === "lastPointMouseClick" && event.data) {
-      this.hideDynamicLine();
-      this.visible = false;
-    } else if (event.type === "lastPointMouseClick" && !event.data) {
-      this.visible = true;
-    }
-    if (!this.visible) return;
-    // hide the line if a point or a line is hovered
-    if ((event.type === "pointMouseEnter" || event.type === "lineMouseEnter") && event.data) {
-      this.hideDynamicLine();
-    }
-    if ((event.type === "pointMouseLeave" || event.type === "lineMouseLeave") && event.data) {
-      const { store } = this.ctx;
-      this.firstPoint = store.tail?.val as LatLng;
-      this.secondPoint = store.tail?.val as LatLng;
-      this.showDynamicLine();
+    switch (event.type) {
+      case 'lastPointMouseClick':
+        this.visible = !!event.data;
+        if (!this.visible) this.hide();
+        break;
+
+      case 'pointMouseEnter':
+      case 'lineMouseEnter':
+        if (event.data) this.hide();
+        break;
+
+      case 'pointMouseLeave':
+      case 'lineMouseLeave':
+        if (event.data) {
+          this.firstPoint = this.ctx.store.tail?.val as LatLng;
+          this.secondPoint = this.ctx.store.tail?.val as LatLng;
+          this.show();
+        }
+        break;
     }
   };
 
-  private dynamicLineVisibility = (data: StoreChangeEvent["data"]) => {
+  private evaluateVisibility = (data: StoreChangeEvent["data"]) => {
     const { store, options } = this.ctx;
     if (data && "tail" in data && data?.tail?.val && !Spatial.isClosedGeometry(store, options)) {
       this.firstPoint = store.tail?.val as Step;
-      this.showDynamicLine();
+      this.show();
     }
   };
 
   private onStoreEventsConsumer = (event: StoreChangeEvent) => {
     if (event.type === "STORE_MUTATED") {
-      this.debouncedDynamicLine(event.data);
+      console.log("store mutated", event.data);
+
       if (!event.data?.size) {
-        this.hideDynamicLine();
+        this.hide();
+      } else {
+        this.onStoreDebounced(event.data);
       }
     }
   };
@@ -91,12 +91,12 @@ export class DynamicLineEvents {
     const isClosed = event.data;
     if (event.type === "CLOSED_GEOMETRY_CHANGED") {
       if (isClosed) {
-        this.hideDynamicLine();
+        this.hide();
       }
 
       if (!isClosed && store?.tail?.val) {
         this.firstPoint = store?.tail?.val;
-        this.showDynamicLine();
+        this.show();
       }
     }
   };
@@ -104,9 +104,10 @@ export class DynamicLineEvents {
   public initDynamicEvents = () => {
     const { map } = this.ctx;
     map.on("click", this.onMapClick);
-    map.on("mousemove", this.throttledOnLineMove);
-    map.on(EVENTS.REMOVEALL, this.hideDynamicLine);
-    map.on(EVENTS.UNDO, this.onUndoClick);
+    map.on("mousemove", this.onMouseMoveThrottled);
+    map.on(EVENTS.REMOVEALL, this.hide);
+    map.on(EVENTS.UNDO, this.onUndoRedoClick);
+    map.on(EVENTS.REDO, this.onUndoRedoClick);
     map.on(EVENTS.RIGHTCLICKREMOVE, this.onRightClickRemove);
   };
 
@@ -114,19 +115,20 @@ export class DynamicLineEvents {
     const { map } = this.ctx;
 
     map.off("click", this.onMapClick);
-    map.off("mousemove", this.throttledOnLineMove);
-    map.off(EVENTS.REMOVEALL, this.hideDynamicLine);
-    map.off(EVENTS.UNDO, this.onUndoClick);
+    map.off("mousemove", this.onMouseMoveThrottled);
+    map.off(EVENTS.REMOVEALL, this.hide);
+    map.off(EVENTS.UNDO, this.onUndoRedoClick);
+    map.off(EVENTS.REDO, this.onUndoRedoClick);
     map.off(EVENTS.RIGHTCLICKREMOVE, this.onRightClickRemove);
   };
 
-  public hideDynamicLine = () => {
+  public hide = () => {
     const { map } = this.ctx;
 
     this.firstPoint = null;
     this.secondPoint = null;
     this.lineFeature = null;
-    map.off("mousemove", this.throttledOnLineMove);
+    map.off("mousemove", this.onMouseMoveThrottled);
 
     const lineSource = map.getSource(ESOURCES.LineDynamicSource) as GeoJSONSource;
     if (lineSource) {
@@ -137,7 +139,7 @@ export class DynamicLineEvents {
     }
   };
 
-  public showDynamicLine = () => {
+  public show = () => {
     const { map, store } = this.ctx;
 
     if (store.size && this.firstPoint?.lat && this.firstPoint.lng && this.secondPoint?.lng && this.secondPoint?.lat) {
@@ -151,7 +153,7 @@ export class DynamicLineEvents {
         this.renderLineOnMouseMove({ lng: this.secondPoint?.lng, lat: this.secondPoint?.lat });
       }
     }
-    map.on("mousemove", this.throttledOnLineMove);
+    map.on("mousemove", this.onMouseMoveThrottled);
   };
 
   private renderLineOnMouseMove = (newCoord: LatLng) => {
@@ -177,19 +179,22 @@ export class DynamicLineEvents {
     }
 
     if (lineClick) return;
-    this.hideDynamicLine();
+    this.hide();
   };
 
-  private onUndoClick = (event: UndoEvent) => {
+  private onUndoRedoClick = (event: UndoEvent) => {
     const { store, options } = this.ctx;
+
     if (!Spatial.isClosedGeometry(store, options)) {
+
       const latLng = event.target.unproject({ x: event.originalEvent.x, y: event.originalEvent.y } as PointLike);
       this.secondPoint = { lng: latLng.lng, lat: latLng.lat };
       this.firstPoint = store.tail?.val as LatLng;
-      this.showDynamicLine();
+      this.show();
     }
+
     if (store.size === 0) {
-      this.hideDynamicLine();
+      this.hide();
     }
   };
 
@@ -198,10 +203,10 @@ export class DynamicLineEvents {
     if (!mode.getClosedGeometry()) {
       this.secondPoint = { lng: event.coordinates.lng, lat: event.coordinates.lat };
       this.firstPoint = store.tail?.val as LatLng;
-      this.showDynamicLine();
+      this.show();
     }
     if (store.size === 0) {
-      this.hideDynamicLine();
+      this.hide();
     }
   };
 }

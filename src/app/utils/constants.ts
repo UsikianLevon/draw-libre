@@ -15,6 +15,7 @@ export const EVENTS = {
   MOVEEND: "mdl:moveend",
   ADD: "mdl:add",
   UNDO: "mdl:undo",
+  REDO: "mdl:redo",
   REMOVEALL: "mdl:removeall",
   SAVE: "mdl:save",
   BREAK: "mdl:break",

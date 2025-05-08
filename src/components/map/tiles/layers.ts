@@ -26,8 +26,6 @@ export class Layers {
   };
 
   private onStoreChange = debounce((event: StoreChangeEvent) => {
-    console.log(event);
-
     const events = [
       "STORE_MUTATED",
       "STORE_LAST_POINT_REMOVED",

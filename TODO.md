@@ -8,4 +8,5 @@
 - [ ] Check the Events class logic. Why did you decide to put eveything in one place. 
 - [ ] point move
 - [ ] point remove
-- [ ] old states like: STORE_MUTATED, 
+- [ ] old states like: STORE_MUTATED
+- [x] bug with undo click and dynamic line(is not triggered in the correct place)

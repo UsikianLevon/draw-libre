@@ -69,7 +69,7 @@ export class FireEvents {
       timestamp: Date.now(),
     });
   }
-  static undoPoint(step: Step & { total: number }, map: UnifiedMap, originalEvent?: Event) {
+  static undo(step: Step & { total: number }, map: UnifiedMap, originalEvent?: Event) {
     map.fire(EVENTS.UNDO, {
       originalEvent,
       id: step.id,
@@ -81,6 +81,21 @@ export class FireEvents {
       timestamp: Date.now(),
     });
   }
+
+
+  static redo(step: Step & { total: number }, map: UnifiedMap, originalEvent?: Event) {
+    map.fire(EVENTS.REDO, {
+      originalEvent,
+      id: step.id,
+      coordinates: {
+        lat: step.lat,
+        lng: step.lng,
+      },
+      total: step.total,
+      timestamp: Date.now(),
+    });
+  }
+
   static modeChanged(map: UnifiedMap, mode: Mode | "break") {
     map.fire(EVENTS.MODECHANGED, {
       mode,

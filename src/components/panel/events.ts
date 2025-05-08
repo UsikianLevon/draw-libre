@@ -1,5 +1,5 @@
 import { StoreHelpers } from "#app/store/index";
-import type { ButtonType, EventsCtx } from "#app/types/index";
+import type { ButtonType, EventsCtx, Step } from "#app/types/index";
 import type { HTMLEvent } from "#app/types/helpers";
 import { DOM } from "#app/utils/dom";
 import { Tooltip } from "#components/tooltip";
@@ -42,8 +42,6 @@ export class PanelEvents {
 
   private onStoreChangeConsumer = (event: StoreChangeEvent) => {
     if (event.type === "STORE_MUTATED") {
-      console.log("store mutated", event);
-
       const { data } = event;
       if (data?.size === 0) {
         this.ctx.panel.hide();
@@ -219,24 +217,27 @@ export class PanelEvents {
     FireEvents.removeAllPoints(map, event);
   };
 
-  private onUndoClick = () => {
-    const { store, renderer } = this.ctx;
+  private onUndoClick = (event: Event) => {
+    const { store, map, renderer } = this.ctx;
     if (store.size == 1) {
       store.reset();
+      this.ctx.panel.hide();
     } else {
       timeline.undo();
       Spatial.switchToLineModeIfCan(this.ctx);
-      this.tooltip.remove();
-      // const step = { ...(store.tail?.val as Step), total: store.size };
-      // FireEvents.undoPoint(step, map, event);
-      renderer.render();
     }
+    this.tooltip.remove();
+    const step = { ...(store.tail?.val as Step), total: store.size };
+    FireEvents.undo(step, map, event);
+    renderer.render();
   };
 
-  private onRedoClick = () => {
-    const { renderer } = this.ctx;
+  private onRedoClick = (event: Event) => {
+    const { store, map, renderer } = this.ctx;
 
     timeline.redo();
+    const step = { ...(store.tail?.val as Step), total: store.size };
+    FireEvents.redo(step, map, event);
     renderer.render();
   };
 

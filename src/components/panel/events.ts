@@ -218,13 +218,16 @@ export class PanelEvents {
   };
 
   private onUndoClick = (event: Event) => {
-    const { store, map, renderer } = this.ctx;
+    const { store, map, mode, renderer } = this.ctx;
     if (store.size == 1) {
       store.reset();
       this.ctx.panel.hide();
     } else {
       timeline.undo();
-      Spatial.switchToLineModeIfCan(this.ctx);
+      const switched = Spatial.switchToLineModeIfCan(this.ctx);
+      if (switched) {
+        mode.reset();
+      }
     }
     this.tooltip.remove();
     const step = { ...(store.tail?.val as Step), total: store.size };

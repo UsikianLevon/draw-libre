@@ -252,13 +252,12 @@ export class Spatial {
     return store.size <= 2;
   };
 
-  static switchToLineModeIfCan = (ctx: EventsCtx) => {
-    const { store, mode, options } = ctx;
+  static switchToLineModeIfCan = (ctx: Pick<EventsCtx, "store" | "options">) => {
+    const { store, options } = ctx;
 
-    const isCircle = store.tail?.next === store.head;
     const canBreakGeometry = Spatial.canBreakClosedGeometry(store, options);
 
-    if (canBreakGeometry && isCircle) {
+    if (canBreakGeometry && store.isCircular()) {
       if (options.pointGeneration === "auto") {
         if (store.tail?.val?.isAuxiliary) {
           if (store.head) {
@@ -287,9 +286,13 @@ export class Spatial {
         if (store.tail) {
           store.tail.next = null;
         }
+        if (store.head) {
+          store.head.prev = null;
+        }
       }
-      mode.reset();
+      return true;
     }
+    return false
   };
 }
 

@@ -30,14 +30,14 @@ export class FirstPoint {
 
   private initConsumers = () => {
     const { mode, store } = this.props;
-    mode.addObserver(this.mapModeConsumer);
-    store.addObserver(this.storeConsumer);
+    mode.addObserver(this.onMapModeChanggeConsumer);
+    store.addObserver(this.onStoreChangeConsumer);
   };
 
   private removeConsumers = () => {
     const { mode, store } = this.props;
-    mode.removeObserver(this.mapModeConsumer);
-    store.removeObserver(this.storeConsumer);
+    mode.removeObserver(this.onMapModeChanggeConsumer);
+    store.removeObserver(this.onStoreChangeConsumer);
   };
 
   public initLayer() {
@@ -90,7 +90,7 @@ export class FirstPoint {
     this.removeConsumers();
   }
 
-  private mapModeConsumer = (event: DrawingModeChangeEvent) => {
+  private onMapModeChanggeConsumer = (event: DrawingModeChangeEvent) => {
     const { map, options } = this.props;
     const { type, data } = event;
 
@@ -105,7 +105,7 @@ export class FirstPoint {
     }
   };
 
-  private storeConsumer = debounce((event: StoreChangeEvent) => {
+  private onStoreChangeConsumer = debounce((event: StoreChangeEvent) => {
     const { map, store, options } = this.props;
     const { type } = event;
 

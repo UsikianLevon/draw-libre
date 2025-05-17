@@ -3,7 +3,7 @@ import type { GeoJSONSource, MapLayerMouseEvent, PointLike } from "maplibre-gl";
 import type { EventsCtx, LatLng, Step } from "#app/types/index";
 import { ELAYERS, ESOURCES, LINE_BASE } from "#app/utils/geo_constants";
 import type { StoreChangeEvent } from "#app/store/types";
-import { GeometryFactory, MapUtils, Spatial, throttle, debounce } from "#app/utils/helpers";
+import { GeometryFactory, MapUtils, throttle, debounce } from "#app/utils/helpers";
 import { EVENTS } from "#app/utils/constants";
 
 import type { DrawingModeChangeEvent } from "../mode/types";
@@ -43,40 +43,44 @@ export class DynamicLineEvents {
     const { mode } = this.ctx;
     if (mode.getClosedGeometry()) return;
 
-    switch (event.type) {
-      case 'lastPointMouseClick':
-        this.visible = !!event.data;
-        if (!this.visible) this.hide();
-        break;
+    if (event.type === "lastPointMouseClick" && event.data) {
+      this.hide();
+      this.visible = false;
+    } else if (event.type === "lastPointMouseClick" && !event.data) {
+      this.visible = true;
+    }
+    if (!this.visible) return;
 
-      case 'pointMouseEnter':
-      case 'lineMouseEnter':
-        if (event.data) this.hide();
-        break;
-
-      case 'pointMouseLeave':
-      case 'lineMouseLeave':
-        if (event.data) {
-          this.firstPoint = this.ctx.store.tail?.val as LatLng;
-          this.secondPoint = this.ctx.store.tail?.val as LatLng;
-          this.show();
-        }
-        break;
+    // hide the line if a point or a line is hovered
+    if ((event.type === "pointMouseEnter" || event.type === "lineMouseEnter")) {
+      if (event.data) {
+        this.hide();
+      }
+    }
+    if ((event.type === "pointMouseLeave" || event.type === "lineMouseLeave")) {
+      const { store } = this.ctx;
+      if (event.data && !store.isCircular()) {
+        this.firstPoint = store.tail?.val as LatLng;
+        this.secondPoint = store.tail?.val as LatLng;
+        this.show();
+      }
     }
   };
 
   private evaluateVisibility = (data: StoreChangeEvent["data"]) => {
-    const { store, options } = this.ctx;
-    if (data && "tail" in data && data?.tail?.val && !Spatial.isClosedGeometry(store, options)) {
+    const { store } = this.ctx;
+
+    if (store.isCircular()) {
+      this.hide();
+    } else {
       this.firstPoint = store.tail?.val as Step;
       this.show();
     }
   };
 
   private onStoreEventsConsumer = (event: StoreChangeEvent) => {
-    if (event.type === "STORE_MUTATED") {
-      console.log("store mutated", event.data);
 
+    if (event.type === "STORE_MUTATED") {
       if (!event.data?.size) {
         this.hide();
       } else {
@@ -94,7 +98,7 @@ export class DynamicLineEvents {
         this.hide();
       }
 
-      if (!isClosed && store?.tail?.val) {
+      if (!store.isCircular() && store?.tail?.val) {
         this.firstPoint = store?.tail?.val;
         this.show();
       }
@@ -183,9 +187,10 @@ export class DynamicLineEvents {
   };
 
   private onUndoRedoClick = (event: UndoEvent) => {
-    const { store, options } = this.ctx;
+    const { store, mode } = this.ctx;
+    console.log(mode.getClosedGeometry(), store.size, store.isCircular());
 
-    if (!Spatial.isClosedGeometry(store, options)) {
+    if (!store.isCircular()) {
 
       const latLng = event.target.unproject({ x: event.originalEvent.x, y: event.originalEvent.y } as PointLike);
       this.secondPoint = { lng: latLng.lng, lat: latLng.lat };
@@ -200,7 +205,9 @@ export class DynamicLineEvents {
 
   private onRightClickRemove = (event: PointRightClickRemoveEvent) => {
     const { store, mode } = this.ctx;
-    if (!mode.getClosedGeometry()) {
+    console.log(mode.getClosedGeometry(), store.isCircular());
+
+    if (!store.isCircular()) {
       this.secondPoint = { lng: event.coordinates.lng, lat: event.coordinates.lat };
       this.firstPoint = store.tail?.val as LatLng;
       this.show();

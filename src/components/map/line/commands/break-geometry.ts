@@ -21,7 +21,6 @@ export class BreakGeometryCommand implements Command {
   ) { }
 
   public execute = () => {
-
     // save the original head and tail before breaking the geometry so we can restore them later if undo is called
     this.originalHead = this.store.head;
     this.originalTail = this.store.tail;

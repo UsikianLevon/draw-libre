@@ -32,7 +32,7 @@ export class Store extends Observable<StoreChangeEvent> {
     this.size = list ? list.size : 0;
   }
 
-  push(step: Step) {
+  push = (step: Step) => {
     const newNode = new ListNode(step);
     if (!this.head) {
       this.head = this.tail = newNode;
@@ -46,8 +46,27 @@ export class Store extends Observable<StoreChangeEvent> {
     this.pingConsumers();
   }
 
-  insert(step: Step, current: ListNode) {
+  public unshift = (step: Step) => {
+    const newNode = new ListNode(step);
+
+    const circular = this.isCircular();
+
+    newNode.next = this.head;
+    this.head = newNode;
+
+    if (circular && this.tail) {
+      this.tail.next = newNode;
+      newNode.prev = this.tail;
+    }
+
+    this.map.set(step.id, newNode);
+    this.size++;
+    this.pingConsumers();
+  }
+
+  public insert = (step: Step, current: ListNode) => {
     if (!current) return;
+
     const newNode = new ListNode(step);
     newNode.prev = current;
     newNode.next = current.next;
@@ -67,17 +86,18 @@ export class Store extends Observable<StoreChangeEvent> {
     this.pingConsumers();
   }
 
-  findStepById(id: StepId): ListNode["val"] | null {
+
+  public findStepById(id: StepId): ListNode["val"] | null {
     const node = this.map.get(id);
     return node ? node.val : null;
   }
 
-  findNodeById(id: StepId): ListNode | null {
+  public findNodeById(id: StepId): ListNode | null {
     const node = this.map.get(id);
     return node ? node : null;
   }
 
-  removeNodeById(id: StepId): ListNode | null {
+  public removeNodeById(id: StepId): ListNode | null {
     const node = this.map.get(id);
     if (!node) return null;
 
@@ -111,7 +131,12 @@ export class Store extends Observable<StoreChangeEvent> {
     return node;
   }
 
-  reset() {
+  public isCircular = (): boolean => {
+    if (!this.head || !this.tail) return false;
+    return this.head === this.tail.next && this.tail === this.head.prev;
+  }
+
+  public reset = () => {
     this.head = null;
     this.tail = null;
     this.size = 0;
@@ -121,7 +146,7 @@ export class Store extends Observable<StoreChangeEvent> {
     });
   }
 
-  pingConsumers = () => {
+  public pingConsumers = () => {
     this.notify({
       type: "STORE_MUTATED",
       data: {

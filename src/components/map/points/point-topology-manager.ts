@@ -7,12 +7,13 @@ import { PointHelpers } from "./helpers";
 import type { PointState } from "./point-state";
 import { AddPointCommand } from "./commands/add-point";
 import { timeline } from "#app/history";
+import { RemovePointCommand } from "./commands/remove-point";
 
 export class PointTopologyManager {
   constructor(
     private readonly props: EventsCtx,
     private readonly state: PointState,
-  ) {}
+  ) { }
 
   private updateMainPoint(node: ListNode, event: MapLayerMouseEvent): void {
     if (node.val) {
@@ -79,46 +80,13 @@ export class PointTopologyManager {
     return cmd.getStep();
   }
 
-  private recalculateAuxiliaryPoints(clickedNode: ListNode | null): void {
-    if (!clickedNode) return;
-
-    const { store } = this.props;
-    const nextAuxNode = clickedNode.next;
-    const prevAuxNode = clickedNode.prev;
-    const nextPrimaryNode = clickedNode.next?.next;
-    const prevPrimaryNode = clickedNode.prev?.prev;
-
-    if (nextAuxNode?.val) {
-      store.removeNodeById(nextAuxNode.val.id);
-    }
-    if (prevAuxNode?.val) {
-      store.removeNodeById(prevAuxNode.val.id);
-    }
-
-    const isNonEdgeSize = store.size !== 3;
-    if (nextPrimaryNode?.val && prevPrimaryNode?.val && isNonEdgeSize) {
-      const auxPoint = PointHelpers.createAuxiliaryPoint(nextPrimaryNode.val, prevPrimaryNode.val);
-      store.insert(auxPoint, prevPrimaryNode);
-    }
-  }
-
   public removePoint(id: string): void {
-    const { store, options } = this.props;
+    const { store, options, mode, map } = this.props;
 
     if (store.size === 1) {
       store.reset();
-      return;
-    }
-
-    const clickedNode = store.findNodeById(id);
-    const isPrimaryNode = !clickedNode?.val?.isAuxiliary;
-
-    if (isPrimaryNode) {
-      store.removeNodeById(id);
-
-      if (options.pointGeneration === "auto") {
-        this.recalculateAuxiliaryPoints(clickedNode);
-      }
+    } else {
+      timeline.commit(new RemovePointCommand({ store, options, mode, map, nodeId: id, }));
     }
   }
 }

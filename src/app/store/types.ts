@@ -10,20 +10,22 @@ interface EventData {
   STORE_BREAK_GEOMETRY: null;
   STORE_CLOSE_GEOMETRY: null;
   STORE_CLEARED: null;
+  STORE_INBETWEEN_POINT_REMOVED: {
+    node: ListNode;
+  };
   STORE_LAST_POINT_REMOVED: {
-    // the last node removed
     node: ListNode;
   };
   STORE_POINT_ADDED: {
     node: ListNode["val"];
   };
+  STORE_INBETWEEN_POINT_ADDED: {
+    node: ListNode;
+  }
   STORE_POINT_INSERTED: {
     node: ListNode["val"];
   };
-  STORE_REMOVED: {
-    // random node removed
-    node: ListNode;
-  };
+
 }
 
 export type StoreChangeEvent = ChangeEvent<EventData>;

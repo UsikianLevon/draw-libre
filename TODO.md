@@ -10,3 +10,5 @@
 - [ ] point remove
 - [ ] old states like: STORE_MUTATED
 - [x] bug with undo click and dynamic line(is not triggered in the correct place)
+- [ ] check all events for the API
+- [ ] and a getContainer in the API for the user

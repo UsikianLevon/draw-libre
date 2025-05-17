@@ -112,18 +112,14 @@ export class PointEvents {
     const { store, renderer } = this.ctx;
     if (store.size === 1) {
       store.reset();
+      this.ctx.panel.hide();
     } else {
       const id = MapUtils.queryPointId(this.ctx.map, event.point);
       const clickedNode = store.findNodeById(id);
 
-      this.topologyManager.removePoint(id);
+      if (!clickedNode?.val) return;
 
-      const isPrimaryNode = !clickedNode?.val?.isAuxiliary;
-
-      if (isPrimaryNode) {
-        FireEvents.pointRemoveRightClick({ ...(clickedNode?.val as Step), total: store.size }, this.ctx.map);
-        Spatial.switchToLineModeIfCan(this.ctx);
-      }
+      this.topologyManager.removePoint(clickedNode.val.id);
     }
     renderer.render();
   };
@@ -258,7 +254,7 @@ export class PointEvents {
 
     this.pointState.clearLastEvent();
 
-    const { mouseEvents, map, store, options } = this.ctx;
+    const { mouseEvents, map, store } = this.ctx;
 
     if ((event.originalEvent as { button: number }).button === 2) {
       this.onPointRemove(event);

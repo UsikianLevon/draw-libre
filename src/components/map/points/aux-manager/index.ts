@@ -31,23 +31,29 @@ export class AuxiliaryPointManager {
         const primaryAfter = auxAfter?.next;
 
         if (auxBefore?.val?.isAuxiliary) {
-            console.log("auxBefore");
-
             this.store.removeNodeById(auxBefore.val.id);
         }
 
         if (auxAfter?.val?.isAuxiliary) {
-            console.log("auxAfter");
             this.store.removeNodeById(auxAfter.val.id);
         }
 
-        if (primaryBefore?.val && primaryAfter?.val && this.store.size > 3) {
-            console.log("auxBefore and auxAfter");
+        // 5(in a circular and only 3 in a linear) is the minimum number of points needed to add an aux point after removal 
+        // head -> aux -> primary -> aux -> tail;
+        //                   ^
+        //                removed
+        // head -> aux -> tail; 
+        //          ^ this needs to be added
+        const meetsAuxInsertionThreshold = this.store.isCircular() ? this.store.size >= 5 : this.store.size >= 3;
+        if (primaryBefore?.val && primaryAfter?.val && meetsAuxInsertionThreshold) {
+            console.log("meetsAuxInsertionThreshold");
 
             const auxPoint = PointHelpers.createAuxiliaryPoint(primaryBefore.val, primaryAfter.val);
             this.store.insert(auxPoint, primaryBefore);
         }
     }
+
+
 
 
     private recalculateLastPointRemoved(): void {
@@ -62,6 +68,8 @@ export class AuxiliaryPointManager {
             this.store.tail.next = this.store.head;
         }
     }
+
+
 
     private rebuildAuxPoints = (event: StoreChangeEvent) => {
         switch (event.type) {
@@ -80,30 +88,6 @@ export class AuxiliaryPointManager {
                 if (this.options.pointGeneration === "auto" && this.store.tail?.val) {
                     const auxPoint = PointHelpers.createAuxiliaryPoint(this.store.tail?.val, this.store.head?.val as Step);
                     this.store.push(auxPoint);
-                }
-                break;
-
-            case "STORE_INBETWEEN_POINT_REMOVED":
-                if (event.data?.node) {
-                    this.recalculateInBetweenRemoved(event.data.node);
-                }
-                break;
-
-            case "STORE_INBETWEEN_POINT_ADDED":
-                if (event.data?.node) {
-                    const node = event.data.node;
-
-                    if (node.prev?.val && node.val) {
-                        const auxBefore = PointHelpers.createAuxiliaryPoint(node.prev.val, node.val);
-                        this.store.insert(auxBefore, node.prev);
-                    }
-
-                    if (node.next?.val && node.val) {
-                        console.log("added", node);
-
-                        const auxAfter = PointHelpers.createAuxiliaryPoint(node.val, node.next.val);
-                        this.store.insert(auxAfter, node);
-                    }
                 }
                 break;
             default:

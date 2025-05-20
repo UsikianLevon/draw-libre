@@ -28,20 +28,17 @@ export class RemovePointManualCommand implements Command {
             this.wasCircular = this.ctx.store.isCircular();
 
             this.ctx.store.removeNodeById(this.ctx.nodeId);
-            const isPrimaryNode = !clickedNode?.val?.isAuxiliary;
 
-            if (isPrimaryNode) {
-                const switched = Spatial.switchToLineModeIfCan(this.ctx);
-                if (switched) {
-                    this.ctx.mode.reset();
-                }
-                FireEvents.pointRemoveRightClick({ ...(clickedNode?.val as Step), total: this.ctx.store.size }, this.ctx.map);
+            const switched = Spatial.switchToLineModeIfCan(this.ctx);
+            if (switched) {
+                this.ctx.mode.reset();
             }
+            FireEvents.pointRemoveRightClick({ ...(clickedNode?.val as Step), total: this.ctx.store.size }, this.ctx.map);
             this.ctx.store.pingConsumers();
         }
     };
 
-    private restoreRemovedNode = (removedNode: ListNode) => {
+    private restoreRemovedMiddleNode = (removedNode: ListNode) => {
         if (!removedNode?.val) return;
 
         const { prev, next } = removedNode;
@@ -72,7 +69,7 @@ export class RemovePointManualCommand implements Command {
         }
     }
 
-    private restoreRemovedHead = (removedNode: ListNode) => {
+    private restoreRemovedHeadNode = (removedNode: ListNode) => {
         const currentHead = this.ctx.store.head;
         if (!removedNode?.val) return;
 
@@ -90,7 +87,7 @@ export class RemovePointManualCommand implements Command {
         }
     }
 
-    private restoreRemovedTail = (removedNode: ListNode) => {
+    private restoreRemovedTailNode = (removedNode: ListNode) => {
         const currentTail = this.ctx.store.tail;
 
         if (currentTail) {
@@ -107,13 +104,13 @@ export class RemovePointManualCommand implements Command {
     }
 
     public undo = () => {
-        if (!this.removedNode?.val) return;
+        if (!this.removedNode?.val) return
         if (this.wasRemovedHead) {
-            this.restoreRemovedHead(this.removedNode);
+            this.restoreRemovedHeadNode(this.removedNode);
         } else if (this.wasRemovedTail) {
-            this.restoreRemovedTail(this.removedNode);
-        } else if (this.removedNode?.prev) {
-            this.restoreRemovedNode(this.removedNode)
+            this.restoreRemovedTailNode(this.removedNode);
+        } else {
+            this.restoreRemovedMiddleNode(this.removedNode)
         }
 
         this.ctx.store.map.set(this.ctx.nodeId, this.removedNode);

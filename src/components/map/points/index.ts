@@ -267,6 +267,8 @@ export class PointEvents {
     this.hideLastPointPanel();
 
     const point = MapUtils.queryPoint(map, event.point);
+    console.log(point);
+
     const geometryIndex = Spatial.getGeometryIndex(store, point?.properties.id);
     this.pointState.setSelectedIdx(geometryIndex);
 

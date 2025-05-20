@@ -1,11 +1,12 @@
 import type { MapLayerMouseEvent, MapMouseEvent } from "maplibre-gl";
-import type { LatLng, Point, Uuid, EventsCtx, RequiredDrawOptions } from "#app/types/index";
+import type { LatLng, Point, Uuid, EventsCtx, RequiredDrawOptions, Step } from "#app/types/index";
 import type { UnifiedMap } from "#app/types/map";
 
 import type { ListNode, Store } from "#app/store/index";
 
 import type { DrawingMode } from "#components/map/mode";
 import { ELAYERS } from "./geo_constants";
+import { PointHelpers } from "#components/map/points/helpers";
 
 export class MapUtils {
   static isFeatureTriggered(event: MapLayerMouseEvent, layerIds: string[]) {
@@ -258,41 +259,30 @@ export class Spatial {
     const canBreakGeometry = Spatial.canBreakClosedGeometry(store, options);
 
     if (canBreakGeometry && store.isCircular()) {
-      if (options.pointGeneration === "auto") {
-        if (store.tail?.val?.isAuxiliary) {
-          if (store.head) {
-            store.head.next = store.tail;
-            store.head.prev = null;
-          }
-          if (store.tail && store.tail.prev && store.head) {
-            store.tail = store.tail.prev;
-            store.tail.prev = store.head.next;
-            store.tail.next = null;
-          }
-          if (store.head?.next) {
-            store.head.next.next = store.tail;
-            store.head.next.prev = store.head;
-          }
-        } else {
-          if (store.head) {
-            store.head.prev = null;
-          }
-          if (store.tail && store.head) {
-            store.tail.prev = store.head.next;
-            store.tail.next = null;
-          }
-        }
-      } else {
-        if (store.tail) {
-          store.tail.next = null;
-        }
-        if (store.head) {
-          store.head.prev = null;
-        }
+      // if the last point is the aux one(we remove the middle point) then we need to 
+      // remove the aux point and just add a new one between the head and the tail
+      let id = ""
+      if (store.tail?.val?.isAuxiliary) {
+        const oldAuxPoint = store.tail;
+        console.log("store.tail.val.id", store.tail.val.id);
+
+        store.removeNodeById(store.tail.val.id);
+        store.tail = oldAuxPoint?.prev as ListNode;
+        const auxPoint = PointHelpers.createAuxiliaryPoint(store.tail?.val as Step, store.head?.val as Step);
+        id = auxPoint.id;
+        store.insert(auxPoint, store.head as ListNode);
       }
-      return true;
+
+      if (store.head) {
+        store.head.prev = null;
+      }
+      if (store.tail) {
+        store.tail.next = null;
+      }
+
+      return [true, null];
     }
-    return false
+    return [false, null]
   };
 }
 

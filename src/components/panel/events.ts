@@ -224,10 +224,10 @@ export class PanelEvents {
       this.ctx.panel.hide();
     } else {
       timeline.undo();
-      const switched = Spatial.switchToLineModeIfCan(this.ctx);
-      if (switched) {
-        mode.reset();
-      }
+      // const switched = Spatial.switchToLineModeIfCan(this.ctx);
+      // if (switched) {
+      //   mode.reset();
+      // }
     }
     this.tooltip.remove();
     const step = { ...(store.tail?.val as Step), total: store.size };

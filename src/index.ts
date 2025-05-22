@@ -165,7 +165,7 @@ export default class DrawLibre implements IControl {
     } else {
       throw new Error("Invalid argument. Expected an array of steps.");
     }
-    this.#renderer?.render();
+    this.#renderer?.execute();
   };
 
   /**
@@ -218,7 +218,7 @@ export default class DrawLibre implements IControl {
   removeAllSteps = () => {
     this.#store?.reset();
     this.#panel?.destroy();
-    this.#renderer?.render();
+    this.#renderer?.execute();
   };
 }
 

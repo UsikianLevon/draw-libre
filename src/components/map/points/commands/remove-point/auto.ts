@@ -85,7 +85,7 @@ export class RemovePointAutoCommand implements Command {
         }
     }
 
-    private switchToLineModeIfCan = (ctx: Pick<EventsCtx, "store" | "options">): boolean => {
+    private breakGeometryIfNeeded = (ctx: Pick<EventsCtx, "store" | "options">): boolean => {
         const { store } = ctx;
 
         if (store.circular.canBreak() && store.circular.isCircular()) {
@@ -125,7 +125,7 @@ export class RemovePointAutoCommand implements Command {
         // remove the primary node
         this.ctx.store.removeNodeById(this.ctx.nodeId);
 
-        const ok = this.switchToLineModeIfCan(this.ctx);
+        const ok = this.breakGeometryIfNeeded(this.ctx);
         if (ok) {
             this.ctx.mode.reset();
         }
@@ -153,8 +153,6 @@ export class RemovePointAutoCommand implements Command {
 
         // this is the case when we have 3 primary and 3 aux points
         if (wasCircular && !this.ctx.store.circular.isCircular()) {
-            console.log("НЕ ЗАШЛИ ОЧЕНЬ ВАЖНО");
-
             const auxPoint = PointHelpers.createAuxiliaryPoint(store.tail?.val as Step, store.head?.val as Step);
             store.push(auxPoint);
             store.circular.close();

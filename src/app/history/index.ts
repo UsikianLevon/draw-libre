@@ -18,7 +18,7 @@ export class Timeline extends Observable<TimelineChangeEvent> {
     return Timeline.instance;
   }
 
-  commit = (cmd: Command) => {
+  public commit = (cmd: Command) => {
     cmd.execute();
     this.undoStack.push({
       execute: cmd.execute,
@@ -30,7 +30,7 @@ export class Timeline extends Observable<TimelineChangeEvent> {
     this.notify({ type: "REDO_STACK_CHANGED", data: 0 });
   };
 
-  undo = () => {
+  public undo = () => {
     const cmd = this.undoStack.pop();
     if (!cmd) return;
     cmd.undo();
@@ -39,7 +39,7 @@ export class Timeline extends Observable<TimelineChangeEvent> {
     return cmd;
   };
 
-  redo = () => {
+  public redo = () => {
     const cmd = this.redoStack.pop();
     if (!cmd) return null;
     cmd.execute();
@@ -47,6 +47,20 @@ export class Timeline extends Observable<TimelineChangeEvent> {
     this.notify({ type: "REDO_STACK_CHANGED", data: this.redoStack.length });
     return cmd;
   };
+
+  public getRedoStackLength = () => {
+    return this.redoStack.length;
+  }
+
+  public getUndoStackLength = () => {
+    return this.undoStack;
+  }
+
+  public resetStacks = () => {
+    this.undoStack = [];
+    this.redoStack = [];
+    this.notify({ type: "REDO_STACK_CHANGED", data: 0 });
+  }
 }
 
 export const timeline = Timeline.getInstance();

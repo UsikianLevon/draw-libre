@@ -126,7 +126,7 @@ export class ControlEvents {
     } else {
       control.lineButton?.classList.add("control-button-active");
       mode.setMode("line");
-      renderer.render();
+      renderer.execute();
     }
   };
 
@@ -141,7 +141,7 @@ export class ControlEvents {
     } else {
       control.polygonButton?.classList.add("control-button-active");
       mode.setMode("polygon");
-      renderer.render();
+      renderer.execute();
     }
   };
 

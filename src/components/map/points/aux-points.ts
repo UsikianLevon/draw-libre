@@ -93,6 +93,6 @@ export class AuxPoints {
       node.val.isAuxiliary = false;
       this.addTwoAuxiliaryPoints(node);
     }
-    renderer.render();
+    renderer.execute();
   };
 }

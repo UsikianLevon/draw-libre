@@ -213,13 +213,17 @@ export class PanelEvents {
     panel.hide();
     mode.reset();
     this.tooltip.remove();
+    timeline.resetStacks();
     renderer.resetGeometries();
     FireEvents.removeAllPoints(map, event);
   };
 
   private onUndoClick = (event: Event) => {
-    const { store, map, mode, renderer } = this.ctx;
-    if (store.size == 1) {
+    const { store, map, renderer } = this.ctx;
+    const hasSomethingToRedo = timeline.getRedoStackLength();
+
+    // hasSomethingToRedo prevents from resetting the store when we still have something to redo and are trying to remove the last point by undoing
+    if (store.size === 1 && hasSomethingToRedo) {
       store.reset();
       this.ctx.panel.hide();
     } else {
@@ -228,7 +232,7 @@ export class PanelEvents {
     this.tooltip.remove();
     const step = { ...(store.tail?.val as Step), total: store.size };
     FireEvents.undo(step, map, event);
-    renderer.render();
+    renderer.execute();
   };
 
   private onRedoClick = (event: Event) => {
@@ -237,7 +241,7 @@ export class PanelEvents {
     timeline.redo();
     const step = { ...(store.tail?.val as Step), total: store.size };
     FireEvents.redo(step, map, event);
-    renderer.render();
+    renderer.execute();
   };
 
   private onSaveClick = (event: Event) => {

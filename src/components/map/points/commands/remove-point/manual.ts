@@ -2,22 +2,38 @@ import type { Command } from "#app/history";
 import type { ListNode } from "#app/store";
 import type { StoreChangeEventKeys } from "#app/store/types";
 import type { Step } from "#app/types";
-import { Spatial } from "#app/utils/helpers";
 import { FireEvents } from "#components/map/helpers";
 import type { RemoveCommanContext } from ".";
 
+interface RemovedPointSnapshot {
+    removedNode: ListNode;
+    wasCircular: boolean;
+    wasRemovedHead: boolean;
+    wasRemovedTail: boolean;
+}
+
 export class RemovePointManualCommand implements Command {
     type: StoreChangeEventKeys = "STORE_INBETWEEN_POINT_REMOVED"
-    removedNode: ListNode | null = null;
-    wasRemovedHead: boolean = false;
-    wasRemovedTail: boolean = false;
-    wasCircular: boolean = false;
+    snapshot: RemovedPointSnapshot | null = null;
 
     constructor(
         private readonly ctx: RemoveCommanContext,
     ) { }
 
-    private switchToLineModeIfCan = (ctx: Pick<RemoveCommanContext, "store">) => {
+    private makeSnapshot(clickedNode: ListNode): RemovedPointSnapshot {
+        const wasRemovedHead = this.ctx.store.head?.val?.id === this.ctx.nodeId;
+        const wasRemovedTail = this.ctx.store.tail?.val?.id === this.ctx.nodeId;
+        const wasCircular = this.ctx.store.circular.isCircular();
+
+        return {
+            removedNode: clickedNode,
+            wasCircular,
+            wasRemovedHead,
+            wasRemovedTail,
+        };
+    }
+
+    private breakGeometryIfNeeded = (ctx: Pick<RemoveCommanContext, "store">) => {
         const { store } = ctx;
 
         if (store.circular.canBreak() && store.circular.isCircular()) {
@@ -35,24 +51,28 @@ export class RemovePointManualCommand implements Command {
 
     public execute = () => {
         const clickedNode = this.ctx.store.findNodeById(this.ctx.nodeId);
-        const isPrimaryNode = !clickedNode?.val?.isAuxiliary;
 
-        if (isPrimaryNode) {
-            this.removedNode = clickedNode;
-            this.wasRemovedHead = this.ctx.store.head?.val?.id === this.ctx.nodeId;
-            this.wasRemovedTail = this.ctx.store.tail?.val?.id === this.ctx.nodeId;
-            this.wasCircular = this.ctx.store.circular.isCircular();
+        if (!clickedNode?.val) return;
 
-            this.ctx.store.removeNodeById(this.ctx.nodeId);
-
-            const ok = this.switchToLineModeIfCan(this.ctx);
-            if (ok) {
-                this.ctx.mode.reset();
-            }
-            FireEvents.pointRemoveRightClick({ ...(clickedNode?.val as Step), total: this.ctx.store.size }, this.ctx.map);
-            this.ctx.store.pingConsumers();
+        this.snapshot = this.makeSnapshot(clickedNode);
+        this.ctx.store.removeNodeById(this.ctx.nodeId);
+        const ok = this.breakGeometryIfNeeded(this.ctx);
+        if (ok) {
+            this.ctx.mode.reset();
         }
+        FireEvents.pointRemoveRightClick({ ...(clickedNode?.val as Step), total: this.ctx.store.size }, this.ctx.map);
+        this.ctx.store.pingConsumers();
     };
+
+    private closeGeometryIfNeeded = () => {
+        const { store, mode } = this.ctx;
+
+        const notCircularNow = !this.ctx.store.circular.isCircular();
+        if (this.snapshot?.wasCircular && notCircularNow) {
+            store.circular.close();
+            mode.setClosedGeometry(true);
+        }
+    }
 
     private restoreRemovedMiddleNode = (removedNode: ListNode) => {
         if (!removedNode?.val) return;
@@ -72,17 +92,6 @@ export class RemovePointManualCommand implements Command {
         } else {
             this.ctx.store.tail = removedNode;
         }
-
-        if (this.wasCircular && !this.ctx.store.circular.isCircular()) {
-            const head = this.ctx.store.head;
-            const tail = this.ctx.store.tail;
-
-            if (head && tail) {
-                tail.next = head;
-                head.prev = tail;
-                this.ctx.mode.setClosedGeometry(true);
-            }
-        }
     }
 
     private restoreRemovedHeadNode = (removedNode: ListNode) => {
@@ -94,13 +103,6 @@ export class RemovePointManualCommand implements Command {
             currentHead.prev = removedNode;
         }
         this.ctx.store.head = removedNode;
-
-        const notCircularNow = !this.ctx.store.circular.isCircular();
-        if (this.wasCircular && notCircularNow) {
-            this.ctx.store.tail!.next = this.ctx.store.head;
-            this.ctx.store.head.prev = this.ctx.store.tail;
-            this.ctx.mode.setClosedGeometry(true);
-        }
     }
 
     private restoreRemovedTailNode = (removedNode: ListNode) => {
@@ -111,26 +113,27 @@ export class RemovePointManualCommand implements Command {
             removedNode.prev = currentTail;
         }
         this.ctx.store.tail = removedNode;
-        const notCircularNow = !this.ctx.store.circular.isCircular();
-        if (this.wasCircular && notCircularNow) {
-            removedNode.next = this.ctx.store.head;
-            this.ctx.store.head!.prev = removedNode;
-            this.ctx.mode.setClosedGeometry(true);
-        }
     }
 
     public undo = () => {
-        if (!this.removedNode?.val) return
-        if (this.wasRemovedHead) {
-            this.restoreRemovedHeadNode(this.removedNode);
-        } else if (this.wasRemovedTail) {
-            this.restoreRemovedTailNode(this.removedNode);
+        if (!this.snapshot) return
+        const { removedNode, wasRemovedHead, wasRemovedTail } = this.snapshot
+
+        if (wasRemovedHead) {
+            this.restoreRemovedHeadNode(removedNode);
+        } else if (wasRemovedTail) {
+            this.restoreRemovedTailNode(removedNode);
         } else {
-            this.restoreRemovedMiddleNode(this.removedNode)
+            this.restoreRemovedMiddleNode(removedNode)
         }
 
-        this.ctx.store.map.set(this.ctx.nodeId, this.removedNode);
-        this.ctx.store.size++;
+        this.closeGeometryIfNeeded();
+
+        if (!this.ctx.store.map.has(this.ctx.nodeId)) {
+            this.ctx.store.map.set(this.ctx.nodeId, removedNode);
+            this.ctx.store.size++;
+        }
+
         this.ctx.store.pingConsumers();
     };
 }

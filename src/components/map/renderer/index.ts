@@ -20,7 +20,7 @@ export class Renderer {
   constructor(private readonly ctx: Context) {
     this.unifiedGeoJSON = GeometryFactory.getUnifiedFeatures(this.ctx.store);
 
-    this.render();
+    this.execute();
   }
 
   private updateLine(featureIdx: number, newCoord: LatLng) {
@@ -58,7 +58,7 @@ export class Renderer {
     }
   }
 
-  public renderOnMouseMove = (
+  public executeOnMouseMove = (
     featureIdx: number,
     newCoord: LatLng,
     aux: { next: LatLng | null; prev: LatLng | null } | null,
@@ -88,7 +88,7 @@ export class Renderer {
     const polygonOptionChecked = options.modes.polygon.visible;
 
     if (polygonOptionChecked && mode.isPolygon()) {
-      this.updatePolygon(featureIdx + 1, newCoord);
+      this.updatePolygon(featureIdx, newCoord);
       if (aux && aux.prev) {
         this.updatePolygon(prevIdx, aux.prev);
       }
@@ -103,7 +103,7 @@ export class Renderer {
     }
   };
 
-  public render() {
+  public execute() {
     this.unifiedGeoJSON = GeometryFactory.getUnifiedFeatures(this.ctx.store);
     const unifiedSource = this.ctx.map.getSource(ESOURCES.UnifiedSource) as GeoJSONSource;
 

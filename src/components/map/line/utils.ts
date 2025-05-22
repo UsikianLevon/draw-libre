@@ -45,7 +45,7 @@ export const updateUIAfterInsert = (event: MapLayerMouseEvent, context: EventsCt
   const { store, renderer } = context;
   if (store.tail?.val) {
     PointVisibility.setSinglePointHidden(event);
-    renderer.render();
+    renderer.execute();
   }
 };
 

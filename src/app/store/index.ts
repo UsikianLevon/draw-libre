@@ -52,12 +52,10 @@ export class Store extends Observable<StoreChangeEvent> {
   public unshift = (step: Step) => {
     const newNode = new ListNode(step);
 
-    const circular = this.isCircular();
-
     newNode.next = this.head;
     this.head = newNode;
 
-    if (circular && this.tail) {
+    if (this.circular.isCircular() && this.tail) {
       this.tail.next = newNode;
       newNode.prev = this.tail;
     }
@@ -132,14 +130,6 @@ export class Store extends Observable<StoreChangeEvent> {
   public findNodeById(id: StepId): ListNode | null {
     const node = this.map.get(id);
     return node ? node : null;
-  }
-
-  public canBreak = (): boolean => {
-    if (this.options?.pointGeneration === "auto") {
-      return this.size <= 3;
-    }
-
-    return this.size <= 2;
   }
 
   public reset = () => {

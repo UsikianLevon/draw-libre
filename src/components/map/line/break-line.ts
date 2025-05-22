@@ -54,7 +54,7 @@ export class LineBreakEvents {
     timeline.commit(new BreakGeometryCommand(store, options, mode, this.current));
     this.onLineLeave();
     mode.reset();
-    renderer.render();
+    renderer.execute();
     FireEvents.onLineBreak(map);
   };
 

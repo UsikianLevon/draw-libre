@@ -121,7 +121,7 @@ export class PointEvents {
 
       this.topologyManager.removePoint(clickedNode.val.id);
     }
-    renderer.render();
+    renderer.execute();
   };
 
   private onOwnGeometryLayersClick = (event: MapLayerMouseEvent) => {
@@ -146,7 +146,7 @@ export class PointEvents {
     const addedStep = this.topologyManager.addPoint(event);
     FireEvents.addPoint({ ...addedStep, total: store.size }, map, mode);
     PointVisibility.setSinglePointHidden(event);
-    renderer.render();
+    renderer.execute();
   };
 
   private onMoveLeftClickUp = (event: MapLayerMouseEvent) => {
@@ -167,7 +167,7 @@ export class PointEvents {
       const { renderer } = this.ctx;
       this.onMoveLeftClickUp(this.pointState.getLastEvent() as MapLayerMouseEvent);
       const auxPoints = this.topologyManager.getAuxPointsLatLng(this.pointState.getLastEvent() as MapLayerMouseEvent);
-      renderer.renderOnMouseMove(this.pointState.getSelectedIdx() as number, event.lngLat, auxPoints);
+      renderer.executeOnMouseMove(this.pointState.getSelectedIdx() as number, event.lngLat, auxPoints);
     }
   }, 17);
 
@@ -270,9 +270,7 @@ export class PointEvents {
     console.log(point);
 
     const geometryIndex = Spatial.getGeometryIndex(store, point?.properties.id);
-    console.log("geometryIndex", geometryIndex);
     this.pointState.setSelectedIdx(geometryIndex);
-    console.log("selectedIdx", this.pointState.getSelectedIdx());
 
     if (mouseEvents) {
       mouseEvents.pointMouseDown = true;

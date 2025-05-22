@@ -31,7 +31,8 @@ export class Layers {
       "STORE_LAST_POINT_REMOVED",
       "STORE_CLOSE_GEOMETRY",
       "STORE_BREAK_GEOMETRY",
-    ] as string[];
+      "STORE_CLEARED"
+    ] as StoreChangeEventKeys[];
     if (events.includes(event.type)) {
       const { map, options, store } = this.ctx;
 

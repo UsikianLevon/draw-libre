@@ -270,7 +270,9 @@ export class PointEvents {
     console.log(point);
 
     const geometryIndex = Spatial.getGeometryIndex(store, point?.properties.id);
+    console.log("geometryIndex", geometryIndex);
     this.pointState.setSelectedIdx(geometryIndex);
+    console.log("selectedIdx", this.pointState.getSelectedIdx());
 
     if (mouseEvents) {
       mouseEvents.pointMouseDown = true;

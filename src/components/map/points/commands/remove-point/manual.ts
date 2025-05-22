@@ -17,6 +17,22 @@ export class RemovePointManualCommand implements Command {
         private readonly ctx: RemoveCommanContext,
     ) { }
 
+    private switchToLineModeIfCan = (ctx: Pick<RemoveCommanContext, "store">) => {
+        const { store } = ctx;
+
+        if (store.circular.canBreak() && store.circular.isCircular()) {
+            if (store.head) {
+                store.head.prev = null;
+            }
+            if (store.tail) {
+                store.tail.next = null;
+            }
+
+            return true
+        }
+        return false
+    };
+
     public execute = () => {
         const clickedNode = this.ctx.store.findNodeById(this.ctx.nodeId);
         const isPrimaryNode = !clickedNode?.val?.isAuxiliary;
@@ -25,12 +41,12 @@ export class RemovePointManualCommand implements Command {
             this.removedNode = clickedNode;
             this.wasRemovedHead = this.ctx.store.head?.val?.id === this.ctx.nodeId;
             this.wasRemovedTail = this.ctx.store.tail?.val?.id === this.ctx.nodeId;
-            this.wasCircular = this.ctx.store.isCircular();
+            this.wasCircular = this.ctx.store.circular.isCircular();
 
             this.ctx.store.removeNodeById(this.ctx.nodeId);
 
-            const switched = Spatial.switchToLineModeIfCan(this.ctx);
-            if (switched) {
+            const ok = this.switchToLineModeIfCan(this.ctx);
+            if (ok) {
                 this.ctx.mode.reset();
             }
             FireEvents.pointRemoveRightClick({ ...(clickedNode?.val as Step), total: this.ctx.store.size }, this.ctx.map);
@@ -57,7 +73,7 @@ export class RemovePointManualCommand implements Command {
             this.ctx.store.tail = removedNode;
         }
 
-        if (this.wasCircular && !this.ctx.store.isCircular()) {
+        if (this.wasCircular && !this.ctx.store.circular.isCircular()) {
             const head = this.ctx.store.head;
             const tail = this.ctx.store.tail;
 
@@ -79,7 +95,7 @@ export class RemovePointManualCommand implements Command {
         }
         this.ctx.store.head = removedNode;
 
-        const notCircularNow = !this.ctx.store.isCircular();
+        const notCircularNow = !this.ctx.store.circular.isCircular();
         if (this.wasCircular && notCircularNow) {
             this.ctx.store.tail!.next = this.ctx.store.head;
             this.ctx.store.head.prev = this.ctx.store.tail;
@@ -95,7 +111,7 @@ export class RemovePointManualCommand implements Command {
             removedNode.prev = currentTail;
         }
         this.ctx.store.tail = removedNode;
-        const notCircularNow = !this.ctx.store.isCircular();
+        const notCircularNow = !this.ctx.store.circular.isCircular();
         if (this.wasCircular && notCircularNow) {
             removedNode.next = this.ctx.store.head;
             this.ctx.store.head!.prev = removedNode;

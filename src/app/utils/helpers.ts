@@ -179,8 +179,7 @@ export class Spatial {
   };
 
   // √(x1​−x2​)²+(y1​−y2​)²​
-  static distance = (point1: Point, point2: Point) =>
-    Math.sqrt((point1.x - point2.x) ** 2 + (point1.y - point2.y) ** 2);
+  static distance = (point1: Point, point2: Point) => Math.sqrt((point1.x - point2.x) ** 2 + (point1.y - point2.y) ** 2);
 
   static checkIfPointIsOnLine = (A: Point, B: Point, P: Point): boolean => {
     const EPSILON = 0.1;
@@ -251,38 +250,6 @@ export class Spatial {
     }
 
     return store.size <= 2;
-  };
-
-  static switchToLineModeIfCan = (ctx: Pick<EventsCtx, "store" | "options">) => {
-    const { store, options } = ctx;
-
-    const canBreakGeometry = Spatial.canBreakClosedGeometry(store, options);
-
-    if (canBreakGeometry && store.isCircular()) {
-      // if the last point is the aux one(we remove the middle point) then we need to 
-      // remove the aux point and just add a new one between the head and the tail
-      let id = ""
-      if (store.tail?.val?.isAuxiliary) {
-        const oldAuxPoint = store.tail;
-        console.log("store.tail.val.id", store.tail.val.id);
-
-        store.removeNodeById(store.tail.val.id);
-        store.tail = oldAuxPoint?.prev as ListNode;
-        const auxPoint = PointHelpers.createAuxiliaryPoint(store.tail?.val as Step, store.head?.val as Step);
-        id = auxPoint.id;
-        store.insert(auxPoint, store.head as ListNode);
-      }
-
-      if (store.head) {
-        store.head.prev = null;
-      }
-      if (store.tail) {
-        store.tail.next = null;
-      }
-
-      return [true, null];
-    }
-    return [false, null]
   };
 }
 

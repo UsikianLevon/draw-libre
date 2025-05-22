@@ -39,8 +39,9 @@ export class Renderer {
   private updatePolygon(featureIdx: number, newCoord: LatLng) {
     const { mode } = this.ctx;
 
-    // -1 because line is always the last feature. Check GeometryFactory.getUnifiedFeatures
+    // -1 because polygon is always the last feature. Check GeometryFactory.getUnifiedFeatures
     const polygon = this.unifiedGeoJSON.features.at(-1)?.geometry.coordinates[0] as number[][];
+
     if (!polygon) return;
     polygon[featureIdx] = [newCoord.lng, newCoord.lat];
 
@@ -63,6 +64,8 @@ export class Renderer {
     aux: { next: LatLng | null; prev: LatLng | null } | null,
   ) => {
     const { mode, options, store } = this.ctx;
+    // console.log("renderOnMouseMove", featureIdx);
+
     // if the selected index is the first one then the prev index is the store.size - 1
     const prevIdx = featureIdx === 0 ? store.size - 1 : featureIdx - 1;
 
@@ -85,7 +88,7 @@ export class Renderer {
     const polygonOptionChecked = options.modes.polygon.visible;
 
     if (polygonOptionChecked && mode.isPolygon()) {
-      this.updatePolygon(featureIdx, newCoord);
+      this.updatePolygon(featureIdx + 1, newCoord);
       if (aux && aux.prev) {
         this.updatePolygon(prevIdx, aux.prev);
       }

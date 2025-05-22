@@ -44,7 +44,7 @@ export class AuxiliaryPointManager {
         //                removed
         // head -> aux -> tail; 
         //          ^ this needs to be added
-        const meetsAuxInsertionThreshold = this.store.isCircular() ? this.store.size >= 5 : this.store.size >= 3;
+        const meetsAuxInsertionThreshold = this.store.circular.isCircular() ? this.store.size >= 5 : this.store.size >= 3;
         if (primaryBefore?.val && primaryAfter?.val && meetsAuxInsertionThreshold) {
             console.log("meetsAuxInsertionThreshold");
 
@@ -68,8 +68,6 @@ export class AuxiliaryPointManager {
             this.store.tail.next = this.store.head;
         }
     }
-
-
 
     private rebuildAuxPoints = (event: StoreChangeEvent) => {
         switch (event.type) {

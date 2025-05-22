@@ -59,7 +59,7 @@ export class DynamicLineEvents {
     }
     if ((event.type === "pointMouseLeave" || event.type === "lineMouseLeave")) {
       const { store } = this.ctx;
-      if (event.data && !store.isCircular()) {
+      if (event.data && !store.circular.isCircular()) {
         this.firstPoint = store.tail?.val as LatLng;
         this.secondPoint = store.tail?.val as LatLng;
         this.show();
@@ -70,7 +70,7 @@ export class DynamicLineEvents {
   private evaluateVisibility = (data: StoreChangeEvent["data"]) => {
     const { store } = this.ctx;
 
-    if (store.isCircular()) {
+    if (store.circular.isCircular()) {
       this.hide();
     } else {
       this.firstPoint = store.tail?.val as Step;
@@ -98,7 +98,7 @@ export class DynamicLineEvents {
         this.hide();
       }
 
-      if (!store.isCircular() && store?.tail?.val) {
+      if (!store.circular.isCircular() && store?.tail?.val) {
         this.firstPoint = store?.tail?.val;
         this.show();
       }
@@ -187,10 +187,9 @@ export class DynamicLineEvents {
   };
 
   private onUndoRedoClick = (event: UndoEvent) => {
-    const { store, mode } = this.ctx;
-    console.log(mode.getClosedGeometry(), store.size, store.isCircular());
+    const { store } = this.ctx;
 
-    if (!store.isCircular()) {
+    if (!store.circular.isCircular()) {
 
       const latLng = event.target.unproject({ x: event.originalEvent.x, y: event.originalEvent.y } as PointLike);
       this.secondPoint = { lng: latLng.lng, lat: latLng.lat };
@@ -205,9 +204,9 @@ export class DynamicLineEvents {
 
   private onRightClickRemove = (event: PointRightClickRemoveEvent) => {
     const { store, mode } = this.ctx;
-    console.log(mode.getClosedGeometry(), store.isCircular());
+    console.log(mode.getClosedGeometry(), store.circular.isCircular());
 
-    if (!store.isCircular()) {
+    if (!store.circular.isCircular()) {
       this.secondPoint = { lng: event.coordinates.lng, lat: event.coordinates.lat };
       this.firstPoint = store.tail?.val as LatLng;
       this.show();

@@ -1,10 +1,10 @@
 import type { MapLayerMouseEvent } from "maplibre-gl";
-import type { EventsCtx, Step } from "#app/types/index";
+import type { Step } from "#app/types/index";
 
 import { ELAYERS } from "#app/utils/geo_constants";
 import { uuidv4 } from "#app/utils/helpers";
 
-import { UnifiedMap } from "#app/types/map";
+import type { UnifiedMap } from "#app/types/map";
 
 export const PointHelpers = {
   getMidpoint(p1: { lat: number; lng: number }, p2: { lat: number; lng: number }) {
@@ -17,14 +17,6 @@ export const PointHelpers = {
   createAuxiliaryPoint(p1: Step, p2: Step) {
     const mid = PointHelpers.getMidpoint(p1, p2);
     const step = { lat: mid.lat, lng: mid.lng, isAuxiliary: true, id: uuidv4() };
-    return step;
-  },
-
-  addPointToMap(event: MapLayerMouseEvent, props: EventsCtx) {
-    const { store } = props;
-
-    const step = { ...event.lngLat, isAuxiliary: false, id: uuidv4() };
-    store.push(step);
     return step;
   },
 };

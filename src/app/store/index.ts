@@ -5,6 +5,7 @@ import { Observable } from "#app/utils/observable";
 
 import { ERRORS } from "./errors";
 import { StoreChangeEvent } from "./types";
+import { Circular } from "./policies/circular";
 
 export class ListNode {
   val: Step | null;
@@ -22,10 +23,12 @@ export class Store extends Observable<StoreChangeEvent> {
   tail: ListNode | null;
   size: number;
   map: Map<StepId, ListNode>;
+  public readonly circular: Circular;
 
-  constructor(options?: RequiredDrawOptions) {
+  constructor(private readonly options?: RequiredDrawOptions) {
     super();
     let list = StoreHelpers.initStore(options);
+    this.circular = new Circular(this, options);
     this.map = list ? list.map : new Map<StepId, ListNode>();
     this.head = list ? list.head : null;
     this.tail = list ? list.tail : null;
@@ -65,7 +68,7 @@ export class Store extends Observable<StoreChangeEvent> {
   }
 
   public insert = (step: Step, current: ListNode) => {
-    if (!current) return;
+    if (!current) return null;
 
     const newNode = new ListNode(step);
     newNode.prev = current;
@@ -85,17 +88,6 @@ export class Store extends Observable<StoreChangeEvent> {
     this.size++;
     this.pingConsumers();
     return newNode
-  }
-
-
-  public findStepById(id: StepId): ListNode["val"] | null {
-    const node = this.map.get(id);
-    return node ? node.val : null;
-  }
-
-  public findNodeById(id: StepId): ListNode | null {
-    const node = this.map.get(id);
-    return node ? node : null;
   }
 
   public removeNodeById(id: StepId): ListNode | null {
@@ -132,9 +124,22 @@ export class Store extends Observable<StoreChangeEvent> {
     return node;
   }
 
-  public isCircular = (): boolean => {
-    if (!this.head || !this.tail) return false;
-    return this.head === this.tail.next && this.tail === this.head.prev;
+  public findStepById(id: StepId): ListNode["val"] | null {
+    const node = this.map.get(id);
+    return node ? node.val : null;
+  }
+
+  public findNodeById(id: StepId): ListNode | null {
+    const node = this.map.get(id);
+    return node ? node : null;
+  }
+
+  public canBreak = (): boolean => {
+    if (this.options?.pointGeneration === "auto") {
+      return this.size <= 3;
+    }
+
+    return this.size <= 2;
   }
 
   public reset = () => {
@@ -183,7 +188,7 @@ export class StoreHelpers {
     return null;
   }
 
-  static #generateIdForSteps = (stepsWithoutIds: LatLng[]): Step[] => {
+  private static generateIdForSteps = (stepsWithoutIds: LatLng[]): Step[] => {
     return stepsWithoutIds.map((step, idx) => {
       return { ...step, isAuxiliary: false, isFirst: idx === 0, id: uuidv4() };
     });
@@ -219,7 +224,7 @@ export class StoreHelpers {
 
   static fromArray(initialOptions: Initial, pointGeneration: RequiredDrawOptions["pointGeneration"]): Store | null {
     const { steps: initialSteps, closeGeometry, generateId } = initialOptions;
-    const steps = generateId ? this.#generateIdForSteps(initialSteps) : initialSteps;
+    const steps = generateId ? this.generateIdForSteps(initialSteps) : initialSteps;
     const list = this.buildStepSequence(steps as Step[], closeGeometry, pointGeneration);
 
     if (closeGeometry && list.tail && list.head) {

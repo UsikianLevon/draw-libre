@@ -1,20 +1,22 @@
-import type { EventsCtx, LatLng, Step } from "#app/types/index";
+import type { EventsCtx, LatLng } from "#app/types/index";
 import type { MapLayerMouseEvent, MapTouchEvent } from "maplibre-gl";
 
 import { MapUtils, Spatial, throttle } from "#app/utils/helpers";
 import { ELAYERS } from "#app/utils/geo_constants";
 import { StoreHelpers } from "#app/store/index";
+import { timeline } from "#app/history";
 
 import { FireEvents } from "../helpers";
 import { PointVisibility } from "./helpers";
 import { FirstPoint } from "./first-point";
 import { removeTransparentLine, addTransparentLine } from "../tiles/helpers";
 import { AuxPoints } from "./aux-points";
-import { StoreChangeEvent } from "#app/store/types";
-import { DrawingModeChangeEvent } from "../mode/types";
+import type { StoreChangeEvent } from "#app/store/types";
+import type { DrawingModeChangeEvent } from "../mode/types";
 import { PointState } from "./point-state";
 import { PointTopologyManager } from "./point-topology-manager";
 import { AuxiliaryPointManager } from "./aux-manager";
+import { MovePointCommand } from "./commands/move-point";
 
 export interface PrimaryPointEvents {
   onPointMouseEnter: (event: MapLayerMouseEvent) => void;
@@ -267,8 +269,6 @@ export class PointEvents {
     this.hideLastPointPanel();
 
     const point = MapUtils.queryPoint(map, event.point);
-    console.log(point);
-
     const geometryIndex = Spatial.getGeometryIndex(store, point?.properties.id);
     this.pointState.setSelectedIdx(geometryIndex);
 
@@ -300,29 +300,15 @@ export class PointEvents {
         this.pointState.clearLastEvent();
       }
 
-      store.notify({
-        type: "STORE_MUTATED",
-        data: store,
-      });
-
       panel?.show();
-
-      FireEvents.movePoint(
-        {
-          id: selectedNode.val.id,
-          total: store.size,
-          end: { lat: selectedNode.val.lat, lng: selectedNode.val.lng },
-          start: startCoordinates as LatLng,
-        },
-        map,
-      );
-
+      timeline.commit(new MovePointCommand(store, selectedNode, startCoordinates as LatLng, map));
       this.pointState.partialReset();
     }
 
     if (mouseEvents) {
       mouseEvents.pointMouseDown = false;
     }
+
 
     addTransparentLine(map, options);
   };

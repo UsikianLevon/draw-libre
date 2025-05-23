@@ -1,4 +1,4 @@
-import type { ListNode, Store } from "#app/store";
+import type { Store } from "#app/store";
 import type { StoreChangeEvent } from "#app/store/types";
 import type { RequiredDrawOptions, Step, StepId } from "#app/types";
 import { Spatial } from "#app/utils/helpers";
@@ -21,40 +21,6 @@ export class AuxiliaryPointManager {
     public removeConsumers = () => {
         this.store.removeObserver(this.rebuildAuxPoints);
     };
-
-    private recalculateInBetweenRemoved(clickedNode: ListNode | null): void {
-        if (!clickedNode) return;
-
-        const auxBefore = clickedNode.prev;
-        const auxAfter = clickedNode.next;
-        const primaryBefore = auxBefore?.prev;
-        const primaryAfter = auxAfter?.next;
-
-        if (auxBefore?.val?.isAuxiliary) {
-            this.store.removeNodeById(auxBefore.val.id);
-        }
-
-        if (auxAfter?.val?.isAuxiliary) {
-            this.store.removeNodeById(auxAfter.val.id);
-        }
-
-        // 5(in a circular and only 3 in a linear) is the minimum number of points needed to add an aux point after removal 
-        // head -> aux -> primary -> aux -> tail;
-        //                   ^
-        //                removed
-        // head -> aux -> tail; 
-        //          ^ this needs to be added
-        const meetsAuxInsertionThreshold = this.store.circular.isCircular() ? this.store.size >= 5 : this.store.size >= 3;
-        if (primaryBefore?.val && primaryAfter?.val && meetsAuxInsertionThreshold) {
-            console.log("meetsAuxInsertionThreshold");
-
-            const auxPoint = PointHelpers.createAuxiliaryPoint(primaryBefore.val, primaryAfter.val);
-            this.store.insert(auxPoint, primaryBefore);
-        }
-    }
-
-
-
 
     private recalculateLastPointRemoved(): void {
         this.store.removeNodeById(this.store.tail?.val?.id as StepId);

@@ -25,7 +25,10 @@ interface EventData {
   STORE_POINT_INSERTED: {
     node: ListNode["val"];
   };
-
+  STORE_POINT_MOVED: {
+    startPoint: ListNode;
+    endPoint: ListNode;
+  };
 }
 
 export type StoreChangeEvent = ChangeEvent<EventData>;

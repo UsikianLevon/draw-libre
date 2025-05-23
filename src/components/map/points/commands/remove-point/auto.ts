@@ -1,5 +1,5 @@
 import type { Command } from "#app/history";
-import { ListNode } from "#app/store";
+import type { ListNode } from "#app/store";
 import type { StoreChangeEventKeys } from "#app/store/types";
 import type { EventsCtx, Step, StepId } from "#app/types";
 import { FireEvents } from "#components/map/helpers";

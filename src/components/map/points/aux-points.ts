@@ -68,7 +68,6 @@ export class AuxPoints {
     }
     const id = MapUtils.queryPointId(map, event.point);
     const node = store.findNodeById(id);
-    console.log("onMouseDown", node);
 
     if (node) {
       timeline.beginTransaction("PointCompound");
@@ -91,9 +90,6 @@ export class AuxPoints {
         this.topologyManager.updateStore();
         this.pointState.clearLastEvent();
       }
-
-      console.log("onMouseUp");
-
 
       panel?.show();
       timeline.commit(new MovePointCommand(store, selectedNode, startCoordinates as LatLng, map));

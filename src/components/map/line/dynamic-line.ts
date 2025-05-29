@@ -52,12 +52,12 @@ export class DynamicLineEvents {
     if (!this.visible) return;
 
     // hide the line if a point or a line is hovered
-    if ((event.type === "pointMouseEnter" || event.type === "lineMouseEnter")) {
+    if (event.type === "pointMouseEnter" || event.type === "lineMouseEnter") {
       if (event.data) {
         this.hide();
       }
     }
-    if ((event.type === "pointMouseLeave" || event.type === "lineMouseLeave")) {
+    if (event.type === "pointMouseLeave" || event.type === "lineMouseLeave") {
       const { store } = this.ctx;
       if (event.data && !store.circular.isCircular()) {
         this.firstPoint = store.tail?.val as LatLng;
@@ -79,7 +79,6 @@ export class DynamicLineEvents {
   };
 
   private onStoreEventsConsumer = (event: StoreChangeEvent) => {
-
     if (event.type === "STORE_MUTATED") {
       if (!event.data?.size) {
         this.hide();
@@ -190,7 +189,6 @@ export class DynamicLineEvents {
     const { store } = this.ctx;
 
     if (!store.circular.isCircular()) {
-
       const latLng = event.target.unproject({ x: event.originalEvent.x, y: event.originalEvent.y } as PointLike);
       this.secondPoint = { lng: latLng.lng, lat: latLng.lat };
       this.firstPoint = store.tail?.val as LatLng;
@@ -204,8 +202,6 @@ export class DynamicLineEvents {
 
   private onRightClickRemove = (event: PointRightClickRemoveEvent) => {
     const { store, mode } = this.ctx;
-    console.log(mode.getClosedGeometry(), store.circular.isCircular());
-
     if (!store.circular.isCircular()) {
       this.secondPoint = { lng: event.coordinates.lng, lat: event.coordinates.lat };
       this.firstPoint = store.tail?.val as LatLng;

@@ -12,8 +12,8 @@ export class CompoundCommand implements Command {
   constructor(
     public readonly type: string,
     public readonly payload: any,
-    private commands: Command[] = []
-  ) { }
+    private commands: Command[] = [],
+  ) {}
 
   add(cmd: Command) {
     this.commands.push(cmd);
@@ -36,7 +36,6 @@ export class CompoundCommand implements Command {
     }
   }
 }
-
 
 export class Timeline extends Observable<TimelineChangeEvent> {
   private transaction: CompoundCommand | null = null;
@@ -68,8 +67,6 @@ export class Timeline extends Observable<TimelineChangeEvent> {
     cmd.undo();
     this.redoStack.push(cmd);
     this.notify({ type: "REDO_STACK_CHANGED", data: this.redoStack.length });
-    console.log("Undo committed:", this.undoStack, this.redoStack);
-
     return cmd;
   };
 
@@ -79,39 +76,36 @@ export class Timeline extends Observable<TimelineChangeEvent> {
     cmd.execute();
     this.undoStack.push(cmd);
     this.notify({ type: "REDO_STACK_CHANGED", data: this.redoStack.length });
-    console.log("Redo committed:", this.undoStack, this.redoStack);
-
     return cmd;
   };
 
   public beginTransaction = (type: string = "compound", payload: any = null) => {
-    if (this.transaction) return
+    if (this.transaction) return;
     this.transaction = new CompoundCommand(type, payload);
   };
 
   public commitTransaction = () => {
-    if (!this.transaction) return
+    if (!this.transaction) return;
     const txn = this.transaction;
     this.transaction = null;
 
     this.undoStack.push(txn);
     this.notify({ type: "REDO_STACK_CHANGED", data: this.redoStack.length });
-    console.log("Transaction committed:", this.undoStack, this.redoStack);
   };
 
   public getRedoStackLength = () => {
     return this.redoStack.length;
-  }
+  };
 
   public getUndoStackLength = () => {
     return this.undoStack;
-  }
+  };
 
   public resetStacks = () => {
     this.undoStack = [];
     this.redoStack = [];
     this.notify({ type: "REDO_STACK_CHANGED", data: 0 });
-  }
+  };
 }
 
 export const timeline = Timeline.getInstance();

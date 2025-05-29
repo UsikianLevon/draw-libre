@@ -131,7 +131,6 @@ export class FirstPoint {
 
     if (Spatial.canCloseGeometry(store, options)) {
       timeline.commit(new CloseGeometryCommand(store, mode, options));
-      console.log("Close geometry command committed", store);
 
       renderer.execute();
     }

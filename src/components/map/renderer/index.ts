@@ -64,7 +64,6 @@ export class Renderer {
     aux: { next: LatLng | null; prev: LatLng | null } | null,
   ) => {
     const { mode, options, store } = this.ctx;
-    // console.log("renderOnMouseMove", featureIdx);
 
     // if the selected index is the first one then the prev index is the store.size - 1
     const prevIdx = featureIdx === 0 ? store.size - 1 : featureIdx - 1;

@@ -47,6 +47,7 @@ export class Store extends Observable<StoreChangeEvent> {
     this.map.set(step.id, newNode);
     this.size++;
     this.pingConsumers();
+    return newNode;
   }
 
   public unshift = (step: Step) => {
@@ -65,23 +66,24 @@ export class Store extends Observable<StoreChangeEvent> {
     this.pingConsumers();
   }
 
-  public insert = (step: Step, current: ListNode) => {
-    if (!current) return null;
+  public insertAfter = (node: ListNode, step: Step) => {
+    if (!node) return null;
 
     const newNode = new ListNode(step);
-    newNode.prev = current;
-    newNode.next = current.next;
+    newNode.prev = node;
+    newNode.next = node.next;
 
-    const betweenHeadAndTail = this.tail === current && this.head === current.next;
+    const betweenHeadAndTail = this.tail === node && this.head === node.next;
     if (betweenHeadAndTail) {
       this.tail = newNode;
+      this.head!.prev = newNode;
     }
 
-    if (current.next) {
-      current.next.prev = newNode;
+    if (node.next) {
+      node.next.prev = newNode;
     }
 
-    current.next = newNode;
+    node.next = newNode;
     this.map.set(step.id, newNode);
     this.size++;
     this.pingConsumers();

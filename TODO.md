@@ -6,9 +6,8 @@
 - [x] fix the bug where the panel causes scrolling when it's outside the viewport.
 - [ ] Panel class needs to be cut in half
 - [ ] Check the Events class logic. Why did you decide to put eveything in one place. 
-- [ ] point move
-- [ ] point remove
-- [ ] old states like: STORE_MUTATED
 - [x] bug with undo click and dynamic line(is not triggered in the correct place)
 - [ ] check all events for the API
-- [ ] and a getContainer in the API for the user
+- [ ] add a getContainer in the API for the user
+- [ ] redo button in the API
+- [ ] keyboard events

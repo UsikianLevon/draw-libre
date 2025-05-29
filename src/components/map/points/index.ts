@@ -47,7 +47,7 @@ export class PointEvents {
       onMapMouseMove: this.onMapMouseMove,
     };
     this.firstPoint = new FirstPoint(this.ctx, this.events);
-    this.auxPoints = new AuxPoints(this.ctx, this.events);
+    this.auxPoints = new AuxPoints(this.ctx, this.events, this.pointState, this.topologyManager);
   }
 
   private initConsumers = () => {
@@ -283,7 +283,7 @@ export class PointEvents {
   };
 
   private onPointMouseUp = () => {
-    const { mouseEvents, store, panel, map, options } = this.ctx;
+    const { mouseEvents, store, panel, map, options, renderer } = this.ctx;
 
     map.off("mousemove", this.onMapMouseMove);
     map.off("touchmove", this.onMapMouseMove);
@@ -294,7 +294,7 @@ export class PointEvents {
     const lastEvent = this.pointState.getLastEvent();
     const startCoordinates = this.pointState.getStartCoordinates();
 
-    if (selectedNode && selectedNode.val) {
+    if (selectedNode && !selectedNode.val?.isAuxiliary) {
       if (lastEvent) {
         this.topologyManager.updateStore();
         this.pointState.clearLastEvent();
@@ -309,7 +309,7 @@ export class PointEvents {
       mouseEvents.pointMouseDown = false;
     }
 
-
     addTransparentLine(map, options);
+    renderer.execute();
   };
 }

@@ -76,10 +76,10 @@ export class RemovePointAutoCommand implements Command {
         if (primaryBefore?.val && primaryAfter?.val && meetsAuxInsertionThreshold) {
             // if we have already undo/redoed then we just insert the new aux point already created 
             if (this.snapshot.newAux) {
-                store.insert(this.snapshot.newAux.val as Step, primaryBefore);
+                store.insertAfter(primaryBefore, this.snapshot.newAux.val as Step);
             } else {
                 const auxPoint = PointHelpers.createAuxiliaryPoint(primaryBefore.val, primaryAfter.val);
-                this.snapshot.newAux = store.insert(auxPoint, primaryBefore);
+                this.snapshot.newAux = store.insertAfter(primaryBefore, auxPoint);
             }
 
         }
@@ -100,7 +100,7 @@ export class RemovePointAutoCommand implements Command {
                 store.removeNodeById(store.tail.val.id);
                 store.tail = oldAuxPoint?.prev as ListNode;
                 const auxPoint = PointHelpers.createAuxiliaryPoint(store.tail?.val as Step, store.head?.val as Step);
-                if (this.snapshot) this.snapshot.newAux = store.insert(auxPoint, store.head as ListNode);
+                if (this.snapshot) this.snapshot.newAux = store.insertAfter(store.head as ListNode, auxPoint);
             }
 
             if (store.head) {
@@ -204,11 +204,11 @@ export class RemovePointAutoCommand implements Command {
         if (!this.snapshot) return
         if (node.prev?.val && node.val) {
             const auxBefore = this.snapshot?.beforeAux
-            store.insert(auxBefore!.val as Step, node.prev);
+            store.insertAfter(node.prev, auxBefore!.val as Step);
         }
 
         if (node.next?.val && node.val) {
-            store.insert(this.snapshot?.afterAux?.val as Step, node);
+            store.insertAfter(node, this.snapshot?.afterAux?.val as Step);
         }
     }
 

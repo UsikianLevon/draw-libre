@@ -29,6 +29,9 @@ interface EventData {
     startPoint: ListNode;
     endPoint: ListNode;
   };
+  STORE_AUX_TO_PRIMARY: {
+    node: ListNode;
+  };
 }
 
 export type StoreChangeEvent = ChangeEvent<EventData>;

@@ -19,7 +19,7 @@ export class InsertPointCommand implements Command {
   }
 
   execute = () => {
-    this.store.insert(this.step, this.segmentStart);
+    this.store.insertAfter(this.segmentStart, this.step);
     this.store.notify({
       type: "STORE_POINT_INSERTED",
       data: {

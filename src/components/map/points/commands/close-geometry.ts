@@ -1,10 +1,12 @@
 import type { Command } from "#app/history";
-import { Store } from "#app/store";
-import type { RequiredDrawOptions, StepId } from "#app/types";
+import { ListNode, Store } from "#app/store";
+import type { RequiredDrawOptions, Step, StepId } from "#app/types";
 import type { DrawingMode } from "#components/map/mode";
+import { PointHelpers } from "../helpers";
 
 export class CloseGeometryCommand implements Command {
   type: string;
+  auxPointSnapshot: ListNode | null = null;
 
   constructor(
     private readonly store: Store,
@@ -14,14 +16,30 @@ export class CloseGeometryCommand implements Command {
     this.type = "STORE_CLOSE_GEOMETRY";
   }
 
-  public execute = () => {
-    // adding auxPoint as the tail
-    this.store.notify({ type: "STORE_CLOSE_GEOMETRY" });
-    // closing the geometry
-    if (this.store.tail?.val && this.store.head?.val) {
-      this.store.tail.next = this.store.head;
-      this.store.head.prev = this.store.tail;
+  private restoreAuxPoint = () => {
+    if (this.auxPointSnapshot?.val) {
+      this.store.head!.prev = this.auxPointSnapshot;
+      this.store.tail!.next = this.auxPointSnapshot;
+      this.auxPointSnapshot.prev = this.store.tail;
+      this.auxPointSnapshot.next = this.store.head;
+      this.store.tail = this.auxPointSnapshot;
+      this.store.map.set(this.auxPointSnapshot.val.id, this.auxPointSnapshot);
+      this.store.size++;
+      this.store.pingConsumers();
     }
+  };
+
+  public execute = () => {
+    // adding aux point as the tail before closing the geometry
+    if (this.options.pointGeneration === "auto" && this.store.tail?.val) {
+      if (this.auxPointSnapshot) {
+        this.restoreAuxPoint();
+      } else {
+        const auxPoint = PointHelpers.createAuxiliaryPoint(this.store.tail?.val, this.store.head?.val as Step);
+        this.auxPointSnapshot = this.store.push(auxPoint);
+      }
+    }
+    this.store.circular.close();
     this.mode.setClosedGeometry(true);
   };
 
@@ -34,6 +52,6 @@ export class CloseGeometryCommand implements Command {
       this.store.head.prev = null;
     }
     this.mode.setClosedGeometry(false);
-    this.store.notify({ type: "STORE_BREAK_GEOMETRY" })
+    this.store.notify({ type: "STORE_BREAK_GEOMETRY" });
   };
 }

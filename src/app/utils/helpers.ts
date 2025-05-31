@@ -179,7 +179,8 @@ export class Spatial {
   };
 
   // √(x1​−x2​)²+(y1​−y2​)²​
-  static distance = (point1: Point, point2: Point) => Math.sqrt((point1.x - point2.x) ** 2 + (point1.y - point2.y) ** 2);
+  static distance = (point1: Point, point2: Point) =>
+    Math.sqrt((point1.x - point2.x) ** 2 + (point1.y - point2.y) ** 2);
 
   static checkIfPointIsOnLine = (A: Point, B: Point, P: Point): boolean => {
     const EPSILON = 0.1;
@@ -326,12 +327,14 @@ export const debounce = (fn: (...args: any) => void, delay: number) => {
   };
 };
 
-export const disableButton = (button: HTMLButtonElement) => {
+export const disableButton = (button: HTMLButtonElement | null) => {
+  if (!button) return;
   button.setAttribute("disabled", "true");
   button.setAttribute("aria-disabled", "true");
 };
 
-export const enableButton = (button: HTMLButtonElement) => {
+export const enableButton = (button: HTMLButtonElement | null) => {
+  if (!button) return;
   button.removeAttribute("disabled");
   button.removeAttribute("aria-disabled");
 };

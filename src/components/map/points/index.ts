@@ -5,13 +5,13 @@ import { MapUtils, Spatial, throttle } from "#app/utils/helpers";
 import { ELAYERS } from "#app/utils/geo_constants";
 import { StoreHelpers } from "#app/store/index";
 import { timeline } from "#app/history";
+import type { StoreChangeEvent } from "#app/store/types";
 
 import { FireEvents } from "../helpers";
 import { PointVisibility } from "./helpers";
 import { FirstPoint } from "./first-point";
 import { removeTransparentLine, addTransparentLine } from "../tiles/helpers";
 import { AuxPoints } from "./aux-points";
-import type { StoreChangeEvent } from "#app/store/types";
 import type { DrawingModeChangeEvent } from "../mode/types";
 import { PointState } from "./point-state";
 import { PointTopologyManager } from "./point-topology-manager";

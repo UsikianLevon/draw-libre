@@ -19,7 +19,6 @@ export class Renderer {
 
   constructor(private readonly ctx: Context) {
     this.unifiedGeoJSON = GeometryFactory.getUnifiedFeatures(this.ctx.store);
-
     this.execute();
   }
 
@@ -65,7 +64,6 @@ export class Renderer {
   ) => {
     const { mode, options, store } = this.ctx;
 
-    // if the selected index is the first one then the prev index is the store.size - 1
     const prevIdx = featureIdx === 0 ? store.size - 1 : featureIdx - 1;
 
     this.updatePoint(featureIdx, newCoord);

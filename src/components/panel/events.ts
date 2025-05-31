@@ -4,7 +4,7 @@ import type { HTMLEvent } from "#app/types/helpers";
 import { DOM } from "#app/utils/dom";
 import { Tooltip } from "#components/tooltip";
 import { FireEvents } from "#components/map/helpers";
-import { disableButton, enableButton, Spatial } from "#app/utils/helpers";
+import { disableButton, enableButton } from "#app/utils/helpers";
 import type { StoreChangeEvent } from "#app/store/types";
 import type { DrawingModeChangeEvent } from "#components/map/mode/types";
 import { timeline } from "#app/history";
@@ -47,6 +47,7 @@ export class PanelEvents {
         this.ctx.panel.hide();
       } else {
         let current = Object.assign({}, data);
+        // TODO why the hell do we need a loop here? We don't like loops
         while (current.tail) {
           if (current.tail?.val?.isAuxiliary) {
             current.tail = current.tail?.prev;
@@ -84,47 +85,27 @@ export class PanelEvents {
     const { panel } = this.ctx;
 
     if (panel.undoButton) {
-      DOM.manageEventListener("add", panel.undoButton, "click", this.onUndoClick);
-      DOM.manageEventListener(
-        "add",
-        panel.undoButton,
-        "mouseenter",
-        this.onMouseEnter as EventListenerOrEventListenerObject,
-      );
-      DOM.manageEventListener("add", panel.undoButton, "mouseleave", this.onMouseLeave);
+      DOM.addEventListener(panel.undoButton, "click", this.onUndoClick);
+      DOM.addEventListener(panel.undoButton, "mouseenter", this.onMouseEnter as EventListenerOrEventListenerObject);
+      DOM.addEventListener(panel.undoButton, "mouseleave", this.onMouseLeave);
     }
 
     if (panel.redoButton) {
-      DOM.manageEventListener("add", panel.redoButton, "click", this.onRedoClick);
-      DOM.manageEventListener(
-        "add",
-        panel.redoButton,
-        "mouseenter",
-        this.onMouseEnter as EventListenerOrEventListenerObject,
-      );
-      DOM.manageEventListener("add", panel.redoButton, "mouseleave", this.onMouseLeave);
+      DOM.addEventListener(panel.redoButton, "click", this.onRedoClick);
+      DOM.addEventListener(panel.redoButton, "mouseenter", this.onMouseEnter as EventListenerOrEventListenerObject);
+      DOM.addEventListener(panel.redoButton, "mouseleave", this.onMouseLeave);
     }
 
     if (panel.deleteButton) {
-      DOM.manageEventListener("add", panel.deleteButton, "click", this.onRemoveAll);
-      DOM.manageEventListener(
-        "add",
-        panel.deleteButton,
-        "mouseenter",
-        this.onMouseEnter as EventListenerOrEventListenerObject,
-      );
-      DOM.manageEventListener("add", panel.deleteButton, "mouseleave", this.onMouseLeave);
+      DOM.addEventListener(panel.deleteButton, "click", this.onRemoveAll);
+      DOM.addEventListener(panel.deleteButton, "mouseenter", this.onMouseEnter as EventListenerOrEventListenerObject);
+      DOM.addEventListener(panel.deleteButton, "mouseleave", this.onMouseLeave);
     }
 
     if (panel.saveButton) {
-      DOM.manageEventListener("add", panel.saveButton, "click", this.onSaveClick);
-      DOM.manageEventListener(
-        "add",
-        panel.saveButton,
-        "mouseenter",
-        this.onMouseEnter as EventListenerOrEventListenerObject,
-      );
-      DOM.manageEventListener("add", panel.saveButton, "mouseleave", this.onMouseLeave);
+      DOM.addEventListener(panel.saveButton, "click", this.onSaveClick);
+      DOM.addEventListener(panel.saveButton, "mouseenter", this.onMouseEnter as EventListenerOrEventListenerObject);
+      DOM.addEventListener(panel.saveButton, "mouseleave", this.onMouseLeave);
     }
   }
 
@@ -132,47 +113,31 @@ export class PanelEvents {
     const { panel } = this.ctx;
 
     if (panel.undoButton) {
-      DOM.manageEventListener("remove", panel.undoButton, "click", this.onUndoClick);
-      DOM.manageEventListener(
-        "remove",
-        panel.undoButton,
-        "mouseenter",
-        this.onMouseEnter as EventListenerOrEventListenerObject,
-      );
-      DOM.manageEventListener("remove", panel.undoButton, "mouseleave", this.onMouseLeave);
+      DOM.removeEventListener(panel.undoButton, "click", this.onUndoClick);
+      DOM.removeEventListener(panel.undoButton, "mouseenter", this.onMouseEnter as EventListenerOrEventListenerObject);
+      DOM.removeEventListener(panel.undoButton, "mouseleave", this.onMouseLeave);
     }
 
     if (panel.deleteButton) {
-      DOM.manageEventListener("remove", panel.deleteButton, "click", this.onRemoveAll);
-      DOM.manageEventListener(
-        "remove",
+      DOM.removeEventListener(panel.deleteButton, "click", this.onRemoveAll);
+      DOM.removeEventListener(
         panel.deleteButton,
         "mouseenter",
         this.onMouseEnter as EventListenerOrEventListenerObject,
       );
-      DOM.manageEventListener("remove", panel.deleteButton, "mouseleave", this.onMouseLeave);
+      DOM.removeEventListener(panel.deleteButton, "mouseleave", this.onMouseLeave);
     }
 
     if (panel.redoButton) {
-      DOM.manageEventListener("remove", panel.redoButton, "click", this.onRedoClick);
-      DOM.manageEventListener(
-        "remove",
-        panel.redoButton,
-        "mouseenter",
-        this.onMouseEnter as EventListenerOrEventListenerObject,
-      );
-      DOM.manageEventListener("remove", panel.redoButton, "mouseleave", this.onMouseLeave);
+      DOM.removeEventListener(panel.redoButton, "click", this.onRedoClick);
+      DOM.removeEventListener(panel.redoButton, "mouseenter", this.onMouseEnter as EventListenerOrEventListenerObject);
+      DOM.removeEventListener(panel.redoButton, "mouseleave", this.onMouseLeave);
     }
 
     if (panel.saveButton) {
-      DOM.manageEventListener("remove", panel.saveButton, "click", this.onSaveClick);
-      DOM.manageEventListener(
-        "remove",
-        panel.saveButton,
-        "mouseenter",
-        this.onMouseEnter as EventListenerOrEventListenerObject,
-      );
-      DOM.manageEventListener("remove", panel.saveButton, "mouseleave", this.onMouseLeave);
+      DOM.removeEventListener(panel.saveButton, "click", this.onSaveClick);
+      DOM.removeEventListener(panel.saveButton, "mouseenter", this.onMouseEnter as EventListenerOrEventListenerObject);
+      DOM.removeEventListener(panel.saveButton, "mouseleave", this.onMouseLeave);
     }
   }
 
@@ -196,7 +161,7 @@ export class PanelEvents {
 
       this.tooltip
         .create({
-          label: label,
+          label,
           placement: "bottom",
         })
         .setPosition(this.tooltip.getPosition(event, "bottom"));
@@ -230,8 +195,7 @@ export class PanelEvents {
       timeline.undo();
     }
     this.tooltip.remove();
-    const step = { ...(store.tail?.val as Step), total: store.size };
-    FireEvents.undo(step, map, event);
+    FireEvents.undo({ ...(store.tail?.val as Step), total: store.size }, map, event);
     renderer.execute();
   };
 
@@ -239,8 +203,7 @@ export class PanelEvents {
     const { store, map, renderer } = this.ctx;
 
     timeline.redo();
-    const step = { ...(store.tail?.val as Step), total: store.size };
-    FireEvents.redo(step, map, event);
+    FireEvents.redo({ ...(store.tail?.val as Step), total: store.size }, map, event);
     renderer.execute();
   };
 

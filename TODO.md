@@ -1,13 +1,13 @@
-- [x] Tile class needs to be cut in half
 - [ ] add an option to export dots with or without aux points
-- [x] when 3 primary dots are added and the middle one is deleted, an aux point is not added between 2 primaries that are left
-- [x] panel size offset
-- [x] getAllSteps("linkedlist")
-- [x] fix the bug where the panel causes scrolling when it's outside the viewport.
 - [ ] Panel class needs to be cut in half
-- [ ] Check the Events class logic. Why did you decide to put eveything in one place. 
-- [x] bug with undo click and dynamic line(is not triggered in the correct place)
+- [ ] Check the Events class logic. Why did you decide to put eveything in one place.
 - [ ] check all events for the API
 - [ ] add a getContainer in the API for the user
-- [ ] redo button in the API
 - [ ] keyboard events
+- [x] redo button in the API
+- [ ] PointEvents must be refactored
+- [x] flickering on the panel
+- [ ] think about a way to make the panel opaque if needed
+- [ ] ok with the state of the app and ready to write tests?
+- [ ] fantom move events(when closing)
+- [ ]

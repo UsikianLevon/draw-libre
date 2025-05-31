@@ -1,18 +1,4 @@
 export class DOM {
-  private static readonly docStyle =
-    typeof window !== "undefined" && window.document && window.document.documentElement.style;
-  private static transformProp = DOM.testProp(["transform", "WebkitTransform"]);
-
-  private static testProp(props: string[]): string | undefined {
-    if (!DOM.docStyle) return props[0];
-    for (let i = 0; i < props.length; i++) {
-      if ((props as any)[i] in DOM.docStyle) {
-        return props[i];
-      }
-    }
-    return props[0];
-  }
-
   static create<K extends keyof HTMLElementTagNameMap>(
     tagName: K,
     className?: string,
@@ -30,15 +16,7 @@ export class DOM {
     }
   }
 
-  public static setTransform(el: HTMLElement, value: string) {
-    if (DOM.transformProp && el.style) {
-      // @ts-ignore
-      el.style[DOM.transformProp] = value;
-    }
-  }
-
-  static manageEventListener(
-    action: "add" | "remove",
+  static addEventListener(
     target: HTMLElement | Window | Document | undefined,
     type: string,
     callback: EventListenerOrEventListenerObject,
@@ -48,13 +26,20 @@ export class DOM {
     } = {},
   ) {
     if (!target) return;
+    target.addEventListener(type, callback, options);
+  }
 
-    const actionFn = action === "add" ? "addEventListener" : "removeEventListener";
-    if ("passive" in options) {
-      target[actionFn](type, callback, options);
-    } else {
-      target[actionFn](type, callback, options.capture);
-    }
+  static removeEventListener(
+    target: HTMLElement | Window | Document | undefined,
+    type: string,
+    callback: EventListenerOrEventListenerObject,
+    options: {
+      capture?: boolean;
+      passive?: boolean;
+    } = {},
+  ) {
+    if (!target) return;
+    target.removeEventListener(type, callback, options);
   }
 
   static mouseButton(e: MouseEvent) {

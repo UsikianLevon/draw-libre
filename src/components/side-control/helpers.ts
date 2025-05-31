@@ -1,23 +1,4 @@
 import { ControlType, RequiredDrawOptions } from "#app/types/index";
-import { DOM } from "#app/utils/dom";
-
-export const addControlListeners = (
-  element: HTMLElement,
-  events: { [key: string]: EventListenerOrEventListenerObject },
-) => {
-  for (const [event, listener] of Object.entries(events)) {
-    DOM.manageEventListener("add", element, event, listener);
-  }
-};
-
-export const removeControlListeners = (
-  element: HTMLElement,
-  events: { [key: string]: EventListenerOrEventListenerObject },
-) => {
-  for (const [event, listener] of Object.entries(events)) {
-    DOM.manageEventListener("remove", element, event, listener);
-  }
-};
 
 export const getButtonLabel = (type: ControlType, options: RequiredDrawOptions) => {
   const lineTitle = options.locale.line;

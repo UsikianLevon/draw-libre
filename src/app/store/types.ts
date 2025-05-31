@@ -1,5 +1,6 @@
 import { ListNode } from "./index";
 import { ChangeEvent } from "#app/utils/observable";
+import type { LatLng } from "#app/types/index";
 
 interface EventData {
   STORE_MUTATED: {
@@ -7,7 +8,9 @@ interface EventData {
     tail: ListNode | null;
     size: number;
   };
-  STORE_BREAK_GEOMETRY: null;
+  STORE_BREAK_GEOMETRY: {
+    coords: LatLng;
+  };
   STORE_CLOSE_GEOMETRY: null;
   STORE_CLEARED: null;
   STORE_INBETWEEN_POINT_REMOVED: {
@@ -19,9 +22,6 @@ interface EventData {
   STORE_POINT_ADDED: {
     node: ListNode["val"];
   };
-  STORE_INBETWEEN_POINT_ADDED: {
-    node: ListNode;
-  }
   STORE_POINT_INSERTED: {
     node: ListNode["val"];
   };

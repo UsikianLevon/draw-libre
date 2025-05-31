@@ -3,6 +3,7 @@ import type { ListNode, Store } from "#app/store";
 import type { StoreChangeEventKeys } from "#app/store/types";
 import type { RequiredDrawOptions } from "#app/types";
 import type { DrawingMode } from "#components/map/mode";
+import type { LatLng } from "#app/types/index";
 
 interface Snapshot {
   originalHead: ListNode | null;
@@ -28,6 +29,7 @@ export class BreakGeometryCommand implements Command {
     private readonly options: RequiredDrawOptions,
     private readonly mode: DrawingMode,
     private readonly current: ListNode,
+    private readonly clickCoords: LatLng,
   ) {}
 
   private makeSnapshot = () => {
@@ -41,7 +43,7 @@ export class BreakGeometryCommand implements Command {
 
     this.store.circular.break(this.current);
     this.mode.setClosedGeometry(false);
-    this.store.notify({ type: this.type });
+    this.store.notify({ type: "STORE_BREAK_GEOMETRY", data: { coords: this.clickCoords } });
 
     // save the new head and tail after breaking the geometry
     this.snapshot.newHead = this.store.head;

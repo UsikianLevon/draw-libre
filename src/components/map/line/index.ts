@@ -36,9 +36,6 @@ export class LineEvents {
     const notBreakMode = !this.ctx.mode.getBreak();
     if (notBreakMode) {
       this.transparent?.initEvents();
-      if (this.ctx.options.dynamicLine) {
-        this.dynamic?.initDynamicEvents();
-      }
     }
   }
 

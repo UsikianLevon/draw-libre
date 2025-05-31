@@ -47,11 +47,13 @@ export class LineBreakEvents {
     }
   };
 
-  private geometryBreakOnClick = () => {
+  private geometryBreakOnClick = (event: MapLayerMouseEvent) => {
+    console.log("geometryBreakOnClick", event, this.current);
+
     const { store, mode, map, renderer, options } = this.ctx;
 
     if (!this.current) return;
-    timeline.commit(new BreakGeometryCommand(store, options, mode, this.current));
+    timeline.commit(new BreakGeometryCommand(store, options, mode, this.current, event.lngLat));
     this.onLineLeave();
     mode.reset();
     renderer.execute();

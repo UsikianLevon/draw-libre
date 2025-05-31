@@ -6,6 +6,8 @@
 
 ## Features
 
+- Undo/redo
+- Can break a closed geometry
 - Draw linestrings (including closed ones) and polygons
 - Compatible with maplibre-gl(v2-v5) and mapbox-gl(v1-v3) and all projections
 - Customizable UI and controls

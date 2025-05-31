@@ -65,6 +65,7 @@ const draw = DrawLibre.getInstance({
     size: "medium", // "large" || "small" - Controls size of the panel that appears after pressing a button
     buttons: {
       delete: { visible: true }, // Controls visibility of the delete all points button
+      redo: { visible: true }
       save: {
         clearOnSave: true, // Whether to clear all points after saving
         visible: true, // Controls visibility of the save button

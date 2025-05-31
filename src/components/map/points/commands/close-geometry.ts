@@ -1,11 +1,12 @@
 import type { Command } from "#app/history";
-import { ListNode, Store } from "#app/store";
+import type { ListNode, Store } from "#app/store";
+import type { StoreChangeEventKeys } from "#app/store/types";
 import type { RequiredDrawOptions, Step, StepId } from "#app/types";
 import type { DrawingMode } from "#components/map/mode";
 import { PointHelpers } from "../helpers";
 
 export class CloseGeometryCommand implements Command {
-  type: string;
+  type: StoreChangeEventKeys = "STORE_CLOSE_GEOMETRY";
   auxPointSnapshot: ListNode | null = null;
 
   constructor(
@@ -41,6 +42,7 @@ export class CloseGeometryCommand implements Command {
     }
     this.store.circular.close();
     this.mode.setClosedGeometry(true);
+    this.store.notify({ type: this.type });
   };
 
   public undo = () => {

@@ -8,9 +8,14 @@ export class PointState {
   private startCoordinates: LatLng | null = null;
   private enteredStep: Step | null = null;
   private lastEvent: MapLayerMouseEvent | null = null;
+  private moved: boolean = false;
 
   public getSelectedNode(): ListNode | null {
     return this.selectedNode;
+  }
+
+  public isMoved(): boolean {
+    return this.moved;
   }
 
   public getSelectedIdx(): number | null {
@@ -49,6 +54,10 @@ export class PointState {
     this.lastEvent = event;
   }
 
+  public setMoved(moved: boolean): void {
+    this.moved = moved;
+  }
+
   public clearLastEvent(): void {
     this.lastEvent = null;
   }
@@ -66,5 +75,6 @@ export class PointState {
     this.selectedIdx = null;
     this.startCoordinates = null;
     this.lastEvent = null;
+    this.moved = false;
   }
 }

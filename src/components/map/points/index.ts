@@ -170,6 +170,7 @@ export class PointEvents {
       this.onMoveLeftClickUp(this.pointState.getLastEvent() as MapLayerMouseEvent);
       const auxPoints = this.topologyManager.getAuxPointsLatLng(this.pointState.getLastEvent() as MapLayerMouseEvent);
       renderer.executeOnMouseMove(this.pointState.getSelectedIdx() as number, event.lngLat, auxPoints);
+      this.pointState.setMoved(true);
     }
   }, 17);
 
@@ -293,6 +294,7 @@ export class PointEvents {
     const selectedNode = this.pointState.getSelectedNode();
     const lastEvent = this.pointState.getLastEvent();
     const startCoordinates = this.pointState.getStartCoordinates();
+    console.log(startCoordinates);
 
     if (selectedNode && !selectedNode.val?.isAuxiliary) {
       if (lastEvent) {
@@ -301,7 +303,13 @@ export class PointEvents {
       }
 
       panel?.show();
-      timeline.commit(new MovePointCommand(store, selectedNode, startCoordinates as LatLng, map));
+
+      if (this.pointState.isMoved()) {
+        console.log("inside");
+
+        timeline.commit(new MovePointCommand(store, selectedNode, startCoordinates as LatLng, map));
+        this.pointState.setMoved(false);
+      }
       this.pointState.partialReset();
     }
 

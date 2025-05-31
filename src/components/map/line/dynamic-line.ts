@@ -201,7 +201,7 @@ export class DynamicLineEvents {
   };
 
   private onRightClickRemove = (event: PointRightClickRemoveEvent) => {
-    const { store, mode } = this.ctx;
+    const { store } = this.ctx;
     if (!store.circular.isCircular()) {
       this.secondPoint = { lng: event.coordinates.lng, lat: event.coordinates.lat };
       this.firstPoint = store.tail?.val as LatLng;

@@ -1,0 +1,11 @@
+- [ ] Panel class needs to be cut in half
+- [ ] Check the Events class logic. Why did you decide to put eveything in one place.
+- [ ] check all events for the API
+- [x] redo button in the API
+- [ ] PointEvents must be refactored
+- [x] flickering on hove in the side panel
+- [ ] think about a way to make the panel less annoying(opaque in some cases OR maybe give the user a way to use the functionality through the API)
+- [x] fantom move events(when closing)
+- [ ] dynamic line is not working sometimes after placing a point(placing and moving fast?)
+- [x] if the head was red and then we removed all points, it should be reset, otherwise there's a flash of redness on next point add event
+- [ ] ok with the state of the app and ready to write tests?

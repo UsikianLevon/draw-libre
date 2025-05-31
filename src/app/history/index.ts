@@ -59,6 +59,7 @@ export class Timeline extends Observable<TimelineChangeEvent> {
 
     this.redoStack.length = 0;
     this.notify({ type: "REDO_STACK_CHANGED", data: 0 });
+    console.log("Timeline commit", cmd.type, this.undoStack, this.redoStack);
   };
 
   public undo = () => {

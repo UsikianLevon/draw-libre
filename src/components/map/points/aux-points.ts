@@ -92,8 +92,10 @@ export class AuxPoints {
       }
 
       panel?.show();
-      timeline.commit(new MovePointCommand(store, selectedNode, startCoordinates as LatLng, map));
-      timeline.commitTransaction();
+      if (this.pointState.isMoved()) {
+        timeline.commit(new MovePointCommand(store, selectedNode, startCoordinates as LatLng, map));
+        timeline.commitTransaction();
+      }
       this.pointState.partialReset();
     }
 

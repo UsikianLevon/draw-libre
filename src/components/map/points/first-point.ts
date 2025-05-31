@@ -116,6 +116,7 @@ export class FirstPoint {
       "STORE_CLOSE_GEOMETRY",
       "STORE_BREAK_GEOMETRY",
       "STORE_LAST_POINT_REMOVED",
+      "STORE_CLEARED",
     ] as StoreChangeEventKeys[];
     if (events.includes(type)) {
       if (Spatial.canCloseGeometry(store, options)) {
@@ -129,7 +130,7 @@ export class FirstPoint {
   private onFirstPointClick = () => {
     const { store, mode, renderer, options } = this.props;
 
-    if (Spatial.canCloseGeometry(store, options)) {
+    if (store.circular.canClose()) {
       timeline.commit(new CloseGeometryCommand(store, mode, options));
 
       renderer.execute();

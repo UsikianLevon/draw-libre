@@ -111,11 +111,9 @@ export class FirstPoint {
 
     const events = [
       "STORE_MUTATED",
-      "STORE_POINT_ADDED",
       "STORE_POINT_INSERTED",
       "STORE_CLOSE_GEOMETRY",
       "STORE_BREAK_GEOMETRY",
-      "STORE_LAST_POINT_REMOVED",
       "STORE_CLEARED",
     ] as StoreChangeEventKeys[];
     if (events.includes(type)) {

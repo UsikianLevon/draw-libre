@@ -28,7 +28,6 @@ export class Layers {
   private onStoreChange = debounce((event: StoreChangeEvent) => {
     const events = [
       "STORE_MUTATED",
-      "STORE_LAST_POINT_REMOVED",
       "STORE_CLOSE_GEOMETRY",
       "STORE_BREAK_GEOMETRY",
       "STORE_CLEARED",

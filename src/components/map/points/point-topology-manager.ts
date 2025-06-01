@@ -11,9 +11,9 @@ import { RemovePointCommand } from "./commands/remove-point";
 
 export class PointTopologyManager {
   constructor(
-    private readonly props: EventsCtx,
+    private readonly ctx: EventsCtx,
     private readonly state: PointState,
-  ) { }
+  ) {}
 
   private updateMainPoint(node: ListNode, event: MapLayerMouseEvent): void {
     if (node.val) {
@@ -59,7 +59,7 @@ export class PointTopologyManager {
     const selectedNode = this.state.getSelectedNode();
     if (!selectedNode) return null;
 
-    const { options } = this.props;
+    const { options } = this.ctx;
     const prevPrimary = selectedNode?.prev?.prev;
     const nextPrimary = selectedNode?.next?.next;
 
@@ -73,20 +73,20 @@ export class PointTopologyManager {
   };
 
   public addPoint(event: MapLayerMouseEvent): Step {
-    const { store } = this.props;
+    const { store, options } = this.ctx;
 
-    const cmd = new AddPointCommand(store, event.lngLat);
+    const cmd = new AddPointCommand(store, options, event.lngLat);
     timeline.commit(cmd);
     return cmd.getStep();
   }
 
   public removePoint(id: string): void {
-    const { store, options, mode, map } = this.props;
+    const { store, options, mode, map } = this.ctx;
 
     if (store.size === 1) {
       store.reset();
     } else {
-      timeline.commit(new RemovePointCommand({ store, options, mode, map, nodeId: id, }));
+      timeline.commit(new RemovePointCommand({ store, options, mode, map, nodeId: id }));
     }
   }
 }

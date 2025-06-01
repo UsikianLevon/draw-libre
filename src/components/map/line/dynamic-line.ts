@@ -85,8 +85,8 @@ export class DynamicLineEvents {
       this.secondPoint = event.data?.coords as LatLng;
       this.show();
       this.visible = true;
-    } else if (event.type === "STORE_POINT_ADDED" || event.type === "STORE_MUTATED") {
-      if (event.type === "STORE_MUTATED" && !this.visible) return;
+    } else if (event.type === "STORE_MUTATED") {
+      if (!this.visible) return;
       if (store.size > 0) {
         this.firstPoint = store.tail?.val as LatLng;
         this.secondPoint = store.tail?.val as LatLng;

@@ -16,12 +16,6 @@ interface EventData {
   STORE_INBETWEEN_POINT_REMOVED: {
     node: ListNode;
   };
-  STORE_LAST_POINT_REMOVED: {
-    node: ListNode;
-  };
-  STORE_POINT_ADDED: {
-    node: ListNode["val"];
-  };
   STORE_POINT_INSERTED: {
     node: ListNode["val"];
   };

@@ -15,7 +15,6 @@ import { AuxPoints } from "./aux-points";
 import type { DrawingModeChangeEvent } from "../mode/types";
 import { PointState } from "./point-state";
 import { PointTopologyManager } from "./point-topology-manager";
-import { AuxiliaryPointManager } from "./aux-manager";
 import { MovePointCommand } from "./commands/move-point";
 
 export interface PrimaryPointEvents {
@@ -32,12 +31,10 @@ export class PointEvents {
   private auxPoints: AuxPoints | null;
   private pointState: PointState;
   private topologyManager: PointTopologyManager;
-  private auxManager: AuxiliaryPointManager;
 
   constructor(private readonly ctx: EventsCtx) {
     this.pointState = new PointState();
     this.topologyManager = new PointTopologyManager(ctx, this.pointState);
-    this.auxManager = new AuxiliaryPointManager(ctx.store, ctx.options);
 
     this.events = {
       onPointMouseEnter: this.onPointMouseEnter,
@@ -58,7 +55,6 @@ export class PointEvents {
   private removeConsumers = () => {
     this.ctx.mode.removeObserver(this.mapModeConsumer);
     this.ctx.store.removeObserver(this.storeEventsConsumer);
-    this.auxManager.removeConsumers();
   };
 
   public initEvents = () => {

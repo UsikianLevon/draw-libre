@@ -4,6 +4,7 @@ import { DOM } from "#app/utils/dom";
 import type { Store } from "#app/store/index";
 import type { DrawingMode } from "#components/map/mode";
 import "./panel.css";
+import { disableButton } from "#app/utils/helpers";
 
 interface IProps {
   map: UnifiedMap;
@@ -16,13 +17,13 @@ const OFFSET_Y = 20;
 
 export class Panel {
   /** DOM-nodes will appear after init, that's why ! assertion is used */
-  private panelPopup!: HTMLDivElement;  // Container for the entire popup
-  private container!: HTMLDivElement;   // Inner container for buttons
+  private panelPopup!: HTMLDivElement; // Container for the entire popup
+  private container!: HTMLDivElement; // Inner container for buttons
   private resizeObserver!: ResizeObserver;
-  private isHidden = true;             // Visibility state
-  private anchor = { dx: 0, dy: 0 };   // Offset from geographic point
-  private pendingCoord: LatLng | null = null;       // Current geographic coordinates for panel placement
-  private rafId = 0;                   // ID for requestAnimationFrame to prevent duplicates
+  private isHidden = true;
+  private anchor = { dx: 0, dy: 0 }; // Offset from geographic point
+  private pendingCoord: LatLng | null = null; // Current geographic coordinates for panel placement
+  private rafId = 0; // ID for requestAnimationFrame to prevent duplicates
   private readonly onMapMove = () => this.schedulePositionUpdate();
   private listenersActive = false;
 
@@ -128,8 +129,14 @@ export class Panel {
 
     this.container = DOM.create("div", "dashboard");
 
-    if (btns.undo.visible) this.undoButton = this.createButton("undo", locale.undo, panelSize, this.container);
-    if (btns.redo.visible) this.redoButton = this.createButton("redo", locale.redo, panelSize, this.container);
+    if (btns.undo.visible) {
+      this.undoButton = this.createButton("undo", locale.undo, panelSize, this.container);
+      disableButton(this.undoButton);
+    }
+    if (btns.redo.visible) {
+      this.redoButton = this.createButton("redo", locale.redo, panelSize, this.container);
+      disableButton(this.redoButton);
+    }
     if (btns.delete.visible) this.deleteButton = this.createButton("delete", locale.delete, panelSize, this.container);
     if (btns.save.visible) this.saveButton = this.createButton("save", locale.save, panelSize, this.container);
   }

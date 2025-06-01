@@ -1,12 +1,10 @@
 import type { MapLayerMouseEvent, MapMouseEvent } from "maplibre-gl";
-import type { LatLng, Point, Uuid, EventsCtx, RequiredDrawOptions, Step } from "#app/types/index";
+import type { LatLng, Point, Uuid, RequiredDrawOptions } from "#app/types/index";
 import type { UnifiedMap } from "#app/types/map";
-
 import type { ListNode, Store } from "#app/store/index";
-
 import type { DrawingMode } from "#components/map/mode";
+
 import { ELAYERS } from "./geo_constants";
-import { PointHelpers } from "#components/map/points/helpers";
 
 export class MapUtils {
   static isFeatureTriggered(event: MapLayerMouseEvent, layerIds: string[]) {

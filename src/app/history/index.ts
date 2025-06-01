@@ -58,7 +58,7 @@ export class Timeline extends Observable<TimelineChangeEvent> {
     }
 
     this.redoStack.length = 0;
-    this.notify({ type: "REDO_STACK_CHANGED", data: 0 });
+    this.pingConsumers();
   };
 
   public undo = () => {
@@ -66,7 +66,7 @@ export class Timeline extends Observable<TimelineChangeEvent> {
     if (!cmd) return;
     cmd.undo();
     this.redoStack.push(cmd);
-    this.notify({ type: "REDO_STACK_CHANGED", data: this.redoStack.length });
+    this.pingConsumers();
     return cmd;
   };
 
@@ -75,7 +75,7 @@ export class Timeline extends Observable<TimelineChangeEvent> {
     if (!cmd) return null;
     cmd.execute();
     this.undoStack.push(cmd);
-    this.notify({ type: "REDO_STACK_CHANGED", data: this.redoStack.length });
+    this.pingConsumers();
     return cmd;
   };
 
@@ -90,7 +90,7 @@ export class Timeline extends Observable<TimelineChangeEvent> {
     this.transaction = null;
 
     this.undoStack.push(txn);
-    this.notify({ type: "REDO_STACK_CHANGED", data: this.redoStack.length });
+    this.pingConsumers();
   };
 
   public getRedoStackLength = () => {
@@ -105,6 +105,18 @@ export class Timeline extends Observable<TimelineChangeEvent> {
     this.undoStack = [];
     this.redoStack = [];
     this.notify({ type: "REDO_STACK_CHANGED", data: 0 });
+  };
+
+  pingConsumers = () => {
+    this.notify({
+      type: "REDO_STACK_CHANGED",
+      data: this.redoStack.length,
+    });
+
+    this.notify({
+      type: "UNDO_STACK_CHANGED",
+      data: this.undoStack.length,
+    });
   };
 }
 

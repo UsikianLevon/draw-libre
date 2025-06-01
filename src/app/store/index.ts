@@ -48,7 +48,7 @@ export class Store extends Observable<StoreChangeEvent> {
     this.size++;
     this.pingConsumers();
     return newNode;
-  }
+  };
 
   public unshift = (step: Step) => {
     const newNode = new ListNode(step);
@@ -64,7 +64,7 @@ export class Store extends Observable<StoreChangeEvent> {
     this.map.set(step.id, newNode);
     this.size++;
     this.pingConsumers();
-  }
+  };
 
   public insertAfter = (node: ListNode, step: Step) => {
     if (!node) return null;
@@ -87,8 +87,8 @@ export class Store extends Observable<StoreChangeEvent> {
     this.map.set(step.id, newNode);
     this.size++;
     this.pingConsumers();
-    return newNode
-  }
+    return newNode;
+  };
 
   public removeNodeById(id: StepId): ListNode | null {
     const node = this.map.get(id);
@@ -142,7 +142,7 @@ export class Store extends Observable<StoreChangeEvent> {
     this.notify({
       type: "STORE_CLEARED",
     });
-  }
+  };
 
   public pingConsumers = () => {
     this.notify({
@@ -191,11 +191,11 @@ export class StoreHelpers {
     closeGeometry: Initial["closeGeometry"],
     pointGeneration: RequiredDrawOptions["pointGeneration"],
   ): Store {
-    const list = new Store();
+    const store = new Store();
     const steps = closeGeometry ? initialSteps.slice(0, -1) : initialSteps;
 
     steps.forEach((step, idx) => {
-      list.push(step);
+      store.push(step);
 
       // if we are at the end of the array and there's no next point
       // we need to create an auxiliary point with the first point
@@ -204,14 +204,15 @@ export class StoreHelpers {
         const isNextPointAvailable = steps[idx + 1];
         if (isNextPointAvailable) {
           const auxPoint = PointHelpers.createAuxiliaryPoint(step, steps[idx + 1] as Step);
-          list.push(auxPoint);
+          store.push(auxPoint);
         } else if (closeGeometry) {
           const auxPoint = PointHelpers.createAuxiliaryPoint(step, steps[0] as Step);
-          list.push(auxPoint);
+          store.push(auxPoint);
         }
       }
     });
-    return list;
+
+    return store;
   }
 
   static fromArray(initialOptions: Initial, pointGeneration: RequiredDrawOptions["pointGeneration"]): Store | null {

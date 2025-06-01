@@ -35,9 +35,11 @@ export class Layers {
     ] as StoreChangeEventKeys[];
 
     if (events.includes(event.type)) {
-      const { map, store } = this.ctx;
+      const { map, store, mode } = this.ctx;
 
-      if (store.size && store.circular.isCircular()) {
+      const isPolygonMode = mode.getMode() === "polygon";
+
+      if (isPolygonMode && store.circular.isCircular()) {
         map.setLayoutProperty(ELAYERS.PolygonLayer, "visibility", "visible");
       } else {
         map.setLayoutProperty(ELAYERS.PolygonLayer, "visibility", "none");

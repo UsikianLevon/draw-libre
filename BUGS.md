@@ -9,5 +9,6 @@
 - [x] dynamic line is not working sometimes after placing a point(placing and moving fast?)
 - [x] gun down the DynamicLineEvents class
 - [x] if the head was red and then we removed all points, it should be reset, otherwise there's a flash of redness on next point add event
+- [ ] gun down closedGeometry inside DrawingMode class? seems like a relic
 
 - [ ] ok with the state of the app and ready to write tests?

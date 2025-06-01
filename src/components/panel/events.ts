@@ -38,6 +38,14 @@ export class PanelEvents {
         enableButton(this.ctx.panel.redoButton as HTMLButtonElement);
       }
     }
+
+    if (type === "UNDO_STACK_CHANGED") {
+      if (!data) {
+        disableButton(this.ctx.panel.undoButton as HTMLButtonElement);
+      } else {
+        enableButton(this.ctx.panel.undoButton as HTMLButtonElement);
+      }
+    }
   };
 
   private onStoreChangeConsumer = (event: StoreChangeEvent) => {

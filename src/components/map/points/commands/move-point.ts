@@ -46,8 +46,6 @@ export class MovePointCommand implements Command {
 
   public execute = () => {
     if (!this.selectedNode.val) return;
-    console.log("execute");
-
     const point = this.store.findStepById(this.selectedNode.val?.id);
     if (point) {
       point.lat = this.end.lat;
@@ -58,9 +56,6 @@ export class MovePointCommand implements Command {
         type: "STORE_MUTATED",
         data: this.store,
       });
-      //   this.store.notify({
-      //     type: "STORE_POINT_MOVED",
-      //   });
       FireEvents.movePoint(
         {
           id: this.selectedNode.val.id,

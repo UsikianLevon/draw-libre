@@ -1,6 +1,7 @@
 import type { Store } from "#app/store";
 import type { RequiredDrawOptions } from "#app/types";
 import type { UnifiedMap } from "#app/types/map";
+import { DrawingMode } from "../mode";
 import { Layers } from "./layers";
 import { Sources } from "./sources";
 
@@ -8,6 +9,7 @@ export interface Context {
   map: UnifiedMap;
   store: Store;
   options: RequiredDrawOptions;
+  mode: DrawingMode;
 }
 
 export class Tiles {

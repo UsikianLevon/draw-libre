@@ -33,7 +33,6 @@ export class Layers {
       "STORE_BREAK_GEOMETRY",
       "STORE_CLEARED",
     ] as StoreChangeEventKeys[];
-    console.log(event);
 
     if (events.includes(event.type)) {
       const { map, store } = this.ctx;

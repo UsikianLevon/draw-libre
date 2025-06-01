@@ -1,6 +1,6 @@
 import { ChangeEvent } from "#app/utils/observable";
 
-type MouseEvent =
+export type MapMouseEvent =
   | "firstPointMouseEnter"
   | "firstPointMouseLeave"
   | "lastPointMouseClick"
@@ -14,4 +14,4 @@ type MouseEvent =
   | "lineMouseEnter"
   | "lineMouseLeave";
 
-export type MouseEventsChangeEvent = ChangeEvent<Record<MouseEvent, boolean>>;
+export type MouseEventsChangeEvent = ChangeEvent<Record<MapMouseEvent, boolean>>;

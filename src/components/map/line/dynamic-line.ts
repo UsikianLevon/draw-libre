@@ -3,48 +3,80 @@ import type { GeoJSONSource, MapLayerMouseEvent, PointLike } from "maplibre-gl";
 import type { EventsCtx, LatLng } from "#app/types/index";
 import { ELAYERS, ESOURCES, LINE_BASE } from "#app/utils/geo_constants";
 import type { StoreChangeEvent } from "#app/store/types";
-import { GeometryFactory, MapUtils, throttle } from "#app/utils/helpers";
+import { debounce, GeometryFactory, MapUtils, throttle } from "#app/utils/helpers";
 import { EVENTS } from "#app/utils/constants";
 
 import type { PointRightClickRemoveEvent, UndoEvent } from "../types";
-import type { MouseEventsChangeEvent } from "../mouse-events/types";
+import type { MouseEventsChangeEvent, MapMouseEvent } from "../mouse-events/types";
 
 const LINE_DYNAMIC_THROTTLE_TIME = 17; // 60 FPS
 
 export class DynamicLineEvents {
+  private visible: boolean;
   private firstPoint: LatLng | null = null;
   private secondPoint: LatLng | null = null;
   private lineFeature: any;
   private onMouseMoveThrottled: (event: MapLayerMouseEvent) => void;
+  private onStoreEventsDebounced: (event: StoreChangeEvent) => void;
 
   constructor(private readonly ctx: EventsCtx) {
-    this.initConsumers();
+    this.visible = true;
     this.onMouseMoveThrottled = throttle(this.onLineMove, LINE_DYNAMIC_THROTTLE_TIME);
+    this.onStoreEventsDebounced = debounce(this.onStoreEventsConsumer, 10);
+    this.initConsumers();
     this.initDynamicEvents();
   }
 
   private initConsumers() {
-    this.ctx.store.addObserver(this.onStoreEventsConsumer);
+    this.ctx.store.addObserver(this.onStoreEventsDebounced);
     this.ctx.mouseEvents.addObserver(this.onMouseEventsConsumer);
   }
 
   public removeConsumers = () => {
-    this.ctx.store.removeObserver(this.onStoreEventsConsumer);
+    this.ctx.store.removeObserver(this.onStoreEventsDebounced);
     this.ctx.mouseEvents.removeObserver(this.onMouseEventsConsumer);
   };
 
   private onMouseEventsConsumer = (event: MouseEventsChangeEvent) => {
     const { store } = this.ctx;
-    if (store.circular.isCircular()) return;
-
-    const clicked = event.data;
-    if (event.type === "lastPointMouseClick" && clicked) {
+    if (store.circular.isCircular()) {
       this.hide();
+      return;
+    }
+
+    // this one is needed to turn off the dynamic line when the last point is clicked
+    if (event.type === "lastPointMouseClick" && event.data) {
+      this.hide();
+      this.visible = false;
+    }
+    // this is needed to not trigger "show" function if the last point was clicked and we just hover a point or a line
+    if (!this.visible) return;
+
+    // not sure about this, but looks like a good idea to hide the dynamic line on these events
+    const HIDE_EVENTS = ["pointMouseEnter", "lineMouseEnter", "pointMouseDown"] as MapMouseEvent[];
+    if (HIDE_EVENTS.includes(event.type) && event.data) {
+      this.hide();
+    }
+
+    // if we hid the dynamic line there ^, then we obviously need to show it again
+    if (event.type === "pointMouseLeave" || event.type === "lineMouseLeave") {
+      const { store } = this.ctx;
+      if (store.circular.isCircular()) return;
+      if (event.data) {
+        this.firstPoint = store.tail?.val as LatLng;
+        this.secondPoint = store.tail?.val as LatLng;
+        this.show();
+      }
     }
   };
 
   private onStoreEventsConsumer = (event: StoreChangeEvent) => {
     const { store } = this.ctx;
+    if (store.circular.isCircular()) {
+      this.hide();
+
+      return;
+    }
 
     if (event.type === "STORE_CLOSE_GEOMETRY" || event.type === "STORE_CLEARED") {
       this.hide();
@@ -52,11 +84,14 @@ export class DynamicLineEvents {
       this.firstPoint = store.tail?.val as LatLng;
       this.secondPoint = event.data?.coords as LatLng;
       this.show();
-    } else if (event.type === "STORE_POINT_ADDED") {
+      this.visible = true;
+    } else if (event.type === "STORE_POINT_ADDED" || event.type === "STORE_MUTATED") {
+      if (event.type === "STORE_MUTATED" && !this.visible) return;
       if (store.size > 0) {
         this.firstPoint = store.tail?.val as LatLng;
         this.secondPoint = store.tail?.val as LatLng;
         this.show();
+        this.visible = true;
       }
     }
   };

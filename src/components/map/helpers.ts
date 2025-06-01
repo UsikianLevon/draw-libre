@@ -37,6 +37,8 @@ export class FireEvents {
     });
   }
   static pointRemoveRightClick(step: Step & { total: number }, map: UnifiedMap) {
+    console.log("Firing right click remove event", step);
+
     map.fire(EVENTS.RIGHTCLICKREMOVE, {
       id: step.id,
       coordinates: {
@@ -81,7 +83,6 @@ export class FireEvents {
       timestamp: Date.now(),
     });
   }
-
 
   static redo(step: Step & { total: number }, map: UnifiedMap, originalEvent?: Event) {
     map.fire(EVENTS.REDO, {

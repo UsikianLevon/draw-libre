@@ -48,8 +48,6 @@ export class LineBreakEvents {
   };
 
   private geometryBreakOnClick = (event: MapLayerMouseEvent) => {
-    console.log("geometryBreakOnClick", event, this.current);
-
     const { store, mode, map, renderer, options } = this.ctx;
 
     if (!this.current) return;

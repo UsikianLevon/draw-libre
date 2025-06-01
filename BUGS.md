@@ -1,10 +1,10 @@
 - [ ] Panel class needs to be cut in half
 - [ ] Check the Events class logic. Why did you decide to put eveything in one place.
-- [ ] check all events for the API
-- [x] redo button in the API
 - [ ] PointEvents must be gunned down
-- [x] flickering on hover in the side panel
 - [ ] think about a way to make the panel less annoying(opaque in some cases OR maybe give the user a way to use the functionality through the API)
+- [x] check all events of the API
+- [x] redo button in the API
+- [x] flickering on hover in the side panel
 - [x] fantom move events(when closing)
 - [x] dynamic line is not working sometimes after placing a point(placing and moving fast?)
 - [x] gun down the DynamicLineEvents class

@@ -58,6 +58,9 @@ export class MovePointCommand implements Command {
         type: "STORE_MUTATED",
         data: this.store,
       });
+      //   this.store.notify({
+      //     type: "STORE_POINT_MOVED",
+      //   });
       FireEvents.movePoint(
         {
           id: this.selectedNode.val.id,

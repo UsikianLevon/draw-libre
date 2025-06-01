@@ -294,7 +294,6 @@ export class PointEvents {
     const selectedNode = this.pointState.getSelectedNode();
     const lastEvent = this.pointState.getLastEvent();
     const startCoordinates = this.pointState.getStartCoordinates();
-    console.log(startCoordinates);
 
     if (selectedNode && !selectedNode.val?.isAuxiliary) {
       if (lastEvent) {
@@ -305,8 +304,6 @@ export class PointEvents {
       panel?.show();
 
       if (this.pointState.isMoved()) {
-        console.log("inside");
-
         timeline.commit(new MovePointCommand(store, selectedNode, startCoordinates as LatLng, map));
         this.pointState.setMoved(false);
       }

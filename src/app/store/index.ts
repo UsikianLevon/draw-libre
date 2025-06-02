@@ -44,6 +44,7 @@ export class Store extends Observable<StoreChangeEvent> {
       this.tail.next = newNode;
       this.tail = newNode;
     }
+
     this.map.set(step.id, newNode);
     this.size++;
     this.pingConsumers();

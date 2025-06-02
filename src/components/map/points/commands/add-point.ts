@@ -1,13 +1,23 @@
 import type { Command } from "#app/history";
-import { Store } from "#app/store";
+import { ListNode, Store } from "#app/store";
 import type { StoreChangeEventKeys } from "#app/store/types";
-import type { LatLng, RequiredDrawOptions, Step, StepId } from "#app/types";
+import type { LatLng, RequiredDrawOptions, Step } from "#app/types";
 import { uuidv4 } from "#app/utils/helpers";
 import { PointHelpers } from "../helpers";
 
+interface Snapshot {
+  addedNode: ListNode | null;
+  prevPrimaryNode: ListNode | null;
+  auxNode: ListNode | null;
+}
+
 export class AddPointCommand implements Command {
   type: StoreChangeEventKeys = "STORE_MUTATED";
-  payload: { node: Step };
+  snapshot: Snapshot = {
+    addedNode: null,
+    prevPrimaryNode: null,
+    auxNode: null,
+  };
   private readonly step: Step;
 
   constructor(
@@ -16,48 +26,80 @@ export class AddPointCommand implements Command {
     coord: LatLng,
   ) {
     this.step = { id: uuidv4(), isAuxiliary: false, ...coord };
-    this.payload = { node: this.step };
   }
 
+  private restoreAddedNode = (addedNode: ListNode) => {
+    if (addedNode.prev) {
+      addedNode.prev.next = addedNode;
+    } else {
+      this.store.head = addedNode;
+    }
+
+    if (addedNode.next) {
+      addedNode.next.prev = addedNode;
+    } else {
+      this.store.tail = addedNode;
+    }
+
+    this.snapshot.addedNode = addedNode;
+
+    if (addedNode.val) {
+      this.store.map.set(addedNode.val.id, addedNode);
+      this.store.size++;
+      this.store.pingConsumers();
+    }
+  };
+
+  private restoreAuxNode = (auxNode: ListNode) => {
+    if (auxNode.prev) {
+      auxNode.prev.next = auxNode;
+    } else {
+      this.store.head = auxNode;
+    }
+
+    if (auxNode.next) {
+      auxNode.next.prev = auxNode;
+    } else {
+      this.store.tail = auxNode;
+    }
+
+    this.snapshot.auxNode = auxNode;
+
+    if (auxNode.val) {
+      this.store.map.set(auxNode.val.id, auxNode);
+      this.store.size++;
+      this.store.pingConsumers();
+    }
+  };
+
   public execute = () => {
-    this.store.push(this.step);
+    if (this.snapshot.addedNode) {
+      this.restoreAddedNode(this.snapshot.addedNode);
+    } else {
+      this.snapshot.addedNode = this.store.push(this.step);
+      this.snapshot.prevPrimaryNode = this.snapshot.addedNode.prev;
+    }
 
     // if pointGeneration is "auto" then we add an auxPoint
     if (this.options.pointGeneration === "auto" && this.store.tail?.prev?.val) {
-      const auxPoint = PointHelpers.createAuxiliaryPoint(this.store.tail?.val as Step, this.store.tail?.prev?.val);
-      this.store.insertAfter(this.store.tail.prev, auxPoint);
-    }
-    this.store.notify({
-      type: "STORE_MUTATED",
-    });
-  };
-
-  public getStep = () => {
-    return this.step;
-  };
-
-  private recalculateLastPointRemoved(): void {
-    this.store.removeNodeById(this.store.tail?.val?.id as StepId);
-    if (this.store.tail?.val?.isAuxiliary) {
-      this.store.removeNodeById(this.store.tail?.val?.id);
-      if (!this.store.circular.canBreak()) {
-        const auxPoint = PointHelpers.createAuxiliaryPoint(this.store.tail.val, this.store.head?.val as Step);
-        this.store.push(auxPoint);
+      if (this.snapshot?.auxNode?.val) {
+        this.restoreAuxNode(this.snapshot.auxNode);
+      } else {
+        const auxPoint = PointHelpers.createAuxiliaryPoint(this.store.tail?.val as Step, this.store.tail?.prev?.val);
+        this.snapshot.auxNode = this.store.insertAfter(this.store.tail.prev, auxPoint);
       }
-      this.store.tail.next = this.store.head;
     }
-  }
+  };
 
   public undo = () => {
     this.store.removeNodeById(this.step.id);
 
-    if (this.options.pointGeneration === "auto") {
-      this.recalculateLastPointRemoved();
+    if (this.options.pointGeneration === "auto" && this?.snapshot.auxNode?.val) {
+      this.store.removeNodeById(this?.snapshot.auxNode.val.id);
     }
-    if (this.store.tail) {
-      this.store.notify({
-        type: "STORE_MUTATED",
-      });
-    }
+  };
+
+  public getStep = () => {
+    return this.step;
   };
 }

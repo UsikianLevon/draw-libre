@@ -7,7 +7,6 @@ import { PointHelpers } from "../helpers";
 
 interface Snapshot {
   addedNode: ListNode | null;
-  prevPrimaryNode: ListNode | null;
   auxNode: ListNode | null;
 }
 
@@ -15,7 +14,6 @@ export class AddPointCommand implements Command {
   type: StoreChangeEventKeys = "STORE_MUTATED";
   snapshot: Snapshot = {
     addedNode: null,
-    prevPrimaryNode: null,
     auxNode: null,
   };
   private readonly step: Step;
@@ -77,7 +75,6 @@ export class AddPointCommand implements Command {
       this.restoreAddedNode(this.snapshot.addedNode);
     } else {
       this.snapshot.addedNode = this.store.push(this.step);
-      this.snapshot.prevPrimaryNode = this.snapshot.addedNode.prev;
     }
 
     // if pointGeneration is "auto" then we add an auxPoint

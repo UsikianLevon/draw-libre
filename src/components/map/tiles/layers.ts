@@ -1,6 +1,6 @@
 import type { StoreChangeEvent, StoreChangeEventKeys } from "#app/store/types";
 import { ELAYERS, generateLayersToRender } from "#app/utils/geo_constants";
-import { debounce, Spatial } from "#app/utils/helpers";
+import { debounce } from "#app/utils/helpers";
 import type { Context } from ".";
 
 export class Layers {

@@ -1,12 +1,12 @@
 import type { UnifiedMap } from "#app/types/map";
-import type { ButtonType, LatLng, PanelImpl, RequiredDrawOptions } from "#app/types/index";
-import { DOM } from "#app/utils/dom";
+import type { LatLng, RequiredDrawOptions } from "#app/types/index";
 import type { Store } from "#app/store/index";
 import type { DrawingMode } from "#components/map/mode";
+import { PanelUIState } from "./state";
+import { PanelView } from "./view";
 import "./panel.css";
-import { disableButton } from "#app/utils/helpers";
 
-interface IProps {
+export interface Context {
   map: UnifiedMap;
   mode: DrawingMode;
   options: RequiredDrawOptions;
@@ -16,128 +16,99 @@ interface IProps {
 const OFFSET_Y = 20;
 
 export class Panel {
-  /** DOM-nodes will appear after init, that's why ! assertion is used */
-  private panelPopup!: HTMLDivElement; // Container for the entire popup
-  private container!: HTMLDivElement; // Inner container for buttons
+  private readonly view: PanelView;
+  private readonly state = new PanelUIState();
+
   private resizeObserver!: ResizeObserver;
-  private isHidden = true;
-  private anchor = { dx: 0, dy: 0 }; // Offset from geographic point
-  private pendingCoord: LatLng | null = null; // Current geographic coordinates for panel placement
-  private rafId = 0; // ID for requestAnimationFrame to prevent duplicates
+
   private readonly onMapMove = () => this.schedulePositionUpdate();
-  private listenersActive = false;
 
-  // Public buttons that can be accessed by parent class
-  public undoButton?: HTMLButtonElement;
-  public redoButton?: HTMLButtonElement;
-  public deleteButton?: HTMLButtonElement;
-  public saveButton?: HTMLButtonElement;
-
-  constructor(private readonly props: IProps) {
+  constructor(private readonly ctx: Context) {
+    this.view = new PanelView(ctx);
     this.init();
   }
 
   private init() {
-    const { store, map } = this.props;
+    const { store } = this.ctx;
 
-    this.createPanel();
-
-    this.panelPopup = DOM.create("div", "dashboard-container");
-    if (this.isHidden) this.panelPopup.classList.add("hidden");
-    this.panelPopup.appendChild(this.container);
-
-    map.getContainer().appendChild(this.panelPopup);
-
-    this.resizeObserver = new ResizeObserver(this.measureAnchor);
-    this.resizeObserver.observe(this.panelPopup);
+    this.resizeObserver = this.view.observeResize(this.measureAnchor);
     this.measureAnchor();
 
     if (store.tail?.val) this.setPanelLocation(store.tail.val);
   }
 
   public destroy() {
-    if (this.listenersActive) {
+    if (this.state.listenersActive) {
       this.disableListeners();
     }
     this.resizeObserver.disconnect();
-    cancelAnimationFrame(this.rafId);
-    this.panelPopup.remove();
+    cancelAnimationFrame(this.state.rafId);
+    this.view.destroy();
   }
 
   private enableListeners() {
-    if (this.listenersActive) return;
-    const map = this.props.map;
+    if (this.state.listenersActive) return;
+    const map = this.ctx.map;
     map.on("move", this.onMapMove);
     map.on("zoom", this.onMapMove);
-    this.listenersActive = true;
+    this.state.listenersActive = true;
   }
 
   private disableListeners() {
-    if (!this.listenersActive) return;
-    const map = this.props.map;
+    if (!this.state.listenersActive) return;
+    const map = this.ctx.map;
     map.off("move", this.onMapMove);
     map.off("zoom", this.onMapMove);
-    this.listenersActive = false;
+    this.state.listenersActive = false;
   }
 
   public setPanelLocation = (coordinates: LatLng) => {
-    this.pendingCoord = coordinates;
+    this.state.pendingCoord = coordinates;
     this.enableListeners();
     this.schedulePositionUpdate();
     this.show();
   };
 
   private measureAnchor = () => {
-    const { width, height } = this.panelPopup.getBoundingClientRect();
-    this.anchor = { dx: -width / 2, dy: -height - OFFSET_Y };
+    const { width, height } = this.view.getRoot().getBoundingClientRect();
+    this.state.anchor = { dx: -width / 2, dy: -height - OFFSET_Y };
     this.schedulePositionUpdate();
   };
 
   private schedulePositionUpdate = () => {
-    if (this.rafId) return;
-    this.rafId = requestAnimationFrame(() => {
-      this.rafId = 0;
-      if (this.pendingCoord) {
-        const point = this.props.map.project(this.pendingCoord);
-        const { dx, dy } = this.anchor;
-        this.panelPopup.style.transform = `translate(${point.x + dx}px, ${point.y + dy}px)`;
+    if (this.state.rafId) return;
+    this.state.rafId = requestAnimationFrame(() => {
+      this.state.rafId = 0;
+      if (this.state.pendingCoord) {
+        const point = this.ctx.map.project(this.state.pendingCoord);
+        const { dx, dy } = this.state.anchor;
+        this.view.setTransform(point.x + dx, point.y + dy);
       }
     });
   };
 
-  private toggleVisibility(visible: boolean) {
-    this.isHidden = !visible;
-    this.panelPopup.classList.toggle("hidden", !visible);
+  private setVisible(visible: boolean) {
+    this.state.isHidden = !visible;
+    if (visible) this.view.show();
+    else this.view.hide();
   }
 
-  public show = () => this.toggleVisibility(true);
-  public hide = () => this.toggleVisibility(false);
+  public show = () => this.setVisible(true);
+  public hide = () => this.setVisible(false);
 
-  private createButton(type: ButtonType, title: string, size: PanelImpl["size"], container: HTMLElement) {
-    const button = DOM.create("button", `panel-button panel-button-${size}`, container);
-    button.setAttribute("data-type", type);
-    button.setAttribute("aria-label", title);
-    DOM.create("span", `icon ${type} icon-${size}`, button);
-    return button as HTMLButtonElement;
+  public get undoButton() {
+    return this.view.getButton("undo");
   }
 
-  private createPanel() {
-    const { options } = this.props;
-    const { locale } = options;
-    const btns = options.panel.buttons;
-    const panelSize = options.panel.size;
+  public get redoButton() {
+    return this.view.getButton("redo");
+  }
 
-    this.container = DOM.create("div", "dashboard");
+  public get deleteButton() {
+    return this.view.getButton("delete");
+  }
 
-    if (btns.undo.visible) {
-      this.undoButton = this.createButton("undo", locale.undo, panelSize, this.container);
-      disableButton(this.undoButton);
-    }
-    if (btns.redo.visible) {
-      this.redoButton = this.createButton("redo", locale.redo, panelSize, this.container);
-      disableButton(this.redoButton);
-    }
-    if (btns.delete.visible) this.deleteButton = this.createButton("delete", locale.delete, panelSize, this.container);
-    if (btns.save.visible) this.saveButton = this.createButton("save", locale.save, panelSize, this.container);
+  public get saveButton() {
+    return this.view.getButton("save");
   }
 }

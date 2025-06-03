@@ -55,6 +55,7 @@ export class PanelEvents {
         this.ctx.panel.hide();
       } else {
         let current = Object.assign({}, data);
+
         // TODO why the hell do we need a loop here? We don't like loops
         while (current.tail) {
           if (current.tail?.val?.isAuxiliary) {

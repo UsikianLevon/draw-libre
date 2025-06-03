@@ -31,6 +31,7 @@ export class RemovePointAutoCommand implements Command {
     const wasRemovedHead = store.head?.val?.id === nodeId;
     const tail = wasCircular ? store.tail?.prev : store.tail;
     const wasRemovedTail = tail?.val?.id === nodeId;
+
     const auxBefore = clickedNode.prev;
     const auxAfter = clickedNode.next;
     const beforePrimary = clickedNode.prev?.prev ?? null;
@@ -48,6 +49,25 @@ export class RemovePointAutoCommand implements Command {
       newAux: null,
     };
   }
+
+  public restoreNodeAfter = (after: ListNode, restoredNode: ListNode) => {
+    if (!after || !restoredNode || !restoredNode.val) return;
+
+    restoredNode.prev = after;
+    restoredNode.next = after.next;
+
+    if (after.next) {
+      after.next.prev = restoredNode;
+    }
+
+    after.next = restoredNode;
+
+    if (!this.ctx.store.map.has(restoredNode.val.id)) {
+      this.ctx.store.map.set(restoredNode.val.id, restoredNode);
+      this.ctx.store.size++;
+      this.ctx.store.pingConsumers();
+    }
+  };
 
   private recalculateInBetweenRemoved(clickedNode: ListNode | null): void {
     if (!clickedNode || !this.snapshot) return;
@@ -76,7 +96,7 @@ export class RemovePointAutoCommand implements Command {
     if (primaryBefore?.val && primaryAfter?.val && meetsAuxInsertionThreshold) {
       // if we have already undo/redoed then we just insert the new aux point already created
       if (this.snapshot.newAux) {
-        store.insertAfter(primaryBefore, this.snapshot.newAux.val as Step);
+        this.restoreNodeAfter(primaryBefore, this.snapshot.newAux);
       } else {
         const auxPoint = PointHelpers.createAuxiliaryPoint(primaryBefore.val, primaryAfter.val);
         this.snapshot.newAux = store.insertAfter(primaryBefore, auxPoint);
@@ -192,16 +212,24 @@ export class RemovePointAutoCommand implements Command {
     }
   };
 
-  private createAuxiliaryPoints(node: ListNode): void {
-    const { store } = this.ctx;
+  private restoreAuxiliaryPoints(node: ListNode): void {
     if (!this.snapshot) return;
-    if (node.prev?.val && node.val) {
-      const auxBefore = this.snapshot?.beforeAux;
-      store.insertAfter(node.prev, auxBefore!.val as Step);
+    if (node.prev?.val && node.val && this.snapshot?.beforeAux) {
+      this.restoreNodeAfter(node.prev, this.snapshot?.beforeAux);
+      if (this.snapshot.wasRemovedHead && this.snapshot.wasCircular) {
+        this.ctx.store.tail = this.snapshot.beforeAux;
+      }
     }
 
-    if (node.next?.val && node.val) {
-      store.insertAfter(node, this.snapshot?.afterAux?.val as Step);
+    if (node.next?.val && node.val && this.snapshot?.afterAux) {
+      this.restoreNodeAfter(node, this.snapshot?.afterAux);
+      if (this.snapshot.wasRemovedTail && this.snapshot.wasCircular) {
+        this.ctx.store.tail = this.snapshot.afterAux;
+      }
+    }
+
+    if (this.snapshot.wasCircular) {
+      this.ctx.store.circular.close();
     }
   }
 
@@ -234,7 +262,7 @@ export class RemovePointAutoCommand implements Command {
       store.size++;
     }
 
-    this.createAuxiliaryPoints(node);
+    this.restoreAuxiliaryPoints(node);
     store.pingConsumers();
   };
 }

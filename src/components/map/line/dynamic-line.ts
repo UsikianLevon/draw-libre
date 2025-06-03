@@ -101,8 +101,8 @@ export class DynamicLineEvents {
     map.on("click", this.onMapClick);
     map.on("mousemove", this.onMouseMoveThrottled);
     map.on(EVENTS.REMOVEALL, this.hide);
-    map.on(EVENTS.UNDO, this.onUndoRedoClick);
-    map.on(EVENTS.REDO, this.onUndoRedoClick);
+    // map.on(EVENTS.UNDO, this.onUndoRedoClick);
+    // map.on(EVENTS.REDO, this.onUndoRedoClick);
     map.on(EVENTS.RIGHTCLICKREMOVE, this.onRightClickRemove);
   };
 

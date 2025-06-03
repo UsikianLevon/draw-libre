@@ -1,5 +1,5 @@
-import { StoreHelpers } from "#app/store/index";
-import type { ButtonType, EventsCtx, Step } from "#app/types/index";
+import { ListNode, StoreHelpers } from "#app/store/index";
+import type { ButtonType, EventsCtx, Step, StepId } from "#app/types/index";
 import type { HTMLEvent } from "#app/types/helpers";
 import { DOM } from "#app/utils/dom";
 import { Tooltip } from "#components/tooltip";
@@ -90,8 +90,35 @@ export class PanelEvents {
     }
   };
 
+  private onKeyDown = (e: KeyboardEvent) => {
+    const isMac = ((): boolean => {
+      if ("userAgentData" in navigator) {
+        return (navigator.userAgentData as any).platform === "macOS";
+      }
+      return navigator.userAgent.toLowerCase().includes("mac");
+    })();
+
+    const ctrl = isMac ? e.metaKey : e.ctrlKey;
+
+    if (ctrl && e.key.toLowerCase() === "z") {
+      e.preventDefault();
+      if (e.shiftKey) {
+        this.onRedoClick(e);
+      } else {
+        this.onUndoClick(e);
+      }
+    }
+
+    if (ctrl && e.key.toLowerCase() === "y") {
+      e.preventDefault();
+      this.onRedoClick(e);
+    }
+  };
+
   public initEvents() {
     const { panel } = this.ctx;
+
+    document.addEventListener("keydown", this.onKeyDown);
 
     if (panel.undoButton) {
       DOM.addEventListener(panel.undoButton, "click", this.onUndoClick);
@@ -120,6 +147,8 @@ export class PanelEvents {
 
   public removeEvents() {
     const { panel } = this.ctx;
+
+    document.removeEventListener("keydown", this.onKeyDown);
 
     if (panel.undoButton) {
       DOM.removeEventListener(panel.undoButton, "click", this.onUndoClick);
@@ -202,6 +231,13 @@ export class PanelEvents {
       this.ctx.panel.hide();
     } else {
       timeline.undo();
+      this.validateStructuredDoublyLinkedList(
+        store.head,
+        store.tail,
+        store.map,
+        "After UNDO",
+        store.circular.isCircular(),
+      );
     }
     this.tooltip.remove();
     FireEvents.undo({ ...(store.tail?.val as Step), total: store.size }, map, event);
@@ -214,7 +250,132 @@ export class PanelEvents {
     timeline.redo();
     FireEvents.redo({ ...(store.tail?.val as Step), total: store.size }, map, event);
     renderer.execute();
+    this.validateStructuredDoublyLinkedList(
+      store.head,
+      store.tail,
+      store.map,
+      "After Redo",
+      store.circular.isCircular(),
+    );
   };
+
+  validateStructuredDoublyLinkedList(
+    head: ListNode | null,
+    tail: ListNode | null,
+    map: Map<StepId, ListNode>,
+    label = "List",
+    isCircular = false,
+  ) {
+    if (!head) {
+      console.log(`${label}: ❌ Head is null`);
+      return;
+    }
+
+    let current: ListNode | null = head;
+    const visited = new Set<ListNode>();
+    let index = 0;
+    let isBroken = false;
+    let detectedCycle = false;
+    let expectPrimary = true;
+
+    const trimId = (id: string | undefined) => (id ? id.slice(-4, -1) : "null");
+
+    while (current) {
+      const id = current.val?.id;
+      const prev = current.prev as ListNode | null;
+      const next = current.next as ListNode | null;
+      const isAux = current.val?.isAuxiliary;
+
+      // Цикл
+      if (visited.has(current)) {
+        if (isCircular && current === head) {
+          detectedCycle = true;
+          console.log(`${label}: 🔁 Proper circular reference detected at index ${index}`);
+          break;
+        } else {
+          console.log(`${label}: ❌ Invalid cycle detected at index ${index}, node ID: ${trimId(id)}`);
+          return;
+        }
+      }
+      visited.add(current);
+
+      // Ссылки
+      if (next && next.prev !== current) {
+        console.log(`${label}: ❌ Forward link broken at ${trimId(id)}`);
+        isBroken = true;
+      }
+      if (prev && prev.next !== current) {
+        console.log(`${label}: ❌ Backward link broken at ${trimId(id)}`);
+        isBroken = true;
+      }
+
+      // Структура: PRIMARY → AUX
+      if (expectPrimary && isAux) {
+        console.log(`${label}: ❌ Expected PRIMARY, got AUX at ${trimId(id)}`);
+        isBroken = true;
+      } else if (!expectPrimary && !isAux) {
+        console.log(`${label}: ❌ Expected AUXILIARY, got PRIMARY at ${trimId(id)}`);
+        isBroken = true;
+      }
+      expectPrimary = !expectPrimary;
+
+      // Первый узел не должен быть AUX
+      if (index === 0 && isAux) {
+        console.log(`${label}: ❌ First node is auxiliary, which is invalid`);
+        isBroken = true;
+      }
+
+      // Проверка наличия в map
+      if (!id || !map.has(id)) {
+        console.log(`${label}: ❌ Node ID ${id ?? "undefined"} not found in map`);
+        isBroken = true;
+      } else if (map.get(id) !== current) {
+        console.log(`${label}: ❌ Map mismatch for ID ${id} — different node instance`);
+        isBroken = true;
+      }
+
+      console.log(
+        `[${index}] ${trimId(prev?.val?.id)} ← ${trimId(id)} ${isAux ? "(AUX)" : "(PRIMARY)"} → ${trimId(next?.val?.id)}`,
+      );
+
+      current = current.next;
+      index++;
+    }
+
+    // Проверка tail/head связей
+    if (isCircular) {
+      if (head.prev !== tail || tail?.next !== head) {
+        console.log(`${label}: ❌ Circular structure broken: head.prev !== tail or tail.next !== head`);
+        isBroken = true;
+      } else if (!detectedCycle) {
+        console.log(`${label}: ❌ Expected circular structure but did not detect cycle`);
+        isBroken = true;
+      }
+    } else {
+      if (head.prev !== null) {
+        console.log(`${label}: ❌ head.prev is not null in non-circular list`);
+        isBroken = true;
+      }
+      if (tail?.next !== null) {
+        console.log(`${label}: ❌ tail.next is not null in non-circular list`);
+        isBroken = true;
+      }
+    }
+
+    // Проверка: все ключи из map должны быть в списке
+    for (const [id, node] of map) {
+      if (!visited.has(node)) {
+        console.log(`${label}: ❌ Node from map (ID ${id}) is not present in linked list`);
+        isBroken = true;
+      }
+    }
+
+    if (!isBroken) {
+      console.log(
+        `${label}: ✅ ${isCircular ? "Circular" : "Linear"} doubly linked list is structurally correct with ${visited.size} nodes`,
+      );
+    }
+  }
 
   private onSaveClick = (event: Event) => {
     const { store, options } = this.ctx;

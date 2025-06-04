@@ -85,14 +85,6 @@ export class DynamicLineEvents {
       this.secondPoint = event.data?.coords as LatLng;
       this.show();
       this.visible = true;
-    } else if (event.type === "STORE_MUTATED") {
-      if (!this.visible) return;
-      if (store.size > 0) {
-        this.firstPoint = store.tail?.val as LatLng;
-        this.secondPoint = store.tail?.val as LatLng;
-        this.show();
-        this.visible = true;
-      }
     }
   };
 
@@ -101,8 +93,8 @@ export class DynamicLineEvents {
     map.on("click", this.onMapClick);
     map.on("mousemove", this.onMouseMoveThrottled);
     map.on(EVENTS.REMOVEALL, this.hide);
-    // map.on(EVENTS.UNDO, this.onUndoRedoClick);
-    // map.on(EVENTS.REDO, this.onUndoRedoClick);
+    map.on(EVENTS.UNDO, this.onUndoRedoClick);
+    map.on(EVENTS.REDO, this.onUndoRedoClick);
     map.on(EVENTS.RIGHTCLICKREMOVE, this.onRightClickRemove);
   };
 

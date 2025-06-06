@@ -8,6 +8,7 @@ interface EventData {
     tail: ListNode | null;
     size: number;
   };
+  STORE_POINT_ADD: null;
   STORE_BREAK_GEOMETRY: {
     coords: LatLng;
   };

@@ -86,6 +86,10 @@ export class AddPointCommand implements Command {
         this.snapshot.auxNode = this.store.insertAfter(this.store.tail.prev, auxPoint);
       }
     }
+
+    this.store.notify({
+      type: "STORE_POINT_ADD",
+    });
   };
 
   public undo = () => {

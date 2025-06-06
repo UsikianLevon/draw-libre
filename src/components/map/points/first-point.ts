@@ -1,7 +1,7 @@
 import type { EventsCtx } from "#app/types/index";
 import type { MapLayerMouseEvent } from "maplibre-gl";
 
-import { Spatial, debounce } from "#app/utils/helpers";
+import { Spatial } from "#app/utils/helpers";
 import { ELAYERS } from "#app/utils/geo_constants";
 import { Tooltip } from "#components/tooltip";
 import { togglePointCircleRadius } from "#components/map/tiles/helpers";
@@ -105,8 +105,8 @@ export class FirstPoint {
     }
   };
 
-  private onStoreChangeConsumer = debounce((event: StoreChangeEvent) => {
-    const { map, store, options } = this.props;
+  private onStoreChangeConsumer = (event: StoreChangeEvent) => {
+    const { map, store } = this.props;
     const { type } = event;
 
     const events = [
@@ -117,13 +117,13 @@ export class FirstPoint {
       "STORE_CLEARED",
     ] as StoreChangeEventKeys[];
     if (events.includes(type)) {
-      if (Spatial.canCloseGeometry(store, options)) {
+      if (store.circular.canClose()) {
         togglePointCircleRadius(map, "large");
       } else {
         togglePointCircleRadius(map, "default");
       }
     }
-  }, 10);
+  };
 
   private onFirstPointClick = () => {
     const { store, mode, renderer, options } = this.props;

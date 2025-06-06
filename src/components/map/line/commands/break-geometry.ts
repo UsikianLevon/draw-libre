@@ -43,14 +43,13 @@ export class BreakGeometryCommand implements Command {
 
     this.store.circular.break(this.current);
     this.mode.setClosedGeometry(false);
-    this.store.notify({ type: "STORE_BREAK_GEOMETRY", data: { coords: this.clickCoords } });
 
     // save the new head and tail after breaking the geometry
     this.snapshot.newHead = this.store.head;
     this.snapshot.newTail = this.store.tail;
 
     // notify the panel to update the UI
-    this.store.pingConsumers();
+    this.store.notify({ type: "STORE_BREAK_GEOMETRY", data: { coords: this.clickCoords } });
   };
 
   private restoreOriginalHeadTail = () => {

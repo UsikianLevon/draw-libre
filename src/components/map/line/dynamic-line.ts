@@ -50,6 +50,7 @@ export class DynamicLineEvents {
       this.visible = false;
     }
     // this is needed to not trigger "show" function if the last point was clicked and we just hover a point or a line
+    // doesn't matter, will rewrite this part
     if (!this.visible) return;
 
     // not sure about this, but looks like a good idea to hide the dynamic line on these events
@@ -86,7 +87,6 @@ export class DynamicLineEvents {
       this.show();
       this.visible = true;
     } else if (event.type === "STORE_POINT_ADD") {
-      if (!this.visible) return;
       if (store.size > 0) {
         this.firstPoint = store.tail?.val as LatLng;
         this.secondPoint = store.tail?.val as LatLng;

@@ -1,5 +1,5 @@
-import { ListNode, StoreHelpers } from "#app/store/index";
-import type { ButtonType, EventsCtx, Step, StepId } from "#app/types/index";
+import { StoreHelpers } from "#app/store/index";
+import type { ButtonType, EventsCtx, Step } from "#app/types/index";
 import type { HTMLEvent } from "#app/types/helpers";
 import { DOM } from "#app/utils/dom";
 import { Tooltip } from "#components/tooltip";

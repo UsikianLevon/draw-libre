@@ -1,20 +1,14 @@
 import { DOM } from "#app/utils/dom";
-import type { RequiredDrawOptions } from "#app/types";
-import type { DrawingMode } from "#components/map/mode";
 import { disableButton } from "#app/utils/helpers";
-
-interface ControlViewCtx {
-  options: RequiredDrawOptions;
-  mode: DrawingMode;
-}
+import { Context } from ".";
 
 export class View {
   private root: HTMLDivElement;
-  public lineButton: HTMLButtonElement | undefined;
-  public polygonButton: HTMLButtonElement | undefined;
-  public breakButton: HTMLButtonElement | undefined;
+  public lineButton?: HTMLButtonElement;
+  public polygonButton?: HTMLButtonElement;
+  public breakButton?: HTMLButtonElement;
 
-  constructor(private readonly ctx: ControlViewCtx) {
+  constructor(private readonly ctx: Pick<Context, "options" | "mode">) {
     this.root = DOM.create("div", "mapboxgl-ctrl mapboxgl-ctrl-group maplibregl-ctrl maplibregl-ctrl-group");
     this.createControl();
   }
@@ -29,6 +23,7 @@ export class View {
     const button = DOM.create("button", `control-button control-button-${size}`, this.root);
     button.setAttribute("aria-label", title);
     button.setAttribute("data-type", type);
+
     if (active) {
       button.classList.add("control-button-active");
     }
@@ -83,8 +78,5 @@ export class View {
 
   public destroy = () => {
     this.root.remove();
-    this.breakButton?.remove();
-    this.polygonButton?.remove();
-    this.lineButton?.remove();
   };
 }

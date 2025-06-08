@@ -63,7 +63,7 @@ export class Cursor {
     mouseEvents.addObserver(this.#mouseEventsObserver);
   }
 
-  removeConsumers() {
+  remove() {
     const { mouseEvents } = this.#props;
 
     mouseEvents.removeObserver(this.#mouseEventsObserver);

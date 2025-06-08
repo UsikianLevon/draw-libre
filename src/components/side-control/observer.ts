@@ -1,6 +1,5 @@
 import { FireEvents } from "#components/map/helpers";
 import { DrawingModeChangeEvent, Mode } from "#components/map/mode/types";
-import { EventsCtx } from "#app/types/index";
 import { disableButton, enableButton } from "#app/utils/helpers";
 import { Context } from ".";
 import { View } from "./view";
@@ -14,7 +13,7 @@ export class Observer {
     this.ctx.mode.addObserver(this.mapModeConsumer);
   };
 
-  public removeConsumers = () => {
+  public remove = () => {
     this.ctx.mode.removeObserver(this.mapModeConsumer);
   };
 

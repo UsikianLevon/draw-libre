@@ -37,7 +37,7 @@ export class Control {
 
   public destroy() {
     this.events.remove();
-    this.observer.removeConsumers();
+    this.observer.remove();
     this.view.destroy();
   }
 }

@@ -36,7 +36,8 @@ export default class DrawLibre implements IControl {
   private events: Events | undefined;
   private tiles: Tiles | undefined;
   private panel: Panel | undefined;
-  private renderer: Renderer | null;
+  private renderer: Renderer | null = null;
+  private control: Control | undefined;
   private cursor: Cursor | undefined;
   private mouseEvents: MouseEvents | undefined;
 
@@ -44,7 +45,6 @@ export default class DrawLibre implements IControl {
 
   private constructor(options?: DrawOptions) {
     this.defaultOptions = Options.init(options);
-    this.renderer = null;
 
     if (this.defaultOptions.initial) {
       Options.checkInitialStepsOption(this.defaultOptions.initial);
@@ -85,7 +85,7 @@ export default class DrawLibre implements IControl {
       options: this.defaultOptions,
       mode: this.mode,
     });
-    const control = new Control({ options: this.defaultOptions, map, mode: this.mode });
+    this.control = new Control({ options: this.defaultOptions, map, mode: this.mode });
     this.mouseEvents = new MouseEvents();
     this.cursor = new Cursor({
       map,
@@ -100,7 +100,7 @@ export default class DrawLibre implements IControl {
       store: this.store,
       options: this.defaultOptions,
       panel: this.panel,
-      control,
+      control: this.control,
       mode: this.mode,
       mouseEvents: this.mouseEvents,
     });
@@ -111,7 +111,7 @@ export default class DrawLibre implements IControl {
 
     this.mode.pingConsumers();
     this.store.pingConsumers();
-    this.container = control.getContainer();
+    this.container = this.control.getContainer();
 
     return this.container;
   };
@@ -130,12 +130,13 @@ export default class DrawLibre implements IControl {
    * @param map - the Map this control will be removed from
    */
   onRemove = () => {
-    this.cursor?.removeConsumers();
+    this.cursor?.remove();
     this.tiles?.remove();
     this.events?.removeMapEventsAndConsumers();
     this.panel?.destroy();
     this.store?.reset();
     this.mode?.unsubscribe();
+    this.control?.destroy();
 
     if (this.container) {
       DOM.remove(this.container);

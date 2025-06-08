@@ -1,13 +1,13 @@
 import type { ControlType } from "#app/types/index";
-import { HTMLEvent } from "#app/types/helpers";
+import type { HTMLEvent } from "#app/types/helpers";
 import { Tooltip } from "#components/tooltip";
 import { CURSORS } from "#components/map/cursor/constants";
-
-import { getButtonLabel } from "./helpers";
 import { DOM } from "#app/utils/dom";
 import { renderer } from "#components/map/renderer";
+
+import { getButtonLabel } from "./helpers";
 import type { Context } from ".";
-import { View } from "./view";
+import type { View } from "./view";
 
 export class Events {
   private tooltip: Tooltip;

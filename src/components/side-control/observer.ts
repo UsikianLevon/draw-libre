@@ -1,122 +1,111 @@
 import { FireEvents } from "#components/map/helpers";
 import { DrawingModeChangeEvent, Mode } from "#components/map/mode/types";
-import { EventsProps } from "#types/index";
+import { EventsCtx } from "#app/types/index";
+import { disableButton, enableButton } from "#app/utils/helpers";
 
 export class ControlObserver {
-  #props: EventsProps;
-  constructor(props: EventsProps) {
-    this.#props = props;
-    this.#initConsumers();
+  constructor(private readonly props: EventsCtx) {
+    this.initConsumers();
   }
 
-  #initConsumers = () => {
-    this.#props.mode.addObserver(this.#mapModeConsumer);
+  private initConsumers = () => {
+    this.props.mode.addObserver(this.mapModeConsumer);
   };
 
-  removeConsumers = () => {
-    this.#props.mode.removeObserver(this.#mapModeConsumer);
+  public removeConsumers = () => {
+    this.props.mode.removeObserver(this.mapModeConsumer);
   };
 
-  #resetAllState = () => {
-    const { _line, _polygon, _break } = this.#props.control;
+  private resetAllState = () => {
+    const { lineButton, polygonButton, breakButton } = this.props.control;
 
-    _line?.classList.remove("control-button-active");
-    _polygon?.classList.remove("control-button-active");
-    _break?.classList.remove("control-button-active");
+    lineButton?.classList.remove("control-button-active");
+    polygonButton?.classList.remove("control-button-active");
+    breakButton?.classList.remove("control-button-active");
   };
 
-  #checkActive = (button: HTMLElement) => {
-    this.#resetAllState();
+  private checkActive = (button: HTMLElement) => {
+    this.resetAllState();
     button.classList.add("control-button-active");
   };
 
-  #observeModeChange = (event: DrawingModeChangeEvent) => {
+  private observeModeChange = (event: DrawingModeChangeEvent) => {
     const { data } = event;
-    const { _line, _polygon, _break } = this.#props.control;
-    const { mode } = this.#props;
-    FireEvents.modeChanged(this.#props.map, data as Mode);
+    const { lineButton, polygonButton, breakButton } = this.props.control;
+    const { mode } = this.props;
+    FireEvents.modeChanged(this.props.map, data as Mode);
 
-    if (!_line || !_polygon || !_break) return;
+    if (!lineButton || !polygonButton || !breakButton) return;
 
     switch (data) {
       case "line":
-        this.#checkActive(_line);
+        this.checkActive(lineButton);
         break;
       case "polygon":
-        this.#checkActive(_polygon);
+        this.checkActive(polygonButton);
         break;
       default:
         break;
     }
 
     if (!data) {
-      this.#disableButton(_break);
+      disableButton(breakButton);
     } else {
       if (mode.getClosedGeometry()) {
-        this.#enableButton(_break);
+        enableButton(breakButton);
       }
     }
   };
 
-  #disableButton = (button: HTMLButtonElement) => {
-    button.setAttribute("disabled", "true");
-    button.setAttribute("aria-disabled", "true");
-  };
-
-  #enableButton = (button: HTMLButtonElement) => {
-    button.removeAttribute("disabled");
-    button.removeAttribute("aria-disabled");
-  };
-
-  #observeGeometryChange = (event: DrawingModeChangeEvent) => {
+  private observeGeometryChange = (event: DrawingModeChangeEvent) => {
     const { data } = event;
-    const { _break, _line, _polygon } = this.#props.control;
-    const { mode } = this.#props;
+    const { breakButton, lineButton, polygonButton } = this.props.control;
+    const { mode } = this.props;
 
     if (data) {
-      if (_break) {
-        this.#enableButton(_break);
+      if (breakButton) {
+        enableButton(breakButton);
       }
       if (mode.getMode() === "polygon") {
-        if (_line) {
-          this.#disableButton(_line);
+        if (lineButton) {
+          disableButton(lineButton);
         }
       }
       if (mode.getMode() === "line") {
-        if (_polygon) {
-          this.#disableButton(_polygon);
+        if (polygonButton) {
+          disableButton(polygonButton);
         }
       }
     } else {
-      if (_break) {
-        this.#disableButton(_break);
+      if (breakButton) {
+        disableButton(breakButton);
       }
       if (mode.getMode() === "polygon") {
-        if (_line) {
-          this.#enableButton(_line);
+        if (lineButton) {
+          enableButton(lineButton);
         }
       }
       if (mode.getMode() === "line") {
-        if (_polygon) {
-          this.#enableButton(_polygon);
+        if (polygonButton) {
+          enableButton(polygonButton);
         }
       }
     }
   };
 
-  #mapModeConsumer = (event: DrawingModeChangeEvent) => {
+  private mapModeConsumer = (event: DrawingModeChangeEvent) => {
     const { type, data } = event;
 
     if (type === "MODE_CHANGED") {
-      this.#observeModeChange(event);
+      this.observeModeChange(event);
     }
     if (type === "CLOSED_GEOMETRY_CHANGED") {
-      this.#observeGeometryChange(event);
+      this.observeGeometryChange(event);
     }
     if (type === "BREAK_CHANGED" && data) {
-      const { _break } = this.#props.control;
-      this.#checkActive(_break as HTMLElement);
-      FireEvents.modeChanged(this.#props.map, "break");
+      const { breakButton } = this.props.control;
+      this.checkActive(breakButton as HTMLElement);
+      FireEvents.modeChanged(this.props.map, "break");
     }
   };
 }

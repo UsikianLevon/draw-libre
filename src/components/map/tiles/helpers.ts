@@ -1,7 +1,7 @@
-import type { UnifiedMap } from "#types/map";
+import type { UnifiedMap } from "#app/types/map";
 
-import { ELAYERS, FIRST_POINT_COLOR, generateLayersToRender, FIRST_POINT_RADIUS } from "#utils/geo_constants";
-import type { RequiredDrawOptions } from "#types/index";
+import { ELAYERS, FIRST_POINT_COLOR, FIRST_POINT_RADIUS, generateLayersToRender } from "#app/utils/geo_constants";
+import type { RequiredDrawOptions } from "#app/types/index";
 
 const firstPointCircleRadius = (map: UnifiedMap) => {
   map.setPaintProperty(ELAYERS.FirstPointLayer, "circle-radius", FIRST_POINT_RADIUS.large);

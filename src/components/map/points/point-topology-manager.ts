@@ -1,20 +1,19 @@
 import type { MapLayerMouseEvent } from "maplibre-gl";
 
-import type { ListNode } from "#store/index";
-import type { EventsProps, LatLng, Step } from "#types/index";
-import { uuidv4 } from "#utils/helpers";
+import type { ListNode } from "#app/store/index";
+import type { EventsCtx, LatLng, Step } from "#app/types/index";
 
 import { PointHelpers } from "./helpers";
 import type { PointState } from "./point-state";
+import { AddPointCommand } from "./commands/add-point";
+import { timeline } from "#app/history";
+import { RemovePointCommand } from "./commands/remove-point";
 
 export class PointTopologyManager {
-  private props: EventsProps;
-  private state: PointState;
-
-  constructor(props: EventsProps, state: PointState) {
-    this.props = props;
-    this.state = state;
-  }
+  constructor(
+    private readonly ctx: EventsCtx,
+    private readonly state: PointState,
+  ) {}
 
   private updateMainPoint(node: ListNode, event: MapLayerMouseEvent): void {
     if (node.val) {
@@ -46,7 +45,7 @@ export class PointTopologyManager {
   }
 
   // we've got the reference to the selected node from the store and just updating the lat/lng when mouse up event happens
-  updateStore = () => {
+  public updateStore = () => {
     const lastEvent = this.state.getLastEvent();
     const selectedNode = this.state.getSelectedNode();
 
@@ -56,11 +55,11 @@ export class PointTopologyManager {
     this.updateAuxiliaryPoints(selectedNode, lastEvent);
   };
 
-  getAuxPointsLatLng = (event: MapLayerMouseEvent) => {
+  public getAuxPointsLatLng = (event: MapLayerMouseEvent) => {
     const selectedNode = this.state.getSelectedNode();
     if (!selectedNode) return null;
 
-    const { options } = this.props;
+    const { options } = this.ctx;
     const prevPrimary = selectedNode?.prev?.prev;
     const nextPrimary = selectedNode?.next?.next;
 
@@ -73,59 +72,21 @@ export class PointTopologyManager {
     return null;
   };
 
-  addPointToStore(event: MapLayerMouseEvent): Step {
-    const { store, options } = this.props;
-    const nextStep = { ...event.lngLat, id: uuidv4() };
+  public addPoint(event: MapLayerMouseEvent): Step {
+    const { store, options } = this.ctx;
 
-    if (options.pointGeneration === "auto" && store?.tail?.val && store.size >= 1) {
-      const auxPoint = PointHelpers.createAuxiliaryPoint(store.tail.val, nextStep);
-      store.push(auxPoint);
-    }
-
-    const addedStep = PointHelpers.addPointToMap(event, this.props);
-    return addedStep;
+    const cmd = new AddPointCommand(store, options, event.lngLat);
+    timeline.commit(cmd);
+    return cmd.getStep();
   }
 
-  private recalculateAuxiliaryPoints(clickedNode: ListNode | null): void {
-    if (!clickedNode) return;
-
-    const { store } = this.props;
-    const nextAuxNode = clickedNode.next;
-    const prevAuxNode = clickedNode.prev;
-    const nextPrimaryNode = clickedNode.next?.next;
-    const prevPrimaryNode = clickedNode.prev?.prev;
-
-    if (nextAuxNode?.val) {
-      store.removeNodeById(nextAuxNode.val.id);
-    }
-    if (prevAuxNode?.val) {
-      store.removeNodeById(prevAuxNode.val.id);
-    }
-
-    const isNonEdgeSize = store.size !== 3;
-    if (nextPrimaryNode?.val && prevPrimaryNode?.val && isNonEdgeSize) {
-      const auxPoint = PointHelpers.createAuxiliaryPoint(nextPrimaryNode.val, prevPrimaryNode.val);
-      store.insert(auxPoint, prevPrimaryNode);
-    }
-  }
-
-  removePointFromStore(id: string): void {
-    const { store, options } = this.props;
+  public removePoint(id: string): void {
+    const { store, options, mode, map } = this.ctx;
 
     if (store.size === 1) {
       store.reset();
-      return;
-    }
-
-    const clickedNode = store.findNodeById(id);
-    const isPrimaryNode = !clickedNode?.val?.isAuxiliary;
-
-    if (isPrimaryNode) {
-      store.removeNodeById(id);
-
-      if (options.pointGeneration === "auto") {
-        this.recalculateAuxiliaryPoints(clickedNode);
-      }
+    } else {
+      timeline.commit(new RemovePointCommand({ store, options, mode, map, nodeId: id }));
     }
   }
 }

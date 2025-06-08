@@ -1,10 +1,9 @@
 import type { MapLayerMouseEvent, MapMouseEvent } from "maplibre-gl";
-import type { LatLng, Point, Uuid, EventsProps, RequiredDrawOptions } from "#types/index";
-import type { UnifiedMap } from "#types/map";
-
-import type { ListNode, Store } from "#store/index";
-
+import type { LatLng, Point, Uuid, RequiredDrawOptions } from "#app/types/index";
+import type { UnifiedMap } from "#app/types/map";
+import type { ListNode, Store } from "#app/store/index";
 import type { DrawingMode } from "#components/map/mode";
+
 import { ELAYERS } from "./geo_constants";
 
 export class MapUtils {
@@ -251,46 +250,6 @@ export class Spatial {
 
     return store.size <= 2;
   };
-
-  static switchToLineModeIfCan = (args: EventsProps) => {
-    const { store, map, mode, options } = args;
-
-    const isCircle = store.tail?.next === store.head;
-    const canBreakGeometry = Spatial.canBreakClosedGeometry(store, options);
-
-    if (canBreakGeometry && isCircle) {
-      if (options.pointGeneration === "auto") {
-        if (store.tail?.val?.isAuxiliary) {
-          if (store.head) {
-            store.head.next = store.tail;
-            store.head.prev = null;
-          }
-          if (store.tail && store.tail.prev && store.head) {
-            store.tail = store.tail.prev;
-            store.tail.prev = store.head.next;
-            store.tail.next = null;
-          }
-          if (store.head?.next) {
-            store.head.next.next = store.tail;
-            store.head.next.prev = store.head;
-          }
-        } else {
-          if (store.head) {
-            store.head.prev = null;
-          }
-          if (store.tail && store.head) {
-            store.tail.prev = store.head.next;
-            store.tail.next = null;
-          }
-        }
-      } else {
-        if (store.tail) {
-          store.tail.next = null;
-        }
-      }
-      mode.reset();
-    }
-  };
 }
 
 export const uuidv4 = (): Uuid => {
@@ -364,4 +323,16 @@ export const debounce = (fn: (...args: any) => void, delay: number) => {
       fn(...args);
     }, delay);
   };
+};
+
+export const disableButton = (button: HTMLButtonElement | null) => {
+  if (!button) return;
+  button.setAttribute("disabled", "true");
+  button.setAttribute("aria-disabled", "true");
+};
+
+export const enableButton = (button: HTMLButtonElement | null) => {
+  if (!button) return;
+  button.removeAttribute("disabled");
+  button.removeAttribute("aria-disabled");
 };

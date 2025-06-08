@@ -1,5 +1,5 @@
-import { ListNode } from "#store/index";
-import { LatLng, Step } from "#types/index";
+import { ListNode } from "#app/store/index";
+import { LatLng, Step } from "#app/types/index";
 import { MapLayerMouseEvent } from "maplibre-gl";
 
 export class PointState {
@@ -8,52 +8,61 @@ export class PointState {
   private startCoordinates: LatLng | null = null;
   private enteredStep: Step | null = null;
   private lastEvent: MapLayerMouseEvent | null = null;
+  private moved: boolean = false;
 
-  getSelectedNode(): ListNode | null {
+  public getSelectedNode(): ListNode | null {
     return this.selectedNode;
   }
 
-  getSelectedIdx(): number | null {
+  public isMoved(): boolean {
+    return this.moved;
+  }
+
+  public getSelectedIdx(): number | null {
     return this.selectedIdx;
   }
 
-  getStartCoordinates(): LatLng | null {
+  public getStartCoordinates(): LatLng | null {
     return this.startCoordinates;
   }
 
-  getEnteredStep(): Step | null {
+  public getEnteredStep(): Step | null {
     return this.enteredStep;
   }
 
-  getLastEvent(): MapLayerMouseEvent | null {
+  public getLastEvent(): MapLayerMouseEvent | null {
     return this.lastEvent;
   }
 
-  setSelectedNode(node: ListNode | null): void {
+  public setSelectedNode(node: ListNode | null): void {
     this.selectedNode = node;
   }
 
-  setSelectedIdx(idx: number | null): void {
+  public setSelectedIdx(idx: number | null): void {
     this.selectedIdx = idx;
   }
 
-  setStartCoordinates(coordinates: LatLng | null): void {
+  public setStartCoordinates(coordinates: LatLng | null): void {
     this.startCoordinates = coordinates;
   }
 
-  setEnteredStep(step: Step | null): void {
+  public setEnteredStep(step: Step | null): void {
     this.enteredStep = step;
   }
 
-  setLastEvent(event: MapLayerMouseEvent | null): void {
+  public setLastEvent(event: MapLayerMouseEvent | null): void {
     this.lastEvent = event;
   }
 
-  clearLastEvent(): void {
+  public setMoved(moved: boolean): void {
+    this.moved = moved;
+  }
+
+  public clearLastEvent(): void {
     this.lastEvent = null;
   }
 
-  reset(): void {
+  public reset(): void {
     this.selectedNode = null;
     this.selectedIdx = null;
     this.startCoordinates = null;
@@ -61,10 +70,11 @@ export class PointState {
     this.lastEvent = null;
   }
 
-  partialReset(): void {
+  public partialReset(): void {
     this.selectedNode = null;
     this.selectedIdx = null;
     this.startCoordinates = null;
     this.lastEvent = null;
+    this.moved = false;
   }
 }

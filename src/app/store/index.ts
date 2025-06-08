@@ -1,10 +1,11 @@
 import { PointHelpers } from "#components/map/points/helpers";
-import type { Initial, LatLng, RequiredDrawOptions, Step, StepId } from "#types/index";
-import { uuidv4 } from "#utils/helpers";
-import { Observable } from "#utils/observable";
+import type { Initial, LatLng, RequiredDrawOptions, Step, StepId } from "#app/types/index";
+import { uuidv4 } from "#app/utils/helpers";
+import { Observable } from "#app/utils/observable";
 
 import { ERRORS } from "./errors";
 import { StoreChangeEvent } from "./types";
+import { Circular } from "./policies/circular";
 
 export class ListNode {
   val: Step | null;
@@ -22,17 +23,19 @@ export class Store extends Observable<StoreChangeEvent> {
   tail: ListNode | null;
   size: number;
   map: Map<StepId, ListNode>;
+  public readonly circular: Circular;
 
-  constructor(options?: RequiredDrawOptions) {
+  constructor(private readonly options?: RequiredDrawOptions) {
     super();
     let list = StoreHelpers.initStore(options);
+    this.circular = new Circular(this, options);
     this.map = list ? list.map : new Map<StepId, ListNode>();
     this.head = list ? list.head : null;
     this.tail = list ? list.tail : null;
     this.size = list ? list.size : 0;
   }
 
-  push(step: Step) {
+  push = (step: Step) => {
     const newNode = new ListNode(step);
     if (!this.head) {
       this.head = this.tail = newNode;
@@ -41,43 +44,54 @@ export class Store extends Observable<StoreChangeEvent> {
       this.tail.next = newNode;
       this.tail = newNode;
     }
+
     this.map.set(step.id, newNode);
     this.size++;
     this.pingConsumers();
-  }
+    return newNode;
+  };
 
-  insert(step: Step, current: ListNode) {
-    if (!current) return;
+  public unshift = (step: Step) => {
     const newNode = new ListNode(step);
-    newNode.prev = current;
-    newNode.next = current.next;
 
-    const betweenHeadAndTail = this.tail === current && this.head === current.next;
+    newNode.next = this.head;
+    this.head = newNode;
+
+    if (this.circular.isCircular() && this.tail) {
+      this.tail.next = newNode;
+      newNode.prev = this.tail;
+    }
+
+    this.map.set(step.id, newNode);
+    this.size++;
+    this.pingConsumers();
+  };
+
+  public insertAfter = (node: ListNode, step: Step) => {
+    if (!node) return null;
+
+    const newNode = new ListNode(step);
+    newNode.prev = node;
+    newNode.next = node.next;
+
+    const betweenHeadAndTail = this.tail === node && this.head === node.next;
     if (betweenHeadAndTail) {
       this.tail = newNode;
+      this.head!.prev = newNode;
     }
 
-    if (current.next) {
-      current.next.prev = newNode;
+    if (node.next) {
+      node.next.prev = newNode;
     }
 
-    current.next = newNode;
+    node.next = newNode;
     this.map.set(step.id, newNode);
     this.size++;
     this.pingConsumers();
-  }
+    return newNode;
+  };
 
-  findStepById(id: StepId): ListNode["val"] | null {
-    const node = this.map.get(id);
-    return node ? node.val : null;
-  }
-
-  findNodeById(id: StepId): ListNode | null {
-    const node = this.map.get(id);
-    return node ? node : null;
-  }
-
-  removeNodeById(id: StepId): ListNode | null {
+  public removeNodeById(id: StepId): ListNode | null {
     const node = this.map.get(id);
     if (!node) return null;
 
@@ -111,15 +125,27 @@ export class Store extends Observable<StoreChangeEvent> {
     return node;
   }
 
-  reset() {
+  public findStepById(id: StepId): ListNode["val"] | null {
+    const node = this.map.get(id);
+    return node ? node.val : null;
+  }
+
+  public findNodeById(id: StepId): ListNode | null {
+    const node = this.map.get(id);
+    return node ? node : null;
+  }
+
+  public reset = () => {
     this.head = null;
     this.tail = null;
     this.size = 0;
     this.map.clear();
-    this.pingConsumers();
-  }
+    this.notify({
+      type: "STORE_CLEARED",
+    });
+  };
 
-  pingConsumers = () => {
+  public pingConsumers = () => {
     this.notify({
       type: "STORE_MUTATED",
       data: {
@@ -155,7 +181,7 @@ export class StoreHelpers {
     return null;
   }
 
-  static #generateIdForSteps = (stepsWithoutIds: LatLng[]): Step[] => {
+  private static generateIdForSteps = (stepsWithoutIds: LatLng[]): Step[] => {
     return stepsWithoutIds.map((step, idx) => {
       return { ...step, isAuxiliary: false, isFirst: idx === 0, id: uuidv4() };
     });
@@ -166,11 +192,11 @@ export class StoreHelpers {
     closeGeometry: Initial["closeGeometry"],
     pointGeneration: RequiredDrawOptions["pointGeneration"],
   ): Store {
-    const list = new Store();
+    const store = new Store();
     const steps = closeGeometry ? initialSteps.slice(0, -1) : initialSteps;
 
     steps.forEach((step, idx) => {
-      list.push(step);
+      store.push(step);
 
       // if we are at the end of the array and there's no next point
       // we need to create an auxiliary point with the first point
@@ -179,19 +205,20 @@ export class StoreHelpers {
         const isNextPointAvailable = steps[idx + 1];
         if (isNextPointAvailable) {
           const auxPoint = PointHelpers.createAuxiliaryPoint(step, steps[idx + 1] as Step);
-          list.push(auxPoint);
+          store.push(auxPoint);
         } else if (closeGeometry) {
           const auxPoint = PointHelpers.createAuxiliaryPoint(step, steps[0] as Step);
-          list.push(auxPoint);
+          store.push(auxPoint);
         }
       }
     });
-    return list;
+
+    return store;
   }
 
   static fromArray(initialOptions: Initial, pointGeneration: RequiredDrawOptions["pointGeneration"]): Store | null {
     const { steps: initialSteps, closeGeometry, generateId } = initialOptions;
-    const steps = generateId ? this.#generateIdForSteps(initialSteps) : initialSteps;
+    const steps = generateId ? this.generateIdForSteps(initialSteps) : initialSteps;
     const list = this.buildStepSequence(steps as Step[], closeGeometry, pointGeneration);
 
     if (closeGeometry && list.tail && list.head) {

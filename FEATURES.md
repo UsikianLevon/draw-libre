@@ -1,0 +1,7 @@
+- [ ] Keyboard events
+- [ ] Download/Upload buttons
+- [ ] Moving the polygon
+- [ ] An eye button that hides the points, leaving only the shape on the map
+- [ ] A way to add many other shapes (but do users need this? Might be bloat—consider integrating through another library)
+- [ ] A way to export dots with or without auxiliary points
+- [ ] Add getContainer(panel) to the API for the user

@@ -22,9 +22,7 @@
     "moduleResolution": "bundler",
     "paths": {
       "#components/*": ["src/components/*"],
-      "#store/*": ["src/store/*"],
-      "#utils/*": ["src/utils/*"],
-      "#types/*": ["src/types/*"]
+      "#app/*": ["src/app/*"]
     }
   },
   "include": ["src"]

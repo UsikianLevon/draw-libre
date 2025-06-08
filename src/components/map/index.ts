@@ -1,47 +1,47 @@
-import type { EventsProps } from "#types/index";
-import { Tiles } from "#components/map/tiles";
+import type { EventsCtx } from "#app/types/index";
+import { Renderer } from "#components/map/renderer";
 import { ControlEvents } from "#components/side-control/events";
 import { PanelEvents } from "#components/panel/events";
 import { LineEvents } from "./line";
 import { PointEvents } from "./points";
 
-export class Events extends Tiles {
-  #props: EventsProps;
-  #panelEvents: PanelEvents;
-  #controlEvents: ControlEvents;
-  #pointEvents: PointEvents;
-  #lineEvents: LineEvents;
+export class Events extends Renderer {
+  private panelEvents: PanelEvents;
+  private controlEvents: ControlEvents;
+  private pointEvents: PointEvents;
+  private lineEvents: LineEvents;
 
-  constructor(props: EventsProps) {
-    super({ ...props });
-    this.#props = props;
-    this.#panelEvents = new PanelEvents(props);
-    this.#controlEvents = new ControlEvents(props);
-    this.#pointEvents = new PointEvents(props);
-    this.#lineEvents = new LineEvents(props);
-    props.map.on("mode:initialize", this.#initEvents);
-    props.map.on("mode:remove", this.#removeDrawEvents);
+  constructor(private readonly events: EventsCtx) {
+    super({ ...events });
+    this.panelEvents = new PanelEvents(events);
+    this.controlEvents = new ControlEvents(events);
+    this.pointEvents = new PointEvents(events);
+    this.lineEvents = new LineEvents(events);
+    // TODO
+    events.map.on("mode:initialize", this.initEvents);
+    events.map.on("mode:remove", this.removeDrawEvents);
   }
 
-  #initEvents = () => {
-    this.#lineEvents.init();
-    this.#panelEvents?.initEvents();
-    this.#panelEvents?.initConsumers();
-    this.#pointEvents?.initEvents();
+  private initEvents = () => {
+    this.lineEvents.init();
+    this.panelEvents?.initEvents();
+    this.panelEvents?.initConsumers();
+    this.pointEvents?.initEvents();
   };
 
-  #removeDrawEvents = () => {
-    this.#panelEvents?.removeEvents();
-    this.#panelEvents?.removeConsumers();
-    this.#pointEvents?.removeEvents();
-    this.#lineEvents?.remove();
+  private removeDrawEvents = () => {
+    this.panelEvents?.removeEvents();
+    this.panelEvents?.removeConsumers();
+    this.pointEvents?.removeEvents();
+    this.lineEvents?.remove();
   };
 
-  removeMapEventsAndConsumers = () => {
-    this.#panelEvents?.removeEvents();
-    this.#pointEvents?.removeEvents();
-    this.#controlEvents?.remove();
-    this.#lineEvents?.remove();
-    this.#props.map.off("mode:initialize", this.#initEvents);
+  public removeMapEventsAndConsumers = () => {
+    this.panelEvents?.removeEvents();
+    this.pointEvents?.removeEvents();
+    this.controlEvents?.remove();
+    this.lineEvents?.remove();
+    this.events.map.off("mode:initialize", this.initEvents);
+    this.events.map.off("mode:remove", this.removeDrawEvents);
   };
 }

@@ -1,5 +1,5 @@
-import { ERRORS } from "#store/errors";
-import { Initial, DrawOptions, RequiredDrawOptions } from "#types/index";
+import { ERRORS } from "#app/store/errors";
+import { Initial, DrawOptions, RequiredDrawOptions } from "#app/types/index";
 import { DEFAULT_OPTIONS } from "./constants";
 import {
   ON_LINE_POINT_PAINT_BASE,
@@ -78,6 +78,9 @@ function generatePanelOptions(options: DrawOptions): RequiredDrawOptions["panel"
     buttons: {
       undo: {
         visible: options.panel?.buttons?.undo?.visible ?? DEFAULT_OPTIONS.panel.buttons.undo.visible,
+      },
+      redo: {
+        visible: options.panel?.buttons?.redo?.visible ?? DEFAULT_OPTIONS.panel.buttons.redo.visible,
       },
       delete: {
         visible: options.panel?.buttons?.delete?.visible ?? DEFAULT_OPTIONS.panel.buttons.delete.visible,
@@ -179,6 +182,7 @@ function generateLocaleOptions(options: DrawOptions): RequiredDrawOptions["local
     save: options.locale?.save ?? DEFAULT_OPTIONS.locale.save,
     delete: options.locale?.delete ?? DEFAULT_OPTIONS.locale.delete,
     undo: options.locale?.undo ?? DEFAULT_OPTIONS.locale.undo,
+    redo: options.locale?.redo ?? DEFAULT_OPTIONS.locale.redo,
     line: options.locale?.line ?? DEFAULT_OPTIONS.locale.line,
     polygon: options.locale?.polygon ?? DEFAULT_OPTIONS.locale.polygon,
     break: options.locale?.break ?? DEFAULT_OPTIONS.locale.break,

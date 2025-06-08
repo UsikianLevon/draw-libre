@@ -6,6 +6,8 @@
 
 ## Features
 
+- Undo/redo
+- Can break a closed geometry
 - Draw linestrings (including closed ones) and polygons
 - Compatible with maplibre-gl(v2-v5) and mapbox-gl(v1-v3) and all projections
 - Customizable UI and controls
@@ -65,6 +67,7 @@ const draw = DrawLibre.getInstance({
     size: "medium", // "large" || "small" - Controls size of the panel that appears after pressing a button
     buttons: {
       delete: { visible: true }, // Controls visibility of the delete all points button
+      redo: { visible: true }
       save: {
         clearOnSave: true, // Whether to clear all points after saving
         visible: true, // Controls visibility of the save button
@@ -82,6 +85,7 @@ const draw = DrawLibre.getInstance({
     polygon: "Polygon",
     save: "Save",
     undo: "Undo",
+    redo: "Redo",
   },
   layersPaint: {
     // Customize layer styles here. Refer to MapLibre's layer specifications for options.

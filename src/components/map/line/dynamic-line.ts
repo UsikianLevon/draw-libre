@@ -1,134 +1,129 @@
 import type { GeoJSONSource, MapLayerMouseEvent, PointLike } from "maplibre-gl";
 
-import type { EventsProps, LatLng, Step } from "#types/index";
-import { ELAYERS, ESOURCES, LINE_BASE } from "#utils/geo_constants";
-import type { StoreChangeEvent } from "#store/types";
-import { GeometryFactory, MapUtils, Spatial, throttle, debounce } from "#utils/helpers";
-import { EVENTS } from "#utils/constants";
+import type { EventsCtx, LatLng } from "#app/types/index";
+import { ELAYERS, ESOURCES, LINE_BASE } from "#app/utils/geo_constants";
+import type { StoreChangeEvent } from "#app/store/types";
+import { debounce, GeometryFactory, MapUtils, throttle } from "#app/utils/helpers";
+import { EVENTS } from "#app/utils/constants";
 
-import type { DrawingModeChangeEvent } from "../mode/types";
-import type { MouseEventsChangeEvent } from "../mouse-events/types";
 import type { PointRightClickRemoveEvent, UndoEvent } from "../types";
+import type { MouseEventsChangeEvent, MapMouseEvent } from "../mouse-events/types";
 
-const LINE_DYNAMIC_THROTTLE_TIME = 10;
+const LINE_DYNAMIC_THROTTLE_TIME = 17; // 60 FPS
 
 export class DynamicLineEvents {
-  #props: EventsProps;
-  #visible: boolean;
-  #firstPoint: LatLng | null;
-  #secondPoint: LatLng | null;
-  #lineFeature: any;
-  #throttledOnLineMove: (event: MapLayerMouseEvent) => void;
-  #debouncedDynamicLine: (data: StoreChangeEvent["data"]) => void;
+  private visible: boolean;
+  private firstPoint: LatLng | null = null;
+  private secondPoint: LatLng | null = null;
+  private lineFeature: any;
+  private onMouseMoveThrottled: (event: MapLayerMouseEvent) => void;
+  private onStoreEventsDebounced: (event: StoreChangeEvent) => void;
 
-  constructor(props: EventsProps) {
-    this.#props = props;
-    this.#visible = props.options.dynamicLine;
-    this.#firstPoint = null;
-    this.#secondPoint = null;
-    this.#initConsumers();
-    this.#throttledOnLineMove = throttle(this.#onLineMove, LINE_DYNAMIC_THROTTLE_TIME);
-    this.#debouncedDynamicLine = debounce(this.#dynamicLineVisibility, 10);
+  constructor(private readonly ctx: EventsCtx) {
+    this.visible = true;
+    this.onMouseMoveThrottled = throttle(this.onLineMove, LINE_DYNAMIC_THROTTLE_TIME);
+    this.onStoreEventsDebounced = debounce(this.onStoreEventsConsumer, 10);
+    this.initConsumers();
+    this.initDynamicEvents();
   }
 
-  #initConsumers() {
-    this.#props.store.addObserver(this.#storeEventsConsumer);
-    this.#props.mode.addObserver(this.#mapModeConsumer);
-    this.#props.mouseEvents.addObserver(this.#mouseEventsConsumer);
+  private initConsumers() {
+    this.ctx.store.addObserver(this.onStoreEventsDebounced);
+    this.ctx.mouseEvents.addObserver(this.onMouseEventsConsumer);
   }
 
-  removeLine = () => {
-    this.hideDynamicLine();
+  public removeConsumers = () => {
+    this.ctx.store.removeObserver(this.onStoreEventsDebounced);
+    this.ctx.mouseEvents.removeObserver(this.onMouseEventsConsumer);
   };
 
-  removeConsumers = () => {
-    this.#props.store.removeObserver(this.#storeEventsConsumer);
-    this.#props.mode.removeObserver(this.#mapModeConsumer);
-    this.#props.mouseEvents.removeObserver(this.#mouseEventsConsumer);
-  };
+  private onMouseEventsConsumer = (event: MouseEventsChangeEvent) => {
+    const { store } = this.ctx;
+    if (store.circular.isCircular()) {
+      this.hide();
+      return;
+    }
 
-  #mouseEventsConsumer = (event: MouseEventsChangeEvent) => {
-    const { mode } = this.#props;
-    if (mode.getClosedGeometry()) return;
-
+    // this one is needed to turn off the dynamic line when the last point is clicked
     if (event.type === "lastPointMouseClick" && event.data) {
-      this.hideDynamicLine();
-      this.#visible = false;
-    } else if (event.type === "lastPointMouseClick" && !event.data) {
-      this.#visible = true;
+      this.hide();
+      this.visible = false;
     }
-    if (!this.#visible) return;
-    // hide the line if a point or a line is hovered
-    if ((event.type === "pointMouseEnter" || event.type === "lineMouseEnter") && event.data) {
-      this.hideDynamicLine();
-    }
-    if ((event.type === "pointMouseLeave" || event.type === "lineMouseLeave") && event.data) {
-      const { store } = this.#props;
-      this.#firstPoint = store.tail?.val as LatLng;
-      this.#secondPoint = store.tail?.val as LatLng;
-      this.showDynamicLine();
-    }
-  };
+    // this is needed to not trigger "show" function if the last point was clicked and we just hover a point or a line
+    // doesn't matter, will rewrite this part
+    if (!this.visible) return;
 
-  #dynamicLineVisibility = (data: StoreChangeEvent["data"]) => {
-    const { store, options } = this.#props;
-    if (data?.tail?.val && !Spatial.isClosedGeometry(store, options)) {
-      this.#firstPoint = store.tail?.val as Step;
-      this.showDynamicLine();
+    // not sure about this, but looks like a good idea to hide the dynamic line on these events
+    const HIDE_EVENTS = ["pointMouseEnter", "lineMouseEnter", "pointMouseDown"] as MapMouseEvent[];
+    if (HIDE_EVENTS.includes(event.type) && event.data) {
+      this.hide();
     }
-  };
 
-  #storeEventsConsumer = (event: StoreChangeEvent) => {
-    if (event.type === "STORE_MUTATED") {
-      this.#debouncedDynamicLine(event.data);
-      if (!event.data.size) {
-        this.hideDynamicLine();
+    // if we hid the dynamic line there ^, then we obviously need to show it again
+    if (event.type === "pointMouseLeave" || event.type === "lineMouseLeave") {
+      const { store } = this.ctx;
+      if (store.circular.isCircular()) return;
+      if (event.data) {
+        this.firstPoint = store.tail?.val as LatLng;
+        this.secondPoint = store.tail?.val as LatLng;
+        this.show();
       }
     }
   };
 
-  #mapModeConsumer = (event: DrawingModeChangeEvent) => {
-    const { store } = this.#props;
+  private onStoreEventsConsumer = (event: StoreChangeEvent) => {
+    const { store } = this.ctx;
+    if (store.circular.isCircular()) {
+      this.hide();
 
-    const isClosed = event.data;
-    if (event.type === "CLOSED_GEOMETRY_CHANGED") {
-      if (isClosed) {
-        this.hideDynamicLine();
-      }
+      return;
+    }
 
-      if (!isClosed && store?.tail?.val) {
-        this.#firstPoint = store?.tail?.val;
-        this.showDynamicLine();
+    if (event.type === "STORE_CLOSE_GEOMETRY" || event.type === "STORE_CLEARED") {
+      this.hide();
+    } else if (event.type === "STORE_BREAK_GEOMETRY") {
+      this.firstPoint = store.tail?.val as LatLng;
+      this.secondPoint = event.data?.coords as LatLng;
+      this.show();
+      this.visible = true;
+    } else if (event.type === "STORE_POINT_ADD") {
+      if (store.size > 0) {
+        this.firstPoint = store.tail?.val as LatLng;
+        this.secondPoint = store.tail?.val as LatLng;
+        this.show();
+        this.visible = true;
       }
     }
   };
 
-  initDynamicEvents = () => {
-    const { map } = this.#props;
-    map.on("click", this.#onMapClick);
-    map.on("mousemove", this.#throttledOnLineMove);
-    map.on(EVENTS.REMOVEALL, this.hideDynamicLine);
-    map.on(EVENTS.UNDO, this.#onUndoClick);
-    map.on(EVENTS.RIGHTCLICKREMOVE, this.#onRightClickRemove);
+  private initDynamicEvents = () => {
+    const { map } = this.ctx;
+    map.on("click", this.onMapClick);
+    map.on("mousemove", this.onMouseMoveThrottled);
+    map.on(EVENTS.REMOVEALL, this.hide);
+    map.on(EVENTS.UNDO, this.onUndoRedoClick);
+    map.on(EVENTS.REDO, this.onUndoRedoClick);
+    map.on(EVENTS.RIGHTCLICKREMOVE, this.onRightClickRemove);
   };
 
-  removeEvents = () => {
-    const { map } = this.#props;
+  public removeEvents = () => {
+    const { map } = this.ctx;
 
-    map.off("click", this.#onMapClick);
-    map.off("mousemove", this.#throttledOnLineMove);
-    map.off(EVENTS.REMOVEALL, this.hideDynamicLine);
-    map.off(EVENTS.UNDO, this.#onUndoClick);
-    map.off(EVENTS.RIGHTCLICKREMOVE, this.#onRightClickRemove);
+    map.off("click", this.onMapClick);
+    map.off("mousemove", this.onMouseMoveThrottled);
+    map.off(EVENTS.REMOVEALL, this.hide);
+    map.off(EVENTS.UNDO, this.onUndoRedoClick);
+    map.off(EVENTS.REDO, this.onUndoRedoClick);
+    map.off(EVENTS.RIGHTCLICKREMOVE, this.onRightClickRemove);
   };
 
-  hideDynamicLine = () => {
-    const { map } = this.#props;
+  public hide = () => {
+    const { map } = this.ctx;
 
-    this.#firstPoint = null;
-    this.#secondPoint = null;
-    this.#lineFeature = null;
-    map.off("mousemove", this.#throttledOnLineMove);
+    this.firstPoint = null;
+    this.secondPoint = null;
+    this.lineFeature = null;
+    map.off("mousemove", this.onMouseMoveThrottled);
 
     const lineSource = map.getSource(ESOURCES.LineDynamicSource) as GeoJSONSource;
     if (lineSource) {
@@ -139,77 +134,73 @@ export class DynamicLineEvents {
     }
   };
 
-  showDynamicLine = () => {
-    const { map, store } = this.#props;
+  private show = () => {
+    const { map, store } = this.ctx;
 
-    if (
-      store.size &&
-      this.#firstPoint?.lat &&
-      this.#firstPoint.lng &&
-      this.#secondPoint?.lng &&
-      this.#secondPoint?.lat
-    ) {
-      const current = [this.#firstPoint.lng, this.#firstPoint.lat] as [number, number];
-      const next = [this.#secondPoint.lng, this.#secondPoint.lat] as [number, number];
+    if (store.size && this.firstPoint?.lat && this.firstPoint.lng && this.secondPoint?.lng && this.secondPoint?.lat) {
+      const current = [this.firstPoint.lng, this.firstPoint.lat] as [number, number];
+      const next = [this.secondPoint.lng, this.secondPoint.lat] as [number, number];
 
-      this.#lineFeature = GeometryFactory.getLine(current, next);
+      this.lineFeature = GeometryFactory.getLine(current, next);
 
       map.setLayoutProperty(ELAYERS.LineDynamicLayer, "visibility", "visible");
-      if (this.#secondPoint) {
-        this.#renderLineOnMouseMove({ lng: this.#secondPoint?.lng, lat: this.#secondPoint?.lat });
+      if (this.secondPoint) {
+        this.renderLineOnMouseMove({ lng: this.secondPoint?.lng, lat: this.secondPoint?.lat });
       }
     }
-    map.on("mousemove", this.#throttledOnLineMove);
+    map.on("mousemove", this.onMouseMoveThrottled);
   };
 
-  #renderLineOnMouseMove = (newCoord: LatLng) => {
-    if (!this.#lineFeature) return;
-    const { map } = this.#props;
+  private renderLineOnMouseMove = (newCoord: LatLng) => {
+    if (!this.lineFeature) return;
+    const { map } = this.ctx;
 
-    this.#lineFeature.features[0].geometry.coordinates[1] = [newCoord.lng, newCoord.lat];
+    this.lineFeature.features[0].geometry.coordinates[1] = [newCoord.lng, newCoord.lat];
     const lineSource = map.getSource(ESOURCES.LineDynamicSource) as GeoJSONSource;
     if (lineSource) {
-      lineSource.setData(this.#lineFeature);
+      lineSource.setData(this.lineFeature);
     }
   };
 
-  #onLineMove = (event: MapLayerMouseEvent) => {
-    this.#renderLineOnMouseMove(event.lngLat);
+  private onLineMove = (event: MapLayerMouseEvent) => {
+    this.renderLineOnMouseMove(event.lngLat);
   };
 
-  #onMapClick = (event: MapLayerMouseEvent) => {
-    const { mode } = this.#props;
+  private onMapClick = (event: MapLayerMouseEvent) => {
+    const { mode } = this.ctx;
     const lineClick = MapUtils.isFeatureTriggered(event, [ELAYERS.LineLayerTransparent, ELAYERS.LineLayer]);
     if (lineClick && mode.getBreak()) {
-      this.#secondPoint = { lng: event.lngLat.lng, lat: event.lngLat.lat };
+      this.secondPoint = { lng: event.lngLat.lng, lat: event.lngLat.lat };
     }
 
     if (lineClick) return;
-    this.hideDynamicLine();
+    this.hide();
   };
 
-  #onUndoClick = (event: UndoEvent) => {
-    const { store, options } = this.#props;
-    if (!Spatial.isClosedGeometry(store, options)) {
+  private onUndoRedoClick = (event: UndoEvent) => {
+    const { store } = this.ctx;
+
+    if (!store.circular.isCircular()) {
       const latLng = event.target.unproject({ x: event.originalEvent.x, y: event.originalEvent.y } as PointLike);
-      this.#secondPoint = { lng: latLng.lng, lat: latLng.lat };
-      this.#firstPoint = store.tail?.val as LatLng;
-      this.showDynamicLine();
+      this.secondPoint = { lng: latLng.lng, lat: latLng.lat };
+      this.firstPoint = store.tail?.val as LatLng;
+      this.show();
     }
+
     if (store.size === 0) {
-      this.hideDynamicLine();
+      this.hide();
     }
   };
 
-  #onRightClickRemove = (event: PointRightClickRemoveEvent) => {
-    const { store, mode } = this.#props;
-    if (!mode.getClosedGeometry()) {
-      this.#secondPoint = { lng: event.coordinates.lng, lat: event.coordinates.lat };
-      this.#firstPoint = store.tail?.val as LatLng;
-      this.showDynamicLine();
+  private onRightClickRemove = (event: PointRightClickRemoveEvent) => {
+    const { store } = this.ctx;
+    if (!store.circular.isCircular()) {
+      this.secondPoint = { lng: event.coordinates.lng, lat: event.coordinates.lat };
+      this.firstPoint = store.tail?.val as LatLng;
+      this.show();
     }
     if (store.size === 0) {
-      this.hideDynamicLine();
+      this.hide();
     }
   };
 }

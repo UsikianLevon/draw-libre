@@ -1,5 +1,5 @@
-import type { RequiredDrawOptions } from "#types/index";
-import { DOM } from "#utils/dom";
+import type { RequiredDrawOptions } from "#app/types/index";
+import { DOM } from "#app/utils/dom";
 import { DrawingMode } from "#components/map/mode";
 import "./control.css";
 
@@ -9,18 +9,16 @@ interface ControlProps {
 }
 
 export class Control {
-  #defaultOptions: RequiredDrawOptions;
-  _line: HTMLButtonElement | undefined;
-  _polygon: HTMLButtonElement | undefined;
-  _break: HTMLButtonElement | undefined;
-  _container: HTMLElement;
-  constructor(props: ControlProps) {
-    this.#defaultOptions = props.options;
-    this._line = undefined;
-    this._polygon = undefined;
-    this._break = undefined;
-    this._container = DOM.create("div", "mapboxgl-ctrl mapboxgl-ctrl-group maplibregl-ctrl maplibregl-ctrl-group");
-    this.createControl(props);
+  public lineButton: HTMLButtonElement | undefined;
+  public polygonButton: HTMLButtonElement | undefined;
+  public breakButton: HTMLButtonElement | undefined;
+  private container: HTMLElement;
+  constructor(private readonly props: ControlProps) {
+    this.lineButton = undefined;
+    this.polygonButton = undefined;
+    this.breakButton = undefined;
+    this.container = DOM.create("div", "mapboxgl-ctrl mapboxgl-ctrl-group maplibregl-ctrl maplibregl-ctrl-group");
+    this.createControl();
   }
 
   createControlButton = (
@@ -29,8 +27,8 @@ export class Control {
     active: boolean,
     disabled?: boolean,
   ): HTMLButtonElement => {
-    const size = this.#defaultOptions.panel.size;
-    const button = DOM.create("button", `control-button control-button-${size}`, this._container);
+    const size = this.props.options.panel.size;
+    const button = DOM.create("button", `control-button control-button-${size}`, this.container);
     button.setAttribute("aria-label", title);
     button.setAttribute("data-type", type);
     if (active) {
@@ -44,45 +42,45 @@ export class Control {
     return button;
   };
 
-  #createLineButton = (context: ControlProps) => {
-    const { mode, options } = context;
-    const lineVisible = this.#defaultOptions.modes.line.visible;
+  private createLineButton = () => {
+    const { mode, options } = this.props;
+    const lineVisible = this.props.options.modes.line.visible;
     const lineTitle = options.locale.line;
     if (lineVisible) {
-      this._line = this.createControlButton("line", lineTitle, mode.getMode() === "line");
+      this.lineButton = this.createControlButton("line", lineTitle, mode.getMode() === "line");
     }
   };
 
-  #createPolygonButton = (context: ControlProps) => {
-    const { mode, options } = context;
+  private createPolygonButton = () => {
+    const { mode, options } = this.props;
 
-    const polygonVisible = this.#defaultOptions.modes.polygon.visible;
+    const polygonVisible = this.props.options.modes.polygon.visible;
     const polygonTitle = options.locale.polygon;
     if (polygonVisible) {
-      this._polygon = this.createControlButton("polygon", polygonTitle, mode.getMode() === "polygon");
+      this.polygonButton = this.createControlButton("polygon", polygonTitle, mode.getMode() === "polygon");
     }
   };
 
-  #createBreakButton = (context: ControlProps) => {
-    const { mode, options } = context;
+  private createBreakButton = () => {
+    const { mode, options } = this.props;
 
-    const breakVisible = this.#defaultOptions.modes.breakGeometry.visible;
+    const breakVisible = this.props.options.modes.breakGeometry.visible;
     const breakTitle = options.locale.break;
     if (breakVisible) {
-      const closedGeometry = this.#defaultOptions?.initial?.closeGeometry;
+      const closedGeometry = this.props.options.initial?.closeGeometry;
       const disabled = !closedGeometry;
       const isBreak = mode.getBreak();
-      this._break = this.createControlButton("break", breakTitle, isBreak, disabled);
+      this.breakButton = this.createControlButton("break", breakTitle, isBreak, disabled);
     }
   };
 
-  createControl = (context: ControlProps) => {
-    this.#createLineButton(context);
-    this.#createPolygonButton(context);
-    this.#createBreakButton(context);
+  private createControl = () => {
+    this.createLineButton();
+    this.createPolygonButton();
+    this.createBreakButton();
   };
 
-  getContainer = () => {
-    return this._container;
+  public getContainer = () => {
+    return this.container;
   };
 }

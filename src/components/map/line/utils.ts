@@ -1,11 +1,13 @@
 import type { MapLayerMouseEvent } from "maplibre-gl";
-import type { EventsProps, Step } from "#types/index";
-import type { UnifiedMap } from "#types/map";
+import type { EventsCtx, Step } from "#app/types/index";
+import type { UnifiedMap } from "#app/types/map";
 
-import type { Store } from "#store/index";
-import { ELAYERS } from "#utils/geo_constants";
-import { MapUtils, Spatial, uuidv4 } from "#utils/helpers";
+import type { Store } from "#app/store/index";
+import { ELAYERS } from "#app/utils/geo_constants";
+import { MapUtils, Spatial, uuidv4 } from "#app/utils/helpers";
 import { PointVisibility } from "../points/helpers";
+import { timeline } from "#app/history";
+import { InsertPointCommand } from "../points/commands/insert-point";
 
 export const isOnLine = (event: MapLayerMouseEvent, store: Store) => {
   let current = store.head;
@@ -29,21 +31,21 @@ export const isOnLine = (event: MapLayerMouseEvent, store: Store) => {
 };
 
 export const insertStepIfOnLine = (event: MapLayerMouseEvent, store: Store): Step | null => {
-  const currentStep = isOnLine(event, store);
+  const segmentStart = isOnLine(event, store);
 
-  if (currentStep) {
+  if (segmentStart) {
     const step = { ...event.lngLat, isAuxiliary: false, id: uuidv4() };
-    store.insert(step, currentStep);
+    timeline.commit(new InsertPointCommand(store, step, segmentStart));
     return step;
   }
   return null;
 };
 
-export const updateUIAfterInsert = (event: MapLayerMouseEvent, context: EventsProps) => {
-  const { store, tiles } = context;
+export const updateUIAfterInsert = (event: MapLayerMouseEvent, context: EventsCtx) => {
+  const { store, renderer } = context;
   if (store.tail?.val) {
     PointVisibility.setSinglePointHidden(event);
-    tiles.render();
+    renderer.execute();
   }
 };
 

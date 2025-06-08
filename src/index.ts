@@ -1,17 +1,17 @@
-import type { IControl, UnifiedMap } from "#types/map";
+import type { IControl, UnifiedMap } from "#app/types/map";
 
-import type { DrawOptions, LatLng, RequiredDrawOptions, Step, StepId } from "#types/index";
+import type { DrawOptions, LatLng, RequiredDrawOptions, Step, StepId } from "#app/types/index";
 import { Panel } from "#components/panel";
-import { Tiles } from "#components/map/tiles";
 import { Events } from "#components/map";
 import { Control } from "#components/side-control";
 import { DrawingMode } from "#components/map/mode";
 import { Cursor } from "#components/map/cursor";
 import { MouseEvents } from "#components/map/mouse-events/index";
-import { uuidv4 } from "#utils/helpers";
-import { DOM } from "#utils/dom";
-import { Store, StoreHelpers } from "#store/index";
-import { Options } from "#utils/options";
+import { uuidv4 } from "#app/utils/helpers";
+import { DOM } from "#app/utils/dom";
+import { Store, StoreHelpers } from "#app/store/index";
+import { Options } from "#app/utils/options";
+import { Tiles } from "#components/map/tiles";
 
 import type {
   UndoEvent,
@@ -26,6 +26,7 @@ import type {
 } from "#components/map/types";
 
 import "./draw.css";
+import { Renderer } from "#components/map/renderer";
 
 export default class DrawLibre implements IControl {
   #container: HTMLElement | undefined;
@@ -35,6 +36,7 @@ export default class DrawLibre implements IControl {
   #events: Events | undefined;
   #tiles: Tiles | undefined;
   #panel: Panel | undefined;
+  #renderer: Renderer | undefined;
   #cursor: Cursor | undefined;
   #mouseEvents: MouseEvents | undefined;
 
@@ -56,6 +58,7 @@ export default class DrawLibre implements IControl {
     this.#mode = undefined;
     this.#events = undefined;
     this.#tiles = undefined;
+    this.#renderer = undefined;
     this.#panel = undefined;
     this.#mouseEvents = undefined;
     this.#cursor = undefined;
@@ -89,7 +92,8 @@ export default class DrawLibre implements IControl {
     this.#store = new Store(this.#defaultOptions);
     this.#mode = new DrawingMode(this.#defaultOptions);
     this.#panel = new Panel({ map, mode: this.#mode, options: this.#defaultOptions, store: this.#store });
-    this.#tiles = new Tiles({ map, store: this.#store, options: this.#defaultOptions, mode: this.#mode });
+    this.#tiles = new Tiles({ map, store: this.#store, mode: this.#mode, options: this.#defaultOptions });
+    this.#renderer = new Renderer({ map, store: this.#store, options: this.#defaultOptions, mode: this.#mode });
     const control = new Control({ options: this.#defaultOptions, mode: this.#mode });
     this.#mouseEvents = new MouseEvents();
     this.#cursor = new Cursor({
@@ -106,7 +110,7 @@ export default class DrawLibre implements IControl {
       panel: this.#panel,
       control,
       mode: this.#mode,
-      tiles: this.#tiles,
+      renderer: this.#renderer,
       mouseEvents: this.#mouseEvents,
     });
 
@@ -136,9 +140,9 @@ export default class DrawLibre implements IControl {
    */
   onRemove = () => {
     this.#cursor?.removeConsumers();
-    this.#tiles?.removeTiles();
+    this.#tiles?.remove();
     this.#events?.removeMapEventsAndConsumers();
-    this.#panel?.removePanel();
+    this.#panel?.destroy();
     this.#store?.reset();
     this.#mode?.unsubscribe();
 
@@ -161,7 +165,7 @@ export default class DrawLibre implements IControl {
     } else {
       throw new Error("Invalid argument. Expected an array of steps.");
     }
-    this.#tiles?.render();
+    this.#renderer?.execute();
   };
 
   /**
@@ -213,8 +217,8 @@ export default class DrawLibre implements IControl {
    */
   removeAllSteps = () => {
     this.#store?.reset();
-    this.#panel?.removePanel();
-    this.#tiles?.render();
+    this.#panel?.destroy();
+    this.#renderer?.execute();
   };
 }
 
@@ -230,5 +234,5 @@ export type {
   SaveEvent,
   UndoEvent,
   ModeChangeEvent,
-  UnifiedMap
+  UnifiedMap,
 };

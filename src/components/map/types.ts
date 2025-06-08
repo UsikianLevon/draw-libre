@@ -1,5 +1,5 @@
-import type { LatLng, Step, Uuid } from "#types/index";
-import type { UnifiedMap } from "#types/map";
+import type { LatLng, Step, Uuid } from "#app/types/index";
+import type { UnifiedMap } from "#app/types/map";
 import type { Mode } from "./mode/types";
 
 interface ModeEvent {

@@ -1,100 +1,108 @@
-import { ListNode } from "#store/index";
-import type { EventsProps, Step } from "#types/index";
-import { ELAYERS } from "#utils/geo_constants";
-import { MapUtils } from "#utils/helpers";
+import type { EventsCtx, LatLng } from "#app/types/index";
+import { ELAYERS } from "#app/utils/geo_constants";
 import type { MapLayerMouseEvent, MapTouchEvent } from "maplibre-gl";
-import { PointHelpers } from "./helpers";
 import type { PrimaryPointEvents } from ".";
+import { timeline } from "#app/history";
+import { AuxToPrimaryCommand } from "./commands/aux-to-primary";
+import { MapUtils } from "#app/utils/helpers";
+import { addTransparentLine } from "../tiles/helpers";
+import { MovePointCommand } from "./commands/move-point";
+import type { PointState } from "./point-state";
+import type { PointTopologyManager } from "./point-topology-manager";
 
 export class AuxPoints {
-  #props: EventsProps;
-  #events: PrimaryPointEvents;
-
-  constructor(props: EventsProps, baseEvents: PrimaryPointEvents) {
-    this.#props = props;
-    this.#events = baseEvents;
-    this.#initEvents();
+  constructor(
+    private readonly ctx: EventsCtx,
+    private readonly baseEvents: PrimaryPointEvents,
+    private readonly pointState: PointState,
+    private readonly topologyManager: PointTopologyManager,
+  ) {
+    this.initEvents();
   }
 
-  #initBaseEvents = () => {
-    const { map } = this.#props;
+  private initBaseEvents = () => {
+    const { map } = this.ctx;
 
-    map.on("mouseenter", ELAYERS.AuxiliaryPointLayer, this.#events.onPointMouseEnter);
-    map.on("mouseleave", ELAYERS.AuxiliaryPointLayer, this.#events.onPointMouseLeave);
-    map.on("mousedown", ELAYERS.AuxiliaryPointLayer, this.#events.onPointMouseDown);
-    map.on("mouseup", ELAYERS.AuxiliaryPointLayer, this.#events.onPointMouseUp);
-    map.on("touchend", ELAYERS.AuxiliaryPointLayer, this.#events.onPointMouseUp);
-    map.on("touchstart", ELAYERS.AuxiliaryPointLayer, this.#events.onPointMouseDown);
+    map.on("mouseenter", ELAYERS.AuxiliaryPointLayer, this.baseEvents.onPointMouseEnter);
+    map.on("mouseleave", ELAYERS.AuxiliaryPointLayer, this.baseEvents.onPointMouseLeave);
+    map.on("mousedown", ELAYERS.AuxiliaryPointLayer, this.baseEvents.onPointMouseDown);
+    map.on("mouseup", ELAYERS.PointsLayer, this.onMouseUp);
+    map.on("touchend", ELAYERS.PointsLayer, this.onMouseUp);
+    map.on("touchstart", ELAYERS.AuxiliaryPointLayer, this.baseEvents.onPointMouseDown);
   };
 
-  #removeBaseEvents = () => {
-    const { map } = this.#props;
+  private removeBaseEvents = () => {
+    const { map } = this.ctx;
 
-    map.off("mouseenter", ELAYERS.AuxiliaryPointLayer, this.#events.onPointMouseEnter);
-    map.off("mouseleave", ELAYERS.AuxiliaryPointLayer, this.#events.onPointMouseLeave);
-    map.off("mousedown", ELAYERS.AuxiliaryPointLayer, this.#events.onPointMouseDown);
-    map.off("mouseup", ELAYERS.AuxiliaryPointLayer, this.#events.onPointMouseUp);
-    map.off("touchend", ELAYERS.AuxiliaryPointLayer, this.#events.onPointMouseUp);
-    map.off("touchstart", ELAYERS.AuxiliaryPointLayer, this.#events.onPointMouseDown);
+    map.off("mouseenter", ELAYERS.AuxiliaryPointLayer, this.baseEvents.onPointMouseEnter);
+    map.off("mouseleave", ELAYERS.AuxiliaryPointLayer, this.baseEvents.onPointMouseLeave);
+    map.off("mousedown", ELAYERS.AuxiliaryPointLayer, this.baseEvents.onPointMouseDown);
+    map.off("mouseup", ELAYERS.PointsLayer, this.onMouseUp);
+    map.off("touchend", ELAYERS.PointsLayer, this.onMouseUp);
+    map.off("touchstart", ELAYERS.AuxiliaryPointLayer, this.baseEvents.onPointMouseDown);
   };
 
-  #initEvents() {
-    const { map } = this.#props;
+  private initEvents() {
+    const { map } = this.ctx;
 
-    map.on("mousedown", ELAYERS.AuxiliaryPointLayer, this.#onMouseDown);
-    map.on("touchstart", ELAYERS.AuxiliaryPointLayer, this.#onMouseDown);
-    // PointsLayer because we need to check if the point was the primary point
-    map.on("mousedown", ELAYERS.PointsLayer, this.#onPrimaryPointMouseDown);
-    map.on("touchstart", ELAYERS.PointsLayer, this.#onPrimaryPointMouseDown);
+    map.on("mousedown", ELAYERS.AuxiliaryPointLayer, this.onMouseDown);
+    map.on("touchstart", ELAYERS.AuxiliaryPointLayer, this.onMouseDown);
     // PointsLayer becasue aux is already false
-    this.#initBaseEvents();
+    this.initBaseEvents();
   }
 
-  removeEvents() {
-    const { map } = this.#props;
-    map.off("mousedown", ELAYERS.AuxiliaryPointLayer, this.#onMouseDown);
-    map.off("touchstart", ELAYERS.AuxiliaryPointLayer, this.#onMouseDown);
-    map.off("mousedown", ELAYERS.PointsLayer, this.#onPrimaryPointMouseDown);
-    map.off("touchstart", ELAYERS.PointsLayer, this.#onPrimaryPointMouseDown);
+  public removeEvents() {
+    const { map } = this.ctx;
+    map.off("mousedown", ELAYERS.AuxiliaryPointLayer, this.onMouseDown);
+    map.off("touchstart", ELAYERS.AuxiliaryPointLayer, this.onMouseDown);
 
-    this.#removeBaseEvents();
+    this.removeBaseEvents();
   }
 
-  #addTwoAuxiliaryPoints = (clickedNode: ListNode | null) => {
-    if (!clickedNode) return;
+  private onMouseDown = (event: MapLayerMouseEvent | MapTouchEvent) => {
+    const { store, renderer, map } = this.ctx;
 
-    const { store } = this.#props;
-
-    const nextPrimaryNode = clickedNode.next;
-    const prevPrimaryNode = clickedNode.prev;
-
-    if (prevPrimaryNode) {
-      const prevAuxPoint = PointHelpers.createAuxiliaryPoint(prevPrimaryNode.val as Step, clickedNode.val as Step);
-      store.insert(prevAuxPoint, prevPrimaryNode);
-    }
-
-    if (nextPrimaryNode) {
-      const nextAuxPoint = PointHelpers.createAuxiliaryPoint(clickedNode.val as Step, nextPrimaryNode.val as Step);
-      store.insert(nextAuxPoint, clickedNode);
-    }
-  };
-
-  #onPrimaryPointMouseDown = (event: MapLayerMouseEvent | MapTouchEvent) => {
-    event.preventDefault();
-  };
-
-  #onMouseDown = (event: MapLayerMouseEvent | MapTouchEvent) => {
-    const { store, tiles, map } = this.#props;
-    // right click
+    // right click TODO
     if ((event.originalEvent as { button: number }).button === 2) {
       return;
     }
     const id = MapUtils.queryPointId(map, event.point);
     const node = store.findNodeById(id);
-    if (node && node.val) {
-      node.val.isAuxiliary = false;
-      this.#addTwoAuxiliaryPoints(node);
+
+    if (node) {
+      timeline.beginTransaction("PointCompound");
+      timeline.commit(new AuxToPrimaryCommand(store, node));
+      renderer.execute();
     }
-    tiles.render();
+  };
+
+  private onMouseUp = () => {
+    const { mouseEvents, store, panel, map, options } = this.ctx;
+
+    mouseEvents.pointMouseUp = true;
+
+    const selectedNode = this.pointState.getSelectedNode();
+    const lastEvent = this.pointState.getLastEvent();
+    const startCoordinates = this.pointState.getStartCoordinates();
+
+    if (selectedNode && selectedNode.val) {
+      if (lastEvent) {
+        this.topologyManager.updateStore();
+        this.pointState.clearLastEvent();
+      }
+
+      panel?.show();
+      if (this.pointState.isMoved()) {
+        timeline.commit(new MovePointCommand(store, selectedNode, startCoordinates as LatLng, map));
+        timeline.commitTransaction();
+      }
+      this.pointState.partialReset();
+    }
+
+    if (mouseEvents) {
+      mouseEvents.pointMouseDown = false;
+    }
+
+    addTransparentLine(map, options);
   };
 }

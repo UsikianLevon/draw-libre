@@ -1,9 +1,10 @@
-import type { UnifiedMap } from "#types/map";
-import type { LatLng, StepId, Step, EventsProps } from "#types/index";
-import { EVENTS } from "#utils/constants";
+import type { UnifiedMap } from "#app/types/map";
+import type { LatLng, StepId, Step, EventsCtx } from "#app/types/index";
+import { EVENTS } from "#app/utils/constants";
 import type { DrawingMode } from "./mode";
 import type { Mode } from "./mode/types";
 
+// TODO this shouldn't be here and it's just bunch of static methods in a class, which is bad.
 export class FireEvents {
   static addPoint(step: Step & { total: number }, map: UnifiedMap, mode: DrawingMode) {
     map.fire(EVENTS.ADD, {
@@ -68,7 +69,7 @@ export class FireEvents {
       timestamp: Date.now(),
     });
   }
-  static undoPoint(step: Step & { total: number }, map: UnifiedMap, originalEvent?: Event) {
+  static undo(step: Step & { total: number }, map: UnifiedMap, originalEvent?: Event) {
     map.fire(EVENTS.UNDO, {
       originalEvent,
       id: step.id,
@@ -80,6 +81,20 @@ export class FireEvents {
       timestamp: Date.now(),
     });
   }
+
+  static redo(step: Step & { total: number }, map: UnifiedMap, originalEvent?: Event) {
+    map.fire(EVENTS.REDO, {
+      originalEvent,
+      id: step.id,
+      coordinates: {
+        lat: step.lat,
+        lng: step.lng,
+      },
+      total: step.total,
+      timestamp: Date.now(),
+    });
+  }
+
   static modeChanged(map: UnifiedMap, mode: Mode | "break") {
     map.fire(EVENTS.MODECHANGED, {
       mode,
@@ -88,7 +103,7 @@ export class FireEvents {
   static removeAllPoints(map: UnifiedMap, originalEvent: Event) {
     map.fire(EVENTS.REMOVEALL, { originalEvent });
   }
-  static onSaveClick(context: Pick<EventsProps, "map" | "mode">, steps: Step[], originalEvent: Event) {
+  static onSaveClick(context: Pick<EventsCtx, "map" | "mode">, steps: Step[], originalEvent: Event) {
     const { map, mode } = context;
 
     map.fire(EVENTS.SAVE, {

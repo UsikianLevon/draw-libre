@@ -10,7 +10,6 @@ import type { Store } from "#app/store/index";
 import type { DrawingMode } from "#components/map/mode";
 import type { DeepRequired } from "./helpers";
 import type { Mode } from "#components/map/mode/types";
-import type { Renderer } from "#components/map/renderer";
 
 export type LatLng = {
   lat: number;
@@ -120,7 +119,7 @@ export interface ControlOptions {
   parent: HTMLElement;
 }
 
-export type EventsCtx = {
+export type MapEventsCtx = {
   map: UnifiedMap;
   panel: Panel;
   store: Store;
@@ -128,7 +127,6 @@ export type EventsCtx = {
   options: RequiredDrawOptions;
   mouseEvents: MouseEvents;
   mode: DrawingMode;
-  renderer: Renderer;
 };
 
 export type ButtonType = keyof Required<NonNullable<PanelImpl["buttons"]>>;

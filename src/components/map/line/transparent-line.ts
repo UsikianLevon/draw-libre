@@ -1,6 +1,6 @@
 import type { GeoJSONSource, MapLayerMouseEvent } from "maplibre-gl";
 
-import type { EventsCtx } from "#app/types/index";
+import type { MapEventsCtx } from "#app/types/index";
 import { ELAYERS, ESOURCES } from "#app/utils/geo_constants";
 import { MapUtils, throttle } from "#app/utils/helpers";
 import { FireEvents } from "../helpers";
@@ -13,7 +13,7 @@ export class TransparentLineEvents {
   private isThrottled: boolean;
   private lastEvent: MapLayerMouseEvent | null;
 
-  constructor(private readonly ctx: EventsCtx) {
+  constructor(private readonly ctx: MapEventsCtx) {
     this.isThrottled = false;
     this.lastEvent = null;
   }

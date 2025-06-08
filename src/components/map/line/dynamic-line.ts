@@ -1,6 +1,6 @@
 import type { GeoJSONSource, MapLayerMouseEvent, PointLike } from "maplibre-gl";
 
-import type { EventsCtx, LatLng } from "#app/types/index";
+import type { MapEventsCtx, LatLng } from "#app/types/index";
 import { ELAYERS, ESOURCES, LINE_BASE } from "#app/utils/geo_constants";
 import type { StoreChangeEvent } from "#app/store/types";
 import { debounce, GeometryFactory, MapUtils, throttle } from "#app/utils/helpers";
@@ -19,7 +19,7 @@ export class DynamicLineEvents {
   private onMouseMoveThrottled: (event: MapLayerMouseEvent) => void;
   private onStoreEventsDebounced: (event: StoreChangeEvent) => void;
 
-  constructor(private readonly ctx: EventsCtx) {
+  constructor(private readonly ctx: MapEventsCtx) {
     this.visible = true;
     this.onMouseMoveThrottled = throttle(this.onLineMove, LINE_DYNAMIC_THROTTLE_TIME);
     this.onStoreEventsDebounced = debounce(this.onStoreEventsConsumer, 10);

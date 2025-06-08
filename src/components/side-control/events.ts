@@ -1,70 +1,64 @@
-import type { EventsCtx, ControlType } from "#app/types/index";
-import { HTMLEvent } from "#app/types/helpers";
+import type { ControlType } from "#app/types/index";
+import type { HTMLEvent } from "#app/types/helpers";
 import { Tooltip } from "#components/tooltip";
 import { CURSORS } from "#components/map/cursor/constants";
-
-import { getButtonLabel } from "./helpers";
-import { ControlObserver } from "./observer";
 import { DOM } from "#app/utils/dom";
 
-export class ControlEvents {
-  #tooltip: Tooltip;
-  #observer: ControlObserver;
+import { getButtonLabel } from "./helpers";
+import type { Context } from ".";
+import type { View } from "./view";
 
-  constructor(private readonly ctx: EventsCtx) {
-    this.#observer = new ControlObserver(ctx);
-    this.#tooltip = new Tooltip();
-    this.#initEvents();
+export class Events {
+  private tooltip: Tooltip;
+
+  constructor(private readonly ctx: Context & { view: View }) {
+    this.tooltip = new Tooltip();
+    this.initEvents();
   }
 
-  #initEvents() {
-    const { control } = this.ctx;
-    if (control) {
-      const { breakButton, lineButton, polygonButton } = control;
-      if (lineButton) {
-        DOM.addEventListener(lineButton, "click", this.onLineClick);
-        DOM.addEventListener(lineButton, "mouseenter", this.onButtonEnter as EventListenerOrEventListenerObject);
-        DOM.addEventListener(lineButton, "mouseleave", this.onButtonLeave);
-      }
-      if (polygonButton) {
-        DOM.addEventListener(polygonButton, "click", this.onPolygonClick);
-        DOM.addEventListener(polygonButton, "mouseenter", this.onButtonEnter as EventListenerOrEventListenerObject);
-        DOM.addEventListener(polygonButton, "mouseleave", this.onButtonLeave);
-      }
-      if (breakButton) {
-        DOM.addEventListener(breakButton, "click", this.onBreakClick);
-        DOM.addEventListener(breakButton, "mouseenter", this.onButtonEnter as EventListenerOrEventListenerObject);
-        DOM.addEventListener(breakButton, "mouseleave", this.onButtonLeave);
-      }
+  initEvents() {
+    const { lineButton, breakButton, polygonButton } = this.ctx.view;
+
+    if (lineButton) {
+      DOM.addEventListener(lineButton, "click", this.onLineClick);
+      DOM.addEventListener(lineButton, "mouseenter", this.onButtonEnter as EventListenerOrEventListenerObject);
+      DOM.addEventListener(lineButton, "mouseleave", this.onButtonLeave);
+    }
+    if (polygonButton) {
+      DOM.addEventListener(polygonButton, "click", this.onPolygonClick);
+      DOM.addEventListener(polygonButton, "mouseenter", this.onButtonEnter as EventListenerOrEventListenerObject);
+      DOM.addEventListener(polygonButton, "mouseleave", this.onButtonLeave);
+    }
+    if (breakButton) {
+      DOM.addEventListener(breakButton, "click", this.onBreakClick);
+      DOM.addEventListener(breakButton, "mouseenter", this.onButtonEnter as EventListenerOrEventListenerObject);
+      DOM.addEventListener(breakButton, "mouseleave", this.onButtonLeave);
     }
   }
 
-  #removeEvents() {
-    const { control } = this.ctx;
-    if (control) {
-      const { breakButton, lineButton, polygonButton } = control;
-      if (lineButton) {
-        DOM.removeEventListener(lineButton, "click", this.onLineClick);
-        DOM.removeEventListener(lineButton, "mouseenter", this.onButtonEnter as EventListenerOrEventListenerObject);
-        DOM.removeEventListener(lineButton, "mouseleave", this.onButtonLeave);
-      }
-      if (polygonButton) {
-        DOM.removeEventListener(polygonButton, "click", this.onPolygonClick);
-        DOM.removeEventListener(polygonButton, "mouseenter", this.onButtonEnter as EventListenerOrEventListenerObject);
-        DOM.removeEventListener(polygonButton, "mouseleave", this.onButtonLeave);
-      }
-      if (breakButton) {
-        DOM.removeEventListener(breakButton, "click", this.onBreakClick);
-        DOM.removeEventListener(breakButton, "mouseenter", this.onButtonEnter as EventListenerOrEventListenerObject);
-        DOM.removeEventListener(breakButton, "mouseleave", this.onButtonLeave);
-      }
+  removeEvents() {
+    const { lineButton, breakButton, polygonButton } = this.ctx.view;
+
+    if (lineButton) {
+      DOM.removeEventListener(lineButton, "click", this.onLineClick);
+      DOM.removeEventListener(lineButton, "mouseenter", this.onButtonEnter as EventListenerOrEventListenerObject);
+      DOM.removeEventListener(lineButton, "mouseleave", this.onButtonLeave);
+    }
+    if (polygonButton) {
+      DOM.removeEventListener(polygonButton, "click", this.onPolygonClick);
+      DOM.removeEventListener(polygonButton, "mouseenter", this.onButtonEnter as EventListenerOrEventListenerObject);
+      DOM.removeEventListener(polygonButton, "mouseleave", this.onButtonLeave);
+    }
+    if (breakButton) {
+      DOM.removeEventListener(breakButton, "click", this.onBreakClick);
+      DOM.removeEventListener(breakButton, "mouseenter", this.onButtonEnter as EventListenerOrEventListenerObject);
+      DOM.removeEventListener(breakButton, "mouseleave", this.onButtonLeave);
     }
   }
 
   remove() {
-    this.#observer.removeConsumers();
-    this.#removeEvents();
-    this.#tooltip.remove();
+    this.removeEvents();
+    this.tooltip.remove();
   }
 
   onButtonEnter = (event: HTMLEvent<HTMLButtonElement>) => {
@@ -75,72 +69,55 @@ export class ControlEvents {
     if (type) {
       const label = getButtonLabel(type, options);
       const placement = "left";
-      this.#tooltip
+      this.tooltip
         .create({
           label,
           placement,
         })
-        .setPosition(this.#tooltip.getPosition(event, placement));
+        .setPosition(this.tooltip.getPosition(event, placement));
     }
   };
 
   onButtonLeave = () => {
-    this.#tooltip.remove();
+    this.tooltip.remove();
   };
 
-  #removeActiveClass = () => {
-    const { control } = this.ctx;
+  removeActiveClass = () => {
+    const { lineButton, breakButton, polygonButton } = this.ctx.view;
 
-    control.lineButton?.classList.remove("control-button-active");
-    control.polygonButton?.classList.remove("control-button-active");
-    control.breakButton?.classList.remove("control-button-active");
-  };
-
-  #initialize = () => {
-    const { map, mode } = this.ctx;
-    if (!mode.getMode()) {
-      map.fire("mode:initialize");
-    }
+    lineButton?.classList.remove("control-button-active");
+    polygonButton?.classList.remove("control-button-active");
+    breakButton?.classList.remove("control-button-active");
   };
 
   onLineClick = () => {
-    const { map, mode, renderer, control } = this.ctx;
-    this.#initialize();
-    this.#removeActiveClass();
-    if (mode.getMode() === "line" && !mode.getBreak()) {
-      mode.setMode(null);
-      map.fire("mode:remove");
-      renderer.resetGeometries();
-    } else {
-      control.lineButton?.classList.add("control-button-active");
-      mode.setMode("line");
-      renderer.execute();
-    }
+    const { mode } = this.ctx;
+    const { lineButton } = this.ctx.view;
+
+    if (mode.getMode() === "line") return;
+
+    this.removeActiveClass();
+    lineButton?.classList.add("control-button-active");
+    mode.setMode("line");
   };
 
   onPolygonClick = () => {
-    const { map, mode, renderer, control } = this.ctx;
-    this.#initialize();
-    this.#removeActiveClass();
-    if (mode.getMode() === "polygon" && !mode.getBreak()) {
-      mode.setMode(null);
-      map.fire("mode:remove");
-      renderer.resetGeometries();
-    } else {
-      control.polygonButton?.classList.add("control-button-active");
-      mode.setMode("polygon");
-      renderer.execute();
-    }
+    const { mode } = this.ctx;
+    const { polygonButton } = this.ctx.view;
+
+    if (mode.getMode() === "polygon") return;
+
+    this.removeActiveClass();
+    polygonButton?.classList.add("control-button-active");
+    mode.setMode("polygon");
   };
 
   onBreakClick = () => {
-    const { map, mode, control } = this.ctx;
-    if (mode.getBreak()) {
-      mode.setMode(null);
-      map.fire("mode:remove");
-    }
-    this.#removeActiveClass();
-    control.breakButton?.classList.add("control-button-active");
+    const { map, mode } = this.ctx;
+    const { breakButton } = this.ctx.view;
+
+    this.removeActiveClass();
+    breakButton?.classList.add("control-button-active");
     mode.setBreak(true);
     map.getCanvasContainer().style.cursor = CURSORS.POINTER;
   };

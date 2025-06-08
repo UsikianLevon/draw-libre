@@ -9,7 +9,7 @@ import type { MouseEventsChangeEvent } from "../mouse-events/types";
 import { CURSORS, type TCursor } from "./constants";
 import type { RequiredDrawOptions } from "#app/types/index";
 
-interface CursorProps {
+interface Context {
   map: UnifiedMap;
   mode: DrawingMode;
   mouseEvents: MouseEvents;
@@ -18,14 +18,11 @@ interface CursorProps {
 }
 
 export class Cursor {
-  #props: CursorProps;
   #canvas: HTMLElement;
 
-  // map: Map, mode: DrawingMode, mouseEvents: MouseEvents, store: Store
-  constructor(props: CursorProps) {
-    this.#props = props;
-    this.#canvas = this.#props.map.getCanvasContainer();
-    this.#canvas.style.cursor = props.mode.getMode() ? CURSORS.CROSSHAIR : CURSORS.AUTO;
+  constructor(private readonly ctx: Context) {
+    this.#canvas = this.ctx.map.getCanvasContainer();
+    this.#canvas.style.cursor = ctx.mode.getMode() ? CURSORS.CROSSHAIR : CURSORS.AUTO;
     this.#initConsumers();
   }
 
@@ -36,7 +33,7 @@ export class Cursor {
   get = () => this.#canvas.style.cursor;
 
   handleMouseLeave = debounce(() => {
-    const { mouseEvents, mode } = this.#props;
+    const { mouseEvents, mode } = this.ctx;
     if (mouseEvents.pointMouseDown) return;
     if (!mode.getMode()) {
       this.set(CURSORS.AUTO);
@@ -50,7 +47,7 @@ export class Cursor {
   }, 10);
 
   handleFirstPointMouseEnter = debounce(() => {
-    const { store, options } = this.#props;
+    const { store, options } = this.ctx;
 
     if (Spatial.canCloseGeometry(store, options)) {
       this.set(CURSORS.POINTER);
@@ -58,19 +55,19 @@ export class Cursor {
   }, 10);
 
   #initConsumers() {
-    const { mouseEvents } = this.#props;
+    const { mouseEvents } = this.ctx;
 
     mouseEvents.addObserver(this.#mouseEventsObserver);
   }
 
-  removeConsumers() {
-    const { mouseEvents } = this.#props;
+  remove() {
+    const { mouseEvents } = this.ctx;
 
     mouseEvents.removeObserver(this.#mouseEventsObserver);
   }
 
   #mouseEventsObserver = (event: MouseEventsChangeEvent) => {
-    const { mode, mouseEvents, store, options } = this.#props;
+    const { mode, mouseEvents, store, options } = this.ctx;
     if (mode.getBreak()) return;
 
     const { type, data } = event;

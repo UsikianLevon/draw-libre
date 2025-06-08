@@ -1,4 +1,4 @@
-import type { EventsCtx, LatLng } from "#app/types/index";
+import type { MapEventsCtx, LatLng } from "#app/types/index";
 import type { MapLayerMouseEvent, MapTouchEvent } from "maplibre-gl";
 
 import { MapUtils, Spatial, throttle } from "#app/utils/helpers";
@@ -16,6 +16,7 @@ import type { DrawingModeChangeEvent } from "../mode/types";
 import { PointState } from "./point-state";
 import { PointTopologyManager } from "./point-topology-manager";
 import { MovePointCommand } from "./commands/move-point";
+import { renderer } from "../renderer";
 
 export interface PrimaryPointEvents {
   onPointMouseEnter: (event: MapLayerMouseEvent) => void;
@@ -32,7 +33,7 @@ export class PointEvents {
   private pointState: PointState;
   private topologyManager: PointTopologyManager;
 
-  constructor(private readonly ctx: EventsCtx) {
+  constructor(private readonly ctx: MapEventsCtx) {
     this.pointState = new PointState();
     this.topologyManager = new PointTopologyManager(ctx, this.pointState);
 
@@ -57,7 +58,7 @@ export class PointEvents {
     this.ctx.store.removeObserver(this.storeEventsConsumer);
   };
 
-  public initEvents = () => {
+  public init = () => {
     const { map } = this.ctx;
     map.on("click", this.onMapClick);
     map.on("dblclick", this.onMapDblClick);
@@ -73,7 +74,7 @@ export class PointEvents {
     this.initConsumers();
   };
 
-  public removeEvents = () => {
+  public remove = () => {
     const { map } = this.ctx;
     map.off("click", this.onMapClick);
     map.off("dblclick", this.onMapDblClick);
@@ -107,7 +108,7 @@ export class PointEvents {
   };
 
   private onPointRemove = (event: MapLayerMouseEvent | MapTouchEvent) => {
-    const { store, renderer } = this.ctx;
+    const { store } = this.ctx;
     if (store.size === 1) {
       store.reset();
       this.ctx.panel.hide();
@@ -132,7 +133,7 @@ export class PointEvents {
   };
 
   private onMapClick = (event: MapLayerMouseEvent) => {
-    const { mode, mouseEvents, map, store, renderer } = this.ctx;
+    const { mode, mouseEvents, map, store } = this.ctx;
 
     if (mode.getClosedGeometry()) return;
     if (this.onOwnGeometryLayersClick(event)) return;
@@ -162,7 +163,6 @@ export class PointEvents {
 
       if (!this.pointState.getSelectedNode()) return;
 
-      const { renderer } = this.ctx;
       this.onMoveLeftClickUp(this.pointState.getLastEvent() as MapLayerMouseEvent);
       const auxPoints = this.topologyManager.getAuxPointsLatLng(this.pointState.getLastEvent() as MapLayerMouseEvent);
       renderer.executeOnMouseMove(this.pointState.getSelectedIdx() as number, event.lngLat, auxPoints);
@@ -280,7 +280,7 @@ export class PointEvents {
   };
 
   private onPointMouseUp = () => {
-    const { mouseEvents, store, panel, map, options, renderer } = this.ctx;
+    const { mouseEvents, store, panel, map, options } = this.ctx;
 
     map.off("mousemove", this.onMapMouseMove);
     map.off("touchmove", this.onMapMouseMove);

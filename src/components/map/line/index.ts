@@ -1,4 +1,4 @@
-import type { EventsCtx } from "#app/types/index";
+import type { MapEventsCtx } from "#app/types/index";
 import { MOBILE_WIDTH } from "#app/utils/constants";
 import type { DrawingModeChangeEvent } from "../mode/types";
 import type { MouseEventsChangeEvent } from "../mouse-events/types";
@@ -12,7 +12,7 @@ export class LineEvents {
   private dynamic: DynamicLineEvents | null;
   private type: "default" | "break";
 
-  constructor(private readonly ctx: EventsCtx) {
+  constructor(private readonly ctx: MapEventsCtx) {
     this.break = new LineBreakEvents(ctx);
     this.transparent = ctx.options.pointGeneration === "manual" ? new TransparentLineEvents(ctx) : null;
     this.dynamic = null;

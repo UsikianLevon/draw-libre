@@ -1,7 +1,7 @@
 import { GeoJSONSource, MapLayerMouseEvent } from "maplibre-gl";
 
 import type { ListNode } from "#app/store/index";
-import type { EventsCtx } from "#app/types/index";
+import type { MapEventsCtx } from "#app/types/index";
 import { ELAYERS, ESOURCES } from "#app/utils/geo_constants";
 import { GeometryFactory, throttle } from "#app/utils/helpers";
 
@@ -9,6 +9,7 @@ import { isOnLine } from "./utils";
 import { FireEvents } from "../helpers";
 import { timeline } from "#app/history";
 import { BreakGeometryCommand } from "./commands/break-geometry";
+import { renderer } from "../renderer";
 
 const LINE_BREAK_THROTTLE_TIME = 15;
 
@@ -16,7 +17,7 @@ export class LineBreakEvents {
   private current: ListNode | null;
   private throttledOnLineEnter: (event: MapLayerMouseEvent) => void;
 
-  constructor(private readonly ctx: EventsCtx) {
+  constructor(private readonly ctx: MapEventsCtx) {
     this.current = null;
     this.throttledOnLineEnter = throttle(this.onLineEnterBreak, LINE_BREAK_THROTTLE_TIME);
   }
@@ -48,7 +49,7 @@ export class LineBreakEvents {
   };
 
   private geometryBreakOnClick = (event: MapLayerMouseEvent) => {
-    const { store, mode, map, renderer, options } = this.ctx;
+    const { store, mode, map, options } = this.ctx;
 
     if (!this.current) return;
     timeline.commit(new BreakGeometryCommand(store, options, mode, this.current, event.lngLat));

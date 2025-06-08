@@ -1,5 +1,5 @@
 import type { UnifiedMap } from "#app/types/map";
-import type { LatLng, StepId, Step, EventsCtx } from "#app/types/index";
+import type { LatLng, StepId, Step, MapEventsCtx } from "#app/types/index";
 import { EVENTS } from "#app/utils/constants";
 import type { DrawingMode } from "./mode";
 import type { Mode } from "./mode/types";
@@ -103,7 +103,7 @@ export class FireEvents {
   static removeAllPoints(map: UnifiedMap, originalEvent: Event) {
     map.fire(EVENTS.REMOVEALL, { originalEvent });
   }
-  static onSaveClick(context: Pick<EventsCtx, "map" | "mode">, steps: Step[], originalEvent: Event) {
+  static onSaveClick(context: Pick<MapEventsCtx, "map" | "mode">, steps: Step[], originalEvent: Event) {
     const { map, mode } = context;
 
     map.fire(EVENTS.SAVE, {

@@ -1,6 +1,6 @@
 import type { LatLng } from "#app/types";
 
-export class PanelUIState {
+export class UIState {
   private _isHidden = true;
   private _anchor = { dx: 0, dy: 0 };
   private _pendingCoord: LatLng | null = null;

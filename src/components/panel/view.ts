@@ -3,7 +3,7 @@ import type { ButtonType, PanelImpl } from "#app/types";
 import { disableButton } from "#app/utils/helpers";
 import { Context } from ".";
 
-export class PanelView {
+export class View {
   private root: HTMLDivElement;
   private buttonContainer: HTMLDivElement;
   private buttons: Partial<Record<ButtonType, HTMLButtonElement>> = {};
@@ -40,33 +40,37 @@ export class PanelView {
     });
   }
 
-  public getButton(type: ButtonType): HTMLButtonElement | undefined {
-    return this.buttons[type];
-  }
+  public getButton = (type: ButtonType): HTMLButtonElement | null => {
+    const button = this?.buttons?.[type];
+    if (!button) {
+      console.warn(`[PanelView] Button "${type}" not initialized`);
+    }
+    return button ?? null;
+  };
 
-  public getRoot(): HTMLDivElement {
+  public getRoot = (): HTMLDivElement => {
     return this.root;
-  }
+  };
 
-  public show() {
+  public show = () => {
     this.root.classList.remove("hidden");
-  }
+  };
 
-  public hide() {
+  public hide = () => {
     this.root.classList.add("hidden");
-  }
+  };
 
-  public setTransform(x: number, y: number) {
+  public setTransform = (x: number, y: number) => {
     this.root.style.transform = `translate(${x}px, ${y}px)`;
-  }
+  };
 
-  public observeResize(callback: ResizeObserverCallback): ResizeObserver {
+  public observeResize = (callback: ResizeObserverCallback): ResizeObserver => {
     const observer = new ResizeObserver(callback);
     observer.observe(this.root);
     return observer;
-  }
+  };
 
-  public destroy() {
+  public destroy = () => {
     this.root.remove();
-  }
+  };
 }

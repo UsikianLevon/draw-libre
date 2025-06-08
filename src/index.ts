@@ -78,7 +78,6 @@ export default class DrawLibre implements IControl {
   onAdd = (map: UnifiedMap) => {
     this.store = new Store(this.defaultOptions);
     this.mode = new DrawingMode(this.defaultOptions);
-    this.panel = new Panel({ map, mode: this.mode, options: this.defaultOptions, store: this.store });
     this.tiles = new Tiles({ map, store: this.store, mode: this.mode, options: this.defaultOptions });
     this.renderer = renderer.initialize({
       map,
@@ -86,7 +85,7 @@ export default class DrawLibre implements IControl {
       options: this.defaultOptions,
       mode: this.mode,
     });
-    const control = new Control({ options: this.defaultOptions, mode: this.mode });
+    const control = new Control({ options: this.defaultOptions, map, mode: this.mode });
     this.mouseEvents = new MouseEvents();
     this.cursor = new Cursor({
       map,
@@ -95,6 +94,7 @@ export default class DrawLibre implements IControl {
       store: this.store,
       options: this.defaultOptions,
     });
+    this.panel = new Panel({ map, mode: this.mode, options: this.defaultOptions, store: this.store });
     this.events = new Events({
       map,
       store: this.store,
@@ -121,7 +121,7 @@ export default class DrawLibre implements IControl {
    *
    * @example ```ts
    * const map = new Map();
-   * const draw = new DrawLibre();
+   * const draw = DrawLibre.getInstance();
    * map.removeControl(draw)
    * ```
    *

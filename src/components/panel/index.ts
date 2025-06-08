@@ -2,8 +2,9 @@ import type { UnifiedMap } from "#app/types/map";
 import type { LatLng, RequiredDrawOptions } from "#app/types/index";
 import type { Store } from "#app/store/index";
 import type { DrawingMode } from "#components/map/mode";
-import { PanelUIState } from "./state";
-import { PanelView } from "./view";
+import { UIState } from "./state";
+import { View } from "./view";
+import { Events } from "./events";
 import "./panel.css";
 
 export interface Context {
@@ -16,28 +17,35 @@ export interface Context {
 const OFFSET_Y = 20;
 
 export class Panel {
-  private readonly view: PanelView;
-  private readonly state = new PanelUIState();
-
+  private readonly view: View;
+  private readonly state = new UIState();
+  private readonly events: Events;
   private resizeObserver!: ResizeObserver;
 
   private readonly onMapMove = () => this.schedulePositionUpdate();
 
   constructor(private readonly ctx: Context) {
-    this.view = new PanelView(ctx);
+    this.view = new View(ctx);
+    this.events = new Events({
+      ...ctx,
+      view: this.view,
+      setPanelLocation: this.setPanelLocation,
+    });
     this.init();
   }
 
   private init() {
     const { store } = this.ctx;
-
     this.resizeObserver = this.view.observeResize(this.measureAnchor);
     this.measureAnchor();
-
     if (store.tail?.val) this.setPanelLocation(store.tail.val);
+    this.events.initEvents();
+    this.events.initConsumers();
   }
 
   public destroy() {
+    this.events.removeConsumers();
+    this.events.removeEvents();
     if (this.state.listenersActive) {
       this.disableListeners();
     }
@@ -95,20 +103,4 @@ export class Panel {
 
   public show = () => this.setVisible(true);
   public hide = () => this.setVisible(false);
-
-  public get undoButton() {
-    return this.view.getButton("undo");
-  }
-
-  public get redoButton() {
-    return this.view.getButton("redo");
-  }
-
-  public get deleteButton() {
-    return this.view.getButton("delete");
-  }
-
-  public get saveButton() {
-    return this.view.getButton("save");
-  }
 }

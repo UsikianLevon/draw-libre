@@ -1,18 +1,12 @@
 import type { EventsCtx } from "#app/types/index";
-import { ControlEvents } from "#components/side-control/events";
-import { PanelEvents } from "#components/panel/events";
 import { LineEvents } from "./line";
 import { PointEvents } from "./points";
 
 export class Events {
-  private panelEvents: PanelEvents;
-  private controlEvents: ControlEvents;
   private pointEvents: PointEvents;
   private lineEvents: LineEvents;
 
   constructor(private readonly events: EventsCtx) {
-    this.panelEvents = new PanelEvents(events);
-    this.controlEvents = new ControlEvents(events);
     this.pointEvents = new PointEvents(events);
     this.lineEvents = new LineEvents(events);
     // TODO
@@ -22,22 +16,16 @@ export class Events {
 
   private initEvents = () => {
     this.lineEvents.init();
-    this.panelEvents?.initEvents();
-    this.panelEvents?.initConsumers();
     this.pointEvents?.initEvents();
   };
 
   private removeDrawEvents = () => {
-    this.panelEvents?.removeEvents();
-    this.panelEvents?.removeConsumers();
     this.pointEvents?.removeEvents();
     this.lineEvents?.remove();
   };
 
   public removeMapEventsAndConsumers = () => {
-    this.panelEvents?.removeEvents();
     this.pointEvents?.removeEvents();
-    this.controlEvents?.remove();
     this.lineEvents?.remove();
     this.events.map.off("mode:initialize", this.initEvents);
     this.events.map.off("mode:remove", this.removeDrawEvents);

@@ -4,11 +4,7 @@ import type { HTMLEvent } from "#app/types/helpers";
 import { DOM } from "#app/utils/dom";
 import { Tooltip } from "#components/tooltip";
 import { FireEvents } from "#components/map/helpers";
-import { disableButton, enableButton } from "#app/utils/helpers";
-import type { StoreChangeEvent } from "#app/store/types";
-import type { DrawingModeChangeEvent } from "#components/map/mode/types";
 import { timeline } from "#app/history";
-import { TimelineChangeEvent } from "#app/history/types";
 import { renderer } from "#components/map/renderer";
 import { Context } from ".";
 import { View } from "./view";
@@ -16,82 +12,9 @@ import { View } from "./view";
 export class Events {
   private tooltip: Tooltip;
 
-  constructor(private readonly ctx: Context & { view: View; setPanelLocation: (coordinates: LatLng) => void }) {
+  constructor(private readonly ctx: Context & { view: View }) {
     this.tooltip = new Tooltip();
   }
-
-  public initConsumers() {
-    this.ctx.store.addObserver(this.onStoreChangeConsumer);
-    this.ctx.mode?.addObserver(this.onMapModeConsumer);
-    timeline.addObserver(this.timelineConsumer);
-  }
-
-  public removeConsumers() {
-    this.ctx.store.removeObserver(this.onStoreChangeConsumer);
-    this.ctx.mode?.removeObserver(this.onMapModeConsumer);
-    timeline.removeObserver(this.timelineConsumer);
-  }
-
-  private timelineConsumer = (event: TimelineChangeEvent) => {
-    const { type, data } = event;
-    if (type === "REDO_STACK_CHANGED") {
-      if (!data) {
-        disableButton(this.ctx.view.getButton("redo"));
-      } else {
-        enableButton(this.ctx.view.getButton("redo"));
-      }
-    }
-
-    if (type === "UNDO_STACK_CHANGED") {
-      if (!data) {
-        disableButton(this.ctx.view.getButton("undo"));
-      } else {
-        enableButton(this.ctx.view.getButton("undo"));
-      }
-    }
-  };
-
-  private onStoreChangeConsumer = (event: StoreChangeEvent) => {
-    if (event.type === "STORE_MUTATED") {
-      const { data } = event;
-      if (data?.size === 0) {
-        this.ctx.view.hide();
-      } else {
-        let current = Object.assign({}, data);
-
-        // TODO why the hell do we need a loop here? We don't like loops
-        while (current.tail) {
-          if (current.tail?.val?.isAuxiliary) {
-            current.tail = current.tail?.prev;
-          } else {
-            if (current.tail?.val) {
-              this.ctx.setPanelLocation({
-                lat: current.tail.val.lat,
-                lng: current.tail.val.lng,
-              });
-            }
-            break;
-          }
-        }
-      }
-    }
-  };
-
-  private onMapModeConsumer = (event: DrawingModeChangeEvent) => {
-    const { store } = this.ctx;
-    const { type, data } = event;
-    if (type === "MODE_CHANGED" && !data) {
-      this.ctx.view.hide();
-    }
-    if (type === "MODE_CHANGED" && data) {
-      if (store.tail?.val) {
-        this.ctx.setPanelLocation({
-          lat: store.tail?.val?.lat,
-          lng: store.tail?.val?.lng,
-        });
-      }
-    }
-  };
 
   public initEvents() {
     const undoButton = this.ctx.view.getButton("undo");

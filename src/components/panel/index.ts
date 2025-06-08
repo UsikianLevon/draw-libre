@@ -6,6 +6,7 @@ import { UIState } from "./state";
 import { View } from "./view";
 import { Events } from "./events";
 import "./panel.css";
+import { Observer } from "./observer";
 
 export interface Context {
   map: UnifiedMap;
@@ -20,6 +21,7 @@ export class Panel {
   private readonly view: View;
   private readonly state = new UIState();
   private readonly events: Events;
+  private readonly observer: Observer;
   private resizeObserver!: ResizeObserver;
 
   private readonly onMapMove = () => this.schedulePositionUpdate();
@@ -29,8 +31,13 @@ export class Panel {
     this.events = new Events({
       ...ctx,
       view: this.view,
+    });
+    this.observer = new Observer({
+      ...ctx,
+      view: this.view,
       setPanelLocation: this.setPanelLocation,
     });
+
     this.init();
   }
 
@@ -40,11 +47,11 @@ export class Panel {
     this.measureAnchor();
     if (store.tail?.val) this.setPanelLocation(store.tail.val);
     this.events.initEvents();
-    this.events.initConsumers();
+    this.observer.initConsumers();
   }
 
   public destroy() {
-    this.events.removeConsumers();
+    this.observer.removeConsumers();
     this.events.removeEvents();
     if (this.state.listenersActive) {
       this.disableListeners();

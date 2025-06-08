@@ -9,6 +9,7 @@ import { isOnLine } from "./utils";
 import { FireEvents } from "../helpers";
 import { timeline } from "#app/history";
 import { BreakGeometryCommand } from "./commands/break-geometry";
+import { renderer } from "../renderer";
 
 const LINE_BREAK_THROTTLE_TIME = 15;
 
@@ -48,7 +49,7 @@ export class LineBreakEvents {
   };
 
   private geometryBreakOnClick = (event: MapLayerMouseEvent) => {
-    const { store, mode, map, renderer, options } = this.ctx;
+    const { store, mode, map, options } = this.ctx;
 
     if (!this.current) return;
     timeline.commit(new BreakGeometryCommand(store, options, mode, this.current, event.lngLat));

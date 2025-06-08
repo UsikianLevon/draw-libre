@@ -1,18 +1,16 @@
 import type { EventsCtx } from "#app/types/index";
-import { Renderer } from "#components/map/renderer";
 import { ControlEvents } from "#components/side-control/events";
 import { PanelEvents } from "#components/panel/events";
 import { LineEvents } from "./line";
 import { PointEvents } from "./points";
 
-export class Events extends Renderer {
+export class Events {
   private panelEvents: PanelEvents;
   private controlEvents: ControlEvents;
   private pointEvents: PointEvents;
   private lineEvents: LineEvents;
 
   constructor(private readonly events: EventsCtx) {
-    super({ ...events });
     this.panelEvents = new PanelEvents(events);
     this.controlEvents = new ControlEvents(events);
     this.pointEvents = new PointEvents(events);

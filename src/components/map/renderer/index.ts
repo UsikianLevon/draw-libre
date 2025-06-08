@@ -15,15 +15,41 @@ interface Context {
 }
 
 export class Renderer {
+  private static instance: Renderer | null = null;
+  private ctx: Context | null = null;
   private unifiedGeoJSON: GeoJSON.FeatureCollection<GeoJSON.LineString | GeoJSON.Polygon | GeoJSON.Point>;
 
-  constructor(private readonly ctx: Context) {
+  constructor() {
+    this.unifiedGeoJSON = {
+      type: "FeatureCollection",
+      features: [],
+    };
+  }
+
+  public initialize(ctx: Context): Renderer | null {
+    this.ctx = ctx;
     this.unifiedGeoJSON = GeometryFactory.getUnifiedFeatures(this.ctx.store);
     this.execute();
+
+    return Renderer.instance;
+  }
+
+  public static getInstance(): Renderer {
+    if (!Renderer.instance) {
+      Renderer.instance = new Renderer();
+    }
+    return Renderer.instance;
+  }
+
+  private getContext(): Context {
+    if (!this.ctx) {
+      throw new Error("Somehow trolled with Renderer.getContext, check the Renderer.initialize");
+    }
+    return this.ctx;
   }
 
   private updateLine(featureIdx: number, newCoord: LatLng) {
-    const { mode } = this.ctx;
+    const { mode } = this.getContext();
 
     // -2 because line is always the second to last feature. Check GeometryFactory.getUnifiedFeatures
     const line = this.unifiedGeoJSON.features.at(-2)?.geometry.coordinates;
@@ -36,7 +62,7 @@ export class Renderer {
   }
 
   private updatePolygon(featureIdx: number, newCoord: LatLng) {
-    const { mode } = this.ctx;
+    const { mode } = this.getContext();
 
     // -1 because polygon is always the last feature. Check GeometryFactory.getUnifiedFeatures
     const polygon = this.unifiedGeoJSON.features.at(-1)?.geometry.coordinates[0] as number[][];
@@ -62,7 +88,7 @@ export class Renderer {
     newCoord: LatLng,
     aux: { next: LatLng | null; prev: LatLng | null } | null,
   ) => {
-    const { mode, options, store } = this.ctx;
+    const { map, mode, options, store } = this.getContext();
 
     const prevIdx = featureIdx === 0 ? store.size - 1 : featureIdx - 1;
 
@@ -94,15 +120,17 @@ export class Renderer {
       }
     }
 
-    const unifiedSource = this.ctx.map.getSource(ESOURCES.UnifiedSource) as GeoJSONSource;
+    const unifiedSource = map.getSource(ESOURCES.UnifiedSource) as GeoJSONSource;
     if (unifiedSource) {
       unifiedSource.setData(this.unifiedGeoJSON);
     }
   };
 
   public execute() {
-    this.unifiedGeoJSON = GeometryFactory.getUnifiedFeatures(this.ctx.store);
-    const unifiedSource = this.ctx.map.getSource(ESOURCES.UnifiedSource) as GeoJSONSource;
+    const { map, store } = this.getContext();
+
+    this.unifiedGeoJSON = GeometryFactory.getUnifiedFeatures(store);
+    const unifiedSource = map.getSource(ESOURCES.UnifiedSource) as GeoJSONSource;
 
     if (unifiedSource) {
       unifiedSource.setData(this.unifiedGeoJSON);
@@ -110,7 +138,9 @@ export class Renderer {
   }
 
   public resetGeometries = () => {
-    const unifiedSource = this.ctx.map.getSource(ESOURCES.UnifiedSource) as GeoJSONSource;
+    const { map } = this.getContext();
+
+    const unifiedSource = map.getSource(ESOURCES.UnifiedSource) as GeoJSONSource;
     if (unifiedSource) {
       unifiedSource.setData({
         type: "FeatureCollection",
@@ -119,3 +149,5 @@ export class Renderer {
     }
   };
 }
+
+export const renderer = Renderer.getInstance();

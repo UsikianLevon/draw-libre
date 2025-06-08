@@ -6,6 +6,7 @@ import { CURSORS } from "#components/map/cursor/constants";
 import { getButtonLabel } from "./helpers";
 import { ControlObserver } from "./observer";
 import { DOM } from "#app/utils/dom";
+import { renderer } from "#components/map/renderer";
 
 export class ControlEvents {
   #tooltip: Tooltip;
@@ -104,7 +105,7 @@ export class ControlEvents {
   };
 
   onLineClick = () => {
-    const { map, mode, renderer, control } = this.ctx;
+    const { map, mode, control } = this.ctx;
     this.#initialize();
     this.#removeActiveClass();
     if (mode.getMode() === "line" && !mode.getBreak()) {
@@ -119,7 +120,7 @@ export class ControlEvents {
   };
 
   onPolygonClick = () => {
-    const { map, mode, renderer, control } = this.ctx;
+    const { map, mode, control } = this.ctx;
     this.#initialize();
     this.#removeActiveClass();
     if (mode.getMode() === "polygon" && !mode.getBreak()) {

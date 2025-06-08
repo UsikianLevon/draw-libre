@@ -8,6 +8,7 @@ import { MapUtils, Spatial, uuidv4 } from "#app/utils/helpers";
 import { PointVisibility } from "../points/helpers";
 import { timeline } from "#app/history";
 import { InsertPointCommand } from "../points/commands/insert-point";
+import { renderer } from "../renderer";
 
 export const isOnLine = (event: MapLayerMouseEvent, store: Store) => {
   let current = store.head;
@@ -42,7 +43,7 @@ export const insertStepIfOnLine = (event: MapLayerMouseEvent, store: Store): Ste
 };
 
 export const updateUIAfterInsert = (event: MapLayerMouseEvent, context: EventsCtx) => {
-  const { store, renderer } = context;
+  const { store } = context;
   if (store.tail?.val) {
     PointVisibility.setSinglePointHidden(event);
     renderer.execute();

@@ -12,6 +12,7 @@ import type { PrimaryPointEvents } from ".";
 import type { StoreChangeEvent, StoreChangeEventKeys } from "#app/store/types";
 import { timeline } from "#app/history";
 import { CloseGeometryCommand } from "./commands/close-geometry";
+import { renderer } from "../renderer";
 
 export class FirstPoint {
   #mouseDown: boolean;
@@ -126,7 +127,7 @@ export class FirstPoint {
   };
 
   private onFirstPointClick = () => {
-    const { store, mode, renderer, options } = this.props;
+    const { store, mode, options } = this.props;
 
     if (store.circular.canClose()) {
       timeline.commit(new CloseGeometryCommand(store, mode, options));

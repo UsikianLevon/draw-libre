@@ -9,6 +9,7 @@ import type { StoreChangeEvent } from "#app/store/types";
 import type { DrawingModeChangeEvent } from "#components/map/mode/types";
 import { timeline } from "#app/history";
 import { TimelineChangeEvent } from "#app/history/types";
+import { renderer } from "#components/map/renderer";
 
 export class PanelEvents {
   private tooltip: Tooltip;
@@ -182,7 +183,7 @@ export class PanelEvents {
   };
 
   private onRemoveAll = (event: Event) => {
-    const { renderer, mode, panel, store, map } = this.ctx;
+    const { mode, panel, store, map } = this.ctx;
     store.reset();
     panel.hide();
     mode.reset();
@@ -193,7 +194,7 @@ export class PanelEvents {
   };
 
   private onUndoClick = (event: Event) => {
-    const { store, map, renderer } = this.ctx;
+    const { store, map } = this.ctx;
     const hasSomethingToRedo = timeline.getRedoStackLength();
 
     // hasSomethingToRedo prevents from resetting the store when we still have something to redo and are trying to remove the last point by undoing
@@ -209,7 +210,7 @@ export class PanelEvents {
   };
 
   private onRedoClick = (event: Event) => {
-    const { store, map, renderer } = this.ctx;
+    const { store, map } = this.ctx;
 
     timeline.redo();
     FireEvents.redo({ ...(store.tail?.val as Step), total: store.size }, map, event);

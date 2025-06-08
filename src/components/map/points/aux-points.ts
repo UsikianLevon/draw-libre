@@ -9,6 +9,7 @@ import { addTransparentLine } from "../tiles/helpers";
 import { MovePointCommand } from "./commands/move-point";
 import type { PointState } from "./point-state";
 import type { PointTopologyManager } from "./point-topology-manager";
+import { renderer } from "../renderer";
 
 export class AuxPoints {
   constructor(
@@ -60,7 +61,7 @@ export class AuxPoints {
   }
 
   private onMouseDown = (event: MapLayerMouseEvent | MapTouchEvent) => {
-    const { store, renderer, map } = this.ctx;
+    const { store, map } = this.ctx;
 
     // right click TODO
     if ((event.originalEvent as { button: number }).button === 2) {

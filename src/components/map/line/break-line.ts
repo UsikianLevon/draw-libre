@@ -1,7 +1,7 @@
 import { GeoJSONSource, MapLayerMouseEvent } from "maplibre-gl";
 
 import type { ListNode } from "#app/store/index";
-import type { EventsCtx } from "#app/types/index";
+import type { MapEventsCtx } from "#app/types/index";
 import { ELAYERS, ESOURCES } from "#app/utils/geo_constants";
 import { GeometryFactory, throttle } from "#app/utils/helpers";
 
@@ -17,7 +17,7 @@ export class LineBreakEvents {
   private current: ListNode | null;
   private throttledOnLineEnter: (event: MapLayerMouseEvent) => void;
 
-  constructor(private readonly ctx: EventsCtx) {
+  constructor(private readonly ctx: MapEventsCtx) {
     this.current = null;
     this.throttledOnLineEnter = throttle(this.onLineEnterBreak, LINE_BREAK_THROTTLE_TIME);
   }

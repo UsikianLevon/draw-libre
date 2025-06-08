@@ -1,4 +1,4 @@
-import type { EventsCtx, LatLng } from "#app/types/index";
+import type { MapEventsCtx, LatLng } from "#app/types/index";
 import type { MapLayerMouseEvent, MapTouchEvent } from "maplibre-gl";
 
 import { MapUtils, Spatial, throttle } from "#app/utils/helpers";
@@ -33,7 +33,7 @@ export class PointEvents {
   private pointState: PointState;
   private topologyManager: PointTopologyManager;
 
-  constructor(private readonly ctx: EventsCtx) {
+  constructor(private readonly ctx: MapEventsCtx) {
     this.pointState = new PointState();
     this.topologyManager = new PointTopologyManager(ctx, this.pointState);
 
@@ -58,7 +58,7 @@ export class PointEvents {
     this.ctx.store.removeObserver(this.storeEventsConsumer);
   };
 
-  public initEvents = () => {
+  public init = () => {
     const { map } = this.ctx;
     map.on("click", this.onMapClick);
     map.on("dblclick", this.onMapDblClick);
@@ -74,7 +74,7 @@ export class PointEvents {
     this.initConsumers();
   };
 
-  public removeEvents = () => {
+  public remove = () => {
     const { map } = this.ctx;
     map.off("click", this.onMapClick);
     map.off("dblclick", this.onMapDblClick);

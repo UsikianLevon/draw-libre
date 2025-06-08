@@ -119,7 +119,7 @@ export interface ControlOptions {
   parent: HTMLElement;
 }
 
-export type EventsCtx = {
+export type MapEventsCtx = {
   map: UnifiedMap;
   panel: Panel;
   store: Store;

@@ -1,7 +1,7 @@
 import type { MapLayerMouseEvent } from "maplibre-gl";
 
 import type { ListNode } from "#app/store/index";
-import type { EventsCtx, LatLng, Step } from "#app/types/index";
+import type { MapEventsCtx, LatLng, Step } from "#app/types/index";
 
 import { PointHelpers } from "./helpers";
 import type { PointState } from "./point-state";
@@ -11,7 +11,7 @@ import { RemovePointCommand } from "./commands/remove-point";
 
 export class PointTopologyManager {
   constructor(
-    private readonly ctx: EventsCtx,
+    private readonly ctx: MapEventsCtx,
     private readonly state: PointState,
   ) {}
 

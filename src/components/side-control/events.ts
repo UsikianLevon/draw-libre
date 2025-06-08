@@ -3,7 +3,6 @@ import type { HTMLEvent } from "#app/types/helpers";
 import { Tooltip } from "#components/tooltip";
 import { CURSORS } from "#components/map/cursor/constants";
 import { DOM } from "#app/utils/dom";
-import { renderer } from "#components/map/renderer";
 
 import { getButtonLabel } from "./helpers";
 import type { Context } from ".";
@@ -91,55 +90,32 @@ export class Events {
     breakButton?.classList.remove("control-button-active");
   };
 
-  initialize = () => {
-    const { map, mode } = this.ctx;
-    if (!mode.getMode()) {
-      map.fire("mode:initialize");
-    }
-  };
-
   onLineClick = () => {
-    const { map, mode } = this.ctx;
+    const { mode } = this.ctx;
     const { lineButton } = this.ctx.view;
 
-    this.initialize();
+    if (mode.getMode() === "line") return;
+
     this.removeActiveClass();
-    if (mode.getMode() === "line" && !mode.getBreak()) {
-      mode.setMode(null);
-      map.fire("mode:remove");
-      renderer.resetGeometries();
-    } else {
-      lineButton?.classList.add("control-button-active");
-      mode.setMode("line");
-      renderer.execute();
-    }
+    lineButton?.classList.add("control-button-active");
+    mode.setMode("line");
   };
 
   onPolygonClick = () => {
-    const { map, mode } = this.ctx;
+    const { mode } = this.ctx;
     const { polygonButton } = this.ctx.view;
 
-    this.initialize();
+    if (mode.getMode() === "polygon") return;
+
     this.removeActiveClass();
-    if (mode.getMode() === "polygon" && !mode.getBreak()) {
-      mode.setMode(null);
-      map.fire("mode:remove");
-      renderer.resetGeometries();
-    } else {
-      polygonButton?.classList.add("control-button-active");
-      mode.setMode("polygon");
-      renderer.execute();
-    }
+    polygonButton?.classList.add("control-button-active");
+    mode.setMode("polygon");
   };
 
   onBreakClick = () => {
     const { map, mode } = this.ctx;
     const { breakButton } = this.ctx.view;
 
-    if (mode.getBreak()) {
-      mode.setMode(null);
-      map.fire("mode:remove");
-    }
     this.removeActiveClass();
     breakButton?.classList.add("control-button-active");
     mode.setBreak(true);

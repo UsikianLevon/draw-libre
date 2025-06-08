@@ -1,33 +1,24 @@
-import type { EventsCtx } from "#app/types/index";
+import type { MapEventsCtx } from "#app/types/index";
 import { LineEvents } from "./line";
 import { PointEvents } from "./points";
 
-export class Events {
+export class MapEvents {
   private pointEvents: PointEvents;
   private lineEvents: LineEvents;
 
-  constructor(private readonly events: EventsCtx) {
-    this.pointEvents = new PointEvents(events);
-    this.lineEvents = new LineEvents(events);
-    // TODO
-    events.map.on("mode:initialize", this.initEvents);
-    events.map.on("mode:remove", this.removeDrawEvents);
+  constructor(private readonly ctx: MapEventsCtx) {
+    this.pointEvents = new PointEvents(ctx);
+    this.lineEvents = new LineEvents(ctx);
+    this.initEvents();
   }
 
   private initEvents = () => {
     this.lineEvents.init();
-    this.pointEvents?.initEvents();
+    this.pointEvents?.init();
   };
 
-  private removeDrawEvents = () => {
-    this.pointEvents?.removeEvents();
+  public remove = () => {
+    this.pointEvents?.remove();
     this.lineEvents?.remove();
-  };
-
-  public removeMapEventsAndConsumers = () => {
-    this.pointEvents?.removeEvents();
-    this.lineEvents?.remove();
-    this.events.map.off("mode:initialize", this.initEvents);
-    this.events.map.off("mode:remove", this.removeDrawEvents);
   };
 }

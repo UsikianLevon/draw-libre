@@ -1,4 +1,4 @@
-import type { EventsCtx } from "#app/types/index";
+import type { MapEventsCtx } from "#app/types/index";
 import type { MapLayerMouseEvent } from "maplibre-gl";
 
 import { Spatial } from "#app/utils/helpers";
@@ -19,7 +19,7 @@ export class FirstPoint {
   #tooltip: Tooltip;
 
   constructor(
-    private readonly props: EventsCtx,
+    private readonly ctx: MapEventsCtx,
     private readonly baseEvents: PrimaryPointEvents,
   ) {
     this.#mouseDown = false;
@@ -30,24 +30,24 @@ export class FirstPoint {
   }
 
   private initConsumers = () => {
-    const { mode, store } = this.props;
+    const { mode, store } = this.ctx;
     mode.addObserver(this.onMapModeChanggeConsumer);
     store.addObserver(this.onStoreChangeConsumer);
   };
 
   private removeConsumers = () => {
-    const { mode, store } = this.props;
+    const { mode, store } = this.ctx;
     mode.removeObserver(this.onMapModeChanggeConsumer);
     store.removeObserver(this.onStoreChangeConsumer);
   };
 
   public initLayer() {
-    const { map } = this.props;
+    const { map } = this.ctx;
     map.setLayoutProperty(ELAYERS.FirstPointLayer, "visibility", "visible");
   }
 
   private initBaseEvents = () => {
-    const { map } = this.props;
+    const { map } = this.ctx;
 
     map.on("mouseenter", ELAYERS.FirstPointLayer, this.baseEvents.onPointMouseEnter);
     map.on("mouseleave", ELAYERS.FirstPointLayer, this.baseEvents.onPointMouseLeave);
@@ -58,7 +58,7 @@ export class FirstPoint {
   };
 
   private initEvents() {
-    const { map } = this.props;
+    const { map } = this.ctx;
 
     map.on("click", ELAYERS.FirstPointLayer, this.onFirstPointClick);
     map.on("mouseenter", ELAYERS.FirstPointLayer, this.onFirstPointMouseEnter);
@@ -70,7 +70,7 @@ export class FirstPoint {
   }
 
   private removeBaseEvents = () => {
-    const { map } = this.props;
+    const { map } = this.ctx;
 
     map.off("mouseenter", ELAYERS.FirstPointLayer, this.baseEvents.onPointMouseEnter);
     map.off("mouseleave", ELAYERS.FirstPointLayer, this.baseEvents.onPointMouseLeave);
@@ -81,7 +81,7 @@ export class FirstPoint {
   };
 
   public removeEvents() {
-    const { map } = this.props;
+    const { map } = this.ctx;
 
     map.off("click", ELAYERS.FirstPointLayer, this.onFirstPointClick);
     map.off("mouseenter", ELAYERS.FirstPointLayer, this.onFirstPointMouseEnter);
@@ -92,7 +92,7 @@ export class FirstPoint {
   }
 
   private onMapModeChanggeConsumer = (event: DrawingModeChangeEvent) => {
-    const { map, options } = this.props;
+    const { map, options } = this.ctx;
     const { type, data } = event;
 
     if (type === "MODE_CHANGED") {
@@ -107,7 +107,7 @@ export class FirstPoint {
   };
 
   private onStoreChangeConsumer = (event: StoreChangeEvent) => {
-    const { map, store } = this.props;
+    const { map, store } = this.ctx;
     const { type } = event;
 
     const events = [
@@ -127,7 +127,7 @@ export class FirstPoint {
   };
 
   private onFirstPointClick = () => {
-    const { store, mode, options } = this.props;
+    const { store, mode, options } = this.ctx;
 
     if (store.circular.canClose()) {
       timeline.commit(new CloseGeometryCommand(store, mode, options));
@@ -146,7 +146,7 @@ export class FirstPoint {
   };
 
   private onFirstPointMouseLeave = () => {
-    const { mouseEvents } = this.props;
+    const { mouseEvents } = this.ctx;
 
     if (this.#mouseDown) return;
 
@@ -155,7 +155,7 @@ export class FirstPoint {
   };
 
   private getTitle = () => {
-    const { mode, options } = this.props;
+    const { mode, options } = this.ctx;
 
     if (mode.getMode() === "line" && options.modes.line.closeGeometry) {
       return options.locale.closeLine;
@@ -169,7 +169,7 @@ export class FirstPoint {
   };
 
   private onFirstPointMouseEnter = (event: MapLayerMouseEvent) => {
-    const { mode, mouseEvents, store, options } = this.props;
+    const { mode, mouseEvents, store, options } = this.ctx;
     mouseEvents.firstPointMouseEnter = true;
     if (mode.getClosedGeometry() || this.#mouseDown) return;
     if (Spatial.canCloseGeometry(store, options)) {

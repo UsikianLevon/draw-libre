@@ -2,7 +2,7 @@ import type { IControl, UnifiedMap } from "#app/types/map";
 
 import type { DrawOptions, LatLng, RequiredDrawOptions, Step, StepId } from "#app/types/index";
 import { Panel } from "#components/panel";
-import { Events } from "#components/map";
+import { MapEvents } from "#components/map";
 import { Control } from "#components/side-control";
 import { DrawingMode } from "#components/map/mode";
 import { Cursor } from "#components/map/cursor";
@@ -33,14 +33,14 @@ export default class DrawLibre implements IControl {
   private store: Store | undefined;
   private mode: DrawingMode | undefined;
   private defaultOptions: RequiredDrawOptions;
-  private events: Events | undefined;
+  private mapEvents: MapEvents | undefined;
   private tiles: Tiles | undefined;
   private panel: Panel | undefined;
-  private renderer: Renderer | null = null;
   private control: Control | undefined;
   private cursor: Cursor | undefined;
   private mouseEvents: MouseEvents | undefined;
 
+  private renderer: Renderer | null = null;
   static instance: DrawLibre | null = null;
 
   private constructor(options?: DrawOptions) {
@@ -95,7 +95,7 @@ export default class DrawLibre implements IControl {
       options: this.defaultOptions,
     });
     this.panel = new Panel({ map, mode: this.mode, options: this.defaultOptions, store: this.store });
-    this.events = new Events({
+    this.mapEvents = new MapEvents({
       map,
       store: this.store,
       options: this.defaultOptions,
@@ -104,10 +104,6 @@ export default class DrawLibre implements IControl {
       mode: this.mode,
       mouseEvents: this.mouseEvents,
     });
-
-    if (this.mode.getMode()) {
-      map.fire("mode:initialize");
-    }
 
     this.mode.pingConsumers();
     this.store.pingConsumers();
@@ -132,7 +128,7 @@ export default class DrawLibre implements IControl {
   onRemove = () => {
     this.cursor?.remove();
     this.tiles?.remove();
-    this.events?.removeMapEventsAndConsumers();
+    this.mapEvents?.remove();
     this.panel?.destroy();
     this.store?.reset();
     this.mode?.unsubscribe();

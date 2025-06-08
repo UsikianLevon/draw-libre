@@ -1,6 +1,6 @@
 {
   "name": "draw-libre",
-  "version": "0.3.3",
+  "version": "0.4.0",
   "description": "Draw a line/polygon on a maplibre or mapbox map",
   "private": false,
   "type": "module",

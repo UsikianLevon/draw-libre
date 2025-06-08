@@ -1,4 +1,4 @@
-import type { EventsCtx, LatLng } from "#app/types/index";
+import type { MapEventsCtx, LatLng } from "#app/types/index";
 import { ELAYERS } from "#app/utils/geo_constants";
 import type { MapLayerMouseEvent, MapTouchEvent } from "maplibre-gl";
 import type { PrimaryPointEvents } from ".";
@@ -13,7 +13,7 @@ import { renderer } from "../renderer";
 
 export class AuxPoints {
   constructor(
-    private readonly ctx: EventsCtx,
+    private readonly ctx: MapEventsCtx,
     private readonly baseEvents: PrimaryPointEvents,
     private readonly pointState: PointState,
     private readonly topologyManager: PointTopologyManager,

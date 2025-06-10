@@ -1,5 +1,5 @@
 import type { RequiredDrawOptions, Step, StepId } from "#app/types/index";
-import { Observable } from "#app/utils/observable";
+import { Observable } from "#app/observable";
 
 import { StoreChangeEvent } from "./types";
 import { Circular } from "./circular";
@@ -65,10 +65,10 @@ export class Store extends Observable<StoreChangeEvent> {
     this.pingConsumers();
   };
 
-  public insertAfter = (node: ListNode, step: Step) => {
+  public insertAfter = (node: ListNode, stepToInsert: Step) => {
     if (!node) return null;
 
-    const newNode = new ListNode(step);
+    const newNode = new ListNode(stepToInsert);
     newNode.prev = node;
     newNode.next = node.next;
 
@@ -83,7 +83,7 @@ export class Store extends Observable<StoreChangeEvent> {
     }
 
     node.next = newNode;
-    this.map.set(step.id, newNode);
+    this.map.set(stepToInsert.id, newNode);
     this.size++;
     this.pingConsumers();
     return newNode;

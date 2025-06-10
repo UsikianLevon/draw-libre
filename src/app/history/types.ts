@@ -1,4 +1,4 @@
-import { ChangeEvent } from "#app/utils/observable";
+import { ChangeEvent } from "#app/observable";
 
 interface EventData {
   REDO_STACK_CHANGED: number;

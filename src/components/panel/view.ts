@@ -1,4 +1,4 @@
-import { DOM } from "#app/utils/dom";
+import { DOM } from "#app/dom";
 import type { ButtonType, PanelImpl } from "#app/types";
 import { disableButton } from "#app/utils/helpers";
 import { Context } from ".";

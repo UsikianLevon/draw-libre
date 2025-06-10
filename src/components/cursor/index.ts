@@ -1,6 +1,6 @@
 import type { UnifiedMap } from "#app/types/map";
 
-import { debounce, Spatial } from "#app/utils/helpers";
+import { debounce } from "#app/utils/helpers";
 import type { DrawingMode } from "#components/map/mode";
 import type { Store } from "#app/store/index";
 
@@ -47,9 +47,9 @@ export class Cursor {
   }, 10);
 
   handleFirstPointMouseEnter = debounce(() => {
-    const { store, options } = this.ctx;
+    const { store } = this.ctx;
 
-    if (Spatial.canCloseGeometry(store, options)) {
+    if (store.circular.canClose()) {
       this.set(CURSORS.POINTER);
     }
   }, 10);
@@ -102,7 +102,7 @@ export class Cursor {
         this.handleMouseLeave();
         break;
       case "lastPointMouseEnter":
-        if (!Spatial.isClosedGeometry(store, options)) {
+        if (!store.circular.isCircular()) {
           this.set(CURSORS.POINTER);
         }
         break;

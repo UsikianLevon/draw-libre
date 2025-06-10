@@ -1,4 +1,4 @@
-import { Observable } from "#app/utils/observable";
+import { Observable } from "#app/observable";
 import { type Command, CompoundCommand } from "./command";
 import type { TimelineChangeEvent } from "./types";
 

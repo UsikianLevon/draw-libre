@@ -1,5 +1,5 @@
 import { ListNode } from "./index";
-import { ChangeEvent } from "#app/utils/observable";
+import { ChangeEvent } from "#app/observable";
 import type { LatLng } from "#app/types/index";
 
 interface EventData {

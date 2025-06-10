@@ -1,4 +1,4 @@
-import { Observable } from "#app/utils/observable";
+import { Observable } from "#app/observable";
 import { MouseEventsChangeEvent } from "./types";
 
 export class MouseEvents extends Observable<MouseEventsChangeEvent> {

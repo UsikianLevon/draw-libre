@@ -1,11 +1,13 @@
+import type { MapLayerMouseEvent, MapTouchEvent } from "maplibre-gl";
+
 import type { MapEventsCtx, LatLng } from "#app/types/index";
 import { ELAYERS } from "#app/utils/geo_constants";
-import type { MapLayerMouseEvent, MapTouchEvent } from "maplibre-gl";
-import type { PrimaryPointEvents } from ".";
 import { timeline } from "#app/history";
 import { AuxToPrimaryCommand } from "./commands/aux-to-primary";
 import { MapUtils } from "#app/utils/helpers";
+
 import { addTransparentLine } from "../tiles/helpers";
+import type { PrimaryPointEvents } from ".";
 import { MovePointCommand } from "./commands/move-point";
 import type { PointState } from "./point-state";
 import type { PointTopologyManager } from "./point-topology-manager";

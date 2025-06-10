@@ -3,11 +3,12 @@ import type { GeoJSONSource, MapLayerMouseEvent } from "maplibre-gl";
 import type { MapEventsCtx } from "#app/types/index";
 import { ELAYERS, ESOURCES } from "#app/utils/geo_constants";
 import { MapUtils, throttle } from "#app/utils/helpers";
+
 import { FireEvents } from "../helpers";
 import { PointVisibility } from "../points/helpers";
 import { checkIfPointClicked, insertStepIfOnLine, updateUIAfterInsert } from "./utils";
 
-export const LINE_TRANSPARENT_THROTTLE_TIME = 22;
+export const LINE_TRANSPARENT_THROTTLE_TIME = 17;
 
 export class TransparentLineEvents {
   private isThrottled: boolean;

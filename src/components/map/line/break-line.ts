@@ -4,10 +4,10 @@ import type { ListNode } from "#app/store/index";
 import type { MapEventsCtx } from "#app/types/index";
 import { ELAYERS, ESOURCES } from "#app/utils/geo_constants";
 import { GeometryFactory, throttle } from "#app/utils/helpers";
+import { timeline } from "#app/history";
 
 import { isOnLine } from "./utils";
 import { FireEvents } from "../helpers";
-import { timeline } from "#app/history";
 import { BreakGeometryCommand } from "./commands/break-geometry";
 import { renderer } from "../renderer";
 

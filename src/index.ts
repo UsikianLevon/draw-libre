@@ -1,19 +1,5 @@
 import type { IControl, UnifiedMap } from "#app/types/map";
-
 import type { DrawOptions, LatLng, RequiredDrawOptions, Step, StepId } from "#app/types/index";
-import { Panel } from "#components/panel";
-import { MapEvents } from "#components/map";
-import { Control } from "#components/side-control";
-import { DrawingMode } from "#components/map/mode";
-import { Cursor } from "#components/cursor";
-import { MouseEvents } from "#components/map/mouse-events/index";
-import { uuidv4 } from "#app/utils/helpers";
-import { DOM } from "#app/utils/dom";
-import { Store } from "#app/store/index";
-import { Options } from "#app/utils/options";
-import { Tiles } from "#components/map/tiles";
-import { renderer, Renderer } from "#components/map/renderer";
-
 import type {
   UndoEvent,
   PointAddEvent,
@@ -26,8 +12,21 @@ import type {
   ModeChangeEvent,
 } from "#components/map/types";
 
-import "./draw.css";
+import { Panel } from "#components/panel";
+import { MapEvents } from "#components/map";
+import { Control } from "#components/side-control";
+import { DrawingMode } from "#components/map/mode";
+import { Cursor } from "#components/cursor";
+import { MouseEvents } from "#components/map/mouse-events/index";
+import { uuidv4 } from "#app/utils/helpers";
+import { DOM } from "#app/dom";
+import { Store } from "#app/store/index";
+import { Tiles } from "#components/map/tiles";
+import { renderer, Renderer } from "#components/map/renderer";
 import { linkedListToArray } from "#app/store/init";
+import { checkInitialStepsOptionOnErrors, initOptions } from "#app/options";
+
+import "./draw.css";
 
 export default class DrawLibre implements IControl {
   private container: HTMLElement | undefined;
@@ -45,10 +44,10 @@ export default class DrawLibre implements IControl {
   static instance: DrawLibre | null = null;
 
   private constructor(options?: DrawOptions) {
-    this.defaultOptions = Options.init(options);
+    this.defaultOptions = initOptions(options);
 
     if (this.defaultOptions.initial) {
-      Options.checkInitialStepsOption(this.defaultOptions.initial);
+      checkInitialStepsOptionOnErrors(this.defaultOptions.initial);
     }
   }
 

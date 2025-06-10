@@ -1,12 +1,13 @@
 import type { MapLayerMouseEvent } from "maplibre-gl";
 import type { MapEventsCtx, Step } from "#app/types/index";
 import type { UnifiedMap } from "#app/types/map";
-
 import type { Store } from "#app/store/index";
+
 import { ELAYERS } from "#app/utils/geo_constants";
 import { MapUtils, Spatial, uuidv4 } from "#app/utils/helpers";
-import { PointVisibility } from "../points/helpers";
 import { timeline } from "#app/history";
+
+import { PointVisibility } from "../points/helpers";
 import { InsertPointCommand } from "../points/commands/insert-point";
 import { renderer } from "../renderer";
 

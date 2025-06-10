@@ -1,8 +1,7 @@
 import type { MapLayerMouseEvent, MapMouseEvent } from "maplibre-gl";
-import type { LatLng, Point, Uuid, RequiredDrawOptions } from "#app/types/index";
+import type { LatLng, Point, Uuid } from "#app/types/index";
 import type { UnifiedMap } from "#app/types/map";
-import type { ListNode, Store } from "#app/store/index";
-import type { DrawingMode } from "#components/map/mode";
+import type { Store } from "#app/store/index";
 
 import { ELAYERS } from "./geo_constants";
 
@@ -37,7 +36,7 @@ export class MapUtils {
 }
 
 export class GeometryFactory {
-  static #collectGeometryCoordinates(store: Store): number[][] {
+  private static collectGeometryCoordinates(store: Store): number[][] {
     const coordinates = [];
     let current = store.head;
     const visitedNodes = new Set();
@@ -144,7 +143,7 @@ export class GeometryFactory {
     store: Store,
   ): GeoJSON.FeatureCollection<GeoJSON.LineString | GeoJSON.Polygon | GeoJSON.Point> {
     const points = this.getPoints(store).features;
-    const coordinates = this.#collectGeometryCoordinates(store);
+    const coordinates = this.collectGeometryCoordinates(store);
 
     const lines = this.getAllLines(coordinates).features;
     const polygons = this.getPolygon(coordinates).features;
@@ -176,79 +175,22 @@ export class Spatial {
     return -1;
   };
 
-  // √(x1​−x2​)²+(y1​−y2​)²​
+  // √((x1​−x2​)²+(y1​−y2​)²​)
   static distance = (point1: Point, point2: Point) =>
-    Math.sqrt((point1.x - point2.x) ** 2 + (point1.y - point2.y) ** 2);
+    Math.sqrt(Math.pow(point1.x - point2.x, 2) + Math.pow(point1.y - point2.y, 2));
 
   static checkIfPointIsOnLine = (A: Point, B: Point, P: Point): boolean => {
     const EPSILON = 0.1;
 
-    const distanceAB = this.distance(A, B);
-    const distanceAP = this.distance(A, P);
-    const distancePB = this.distance(P, B);
+    const AB = this.distance(A, B);
+    const AP = this.distance(A, P);
+    const PB = this.distance(P, B);
 
-    if (Math.abs(distanceAP + distancePB - distanceAB) < EPSILON) {
+    if (Math.abs(AP + PB - AB) < EPSILON) {
       return true;
     }
 
     return false;
-  };
-
-  static isClosedGeometry = (store: Store, options: RequiredDrawOptions) => {
-    if (options.pointGeneration === "auto") {
-      return store.tail?.next?.val?.id === store.head?.val?.id && store.tail?.next !== null;
-    }
-    return store.tail?.next === store.head;
-  };
-
-  //  when we have 1 primary <--- 1 aux <--- 1 primary current will be an aux when 1 prim <--- 1 aux and a primary 1 aux <--- 1 prim
-  //                         [aux]     [primary]
-  static breakGeometry = (store: Store, options: RequiredDrawOptions, current: ListNode) => {
-    if (!store.head) return;
-
-    if (options.pointGeneration === "auto") {
-      // if the current node is an aux, then we need to make one step back for the tail and the head is the next node from the aux point
-      if (current.val?.isAuxiliary) {
-        store.head = current.next as ListNode;
-        store.head.prev = null;
-        store.tail = current.prev as ListNode;
-        store.tail.next = null;
-      } else {
-        // else the tail is the current node and for the head we need to jump over the aux point so the next.next
-        store.head = current.next?.next as ListNode;
-        store.head.prev = null;
-        store.tail = current;
-        store.tail.next = null;
-      }
-      store.size = store.size - 1;
-    } else {
-      // no aux here, so the tail is the current node and the head is the next node
-      store.head = current.next as ListNode;
-      store.head.prev = null;
-      store.tail = current;
-      store.tail.next = null;
-    }
-  };
-
-  static closeGeometry = (store: Store, mode: DrawingMode) => {
-    if (store.tail && store.head) {
-      store.tail.next = store.head;
-      store.head.prev = store.tail;
-    }
-    mode.setClosedGeometry(true);
-  };
-
-  static canCloseGeometry = (store: Store, options: RequiredDrawOptions) => {
-    const storeSize = options.pointGeneration === "auto" ? store.size > 3 : store.size > 2;
-    return storeSize && !this.isClosedGeometry(store, options);
-  };
-
-  static canBreakClosedGeometry = (store: Store, options: RequiredDrawOptions) => {
-    if (options.pointGeneration === "auto") {
-      return store.size <= 3;
-    }
-
-    return store.size <= 2;
   };
 }
 

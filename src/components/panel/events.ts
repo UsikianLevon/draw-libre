@@ -1,13 +1,13 @@
 import type { ButtonType, Step } from "#app/types/index";
 import type { HTMLEvent } from "#app/types/helpers";
-import { DOM } from "#app/utils/dom";
+import { DOM } from "#app/dom";
 import { Tooltip } from "#components/tooltip";
 import { FireEvents } from "#components/map/helpers";
 import { timeline } from "#app/history";
 import { renderer } from "#components/map/renderer";
-import { Context } from ".";
-import { View } from "./view";
 import { linkedListToArray } from "#app/store/init";
+import { View } from "./view";
+import { Context } from ".";
 
 export class Events {
   private tooltip: Tooltip;

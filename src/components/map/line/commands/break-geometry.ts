@@ -84,7 +84,7 @@ export class BreakGeometryCommand implements Command {
     this.store.circular.close();
     this.store.notify({ type: "STORE_CLOSE_GEOMETRY" });
 
-    const { newHead, newTail, newAuxBetweenHeadTail } = this.snapshot;
+    const { newHead, newTail } = this.snapshot;
     // restore old node connections. These are the nodes that were "removed" when breaking the geometry previously
     if (newHead && newTail) {
       if (this.options.pointGeneration === "auto") {

@@ -8,3 +8,5 @@ export type DeepRequired<T> = T extends AnyFunction
 export type HTMLEvent<T extends HTMLElement> = Event & {
   target: T;
 };
+
+export type LiteralOrCustom<T> = T | (T extends string ? string & {} : number & {});

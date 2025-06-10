@@ -1,7 +1,7 @@
-import { Command } from "#app/history";
 import { ListNode, Store } from "#app/store";
 import type { LatLng, Step } from "#app/types";
 import { uuidv4 } from "#app/utils/helpers";
+import type { Command } from "#app/history/command";
 
 interface Snapshot {
   insertedNode: ListNode | null;

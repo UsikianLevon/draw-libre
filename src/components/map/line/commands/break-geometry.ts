@@ -1,9 +1,9 @@
-import type { Command } from "#app/history";
 import type { ListNode, Store } from "#app/store";
 import type { StoreChangeEventKeys } from "#app/store/types";
 import type { RequiredDrawOptions } from "#app/types";
 import type { DrawingMode } from "#components/map/mode";
 import type { LatLng } from "#app/types/index";
+import type { Command } from "#app/history/command";
 
 interface Snapshot {
   originalHead: ListNode | null;

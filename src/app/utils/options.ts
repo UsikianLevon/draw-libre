@@ -1,4 +1,4 @@
-import { ERRORS } from "#app/store/errors";
+import { ERRORS } from "#app/store/init";
 import { Initial, DrawOptions, RequiredDrawOptions } from "#app/types/index";
 import { DEFAULT_OPTIONS } from "./constants";
 import {

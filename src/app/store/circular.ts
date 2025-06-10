@@ -1,5 +1,5 @@
 import type { RequiredDrawOptions } from "#app/types";
-import type { ListNode, Store } from "..";
+import type { ListNode, Store } from ".";
 
 export class Circular {
   constructor(

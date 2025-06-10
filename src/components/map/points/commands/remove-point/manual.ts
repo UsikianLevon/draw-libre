@@ -1,4 +1,4 @@
-import type { Command } from "#app/history";
+import type { Command } from "#app/history/command";
 import type { ListNode } from "#app/store";
 import type { StoreChangeEventKeys } from "#app/store/types";
 import type { Step } from "#app/types";

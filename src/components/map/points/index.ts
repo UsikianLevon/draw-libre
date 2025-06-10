@@ -3,7 +3,6 @@ import type { MapLayerMouseEvent, MapTouchEvent } from "maplibre-gl";
 
 import { MapUtils, Spatial, throttle } from "#app/utils/helpers";
 import { ELAYERS } from "#app/utils/geo_constants";
-import { StoreHelpers } from "#app/store/index";
 import { timeline } from "#app/history";
 import type { StoreChangeEvent } from "#app/store/types";
 
@@ -97,7 +96,7 @@ export class PointEvents {
     const { mouseEvents, store, map, options } = this.ctx;
     const id = MapUtils.queryPointId(map, event.point);
 
-    if (StoreHelpers.isLastPoint(store, options, id)) {
+    if (store.isLastPoint(options, id)) {
       mouseEvents.lastPointMouseClick = true;
       mouseEvents.lastPointMouseUp = false;
     }
@@ -178,7 +177,7 @@ export class PointEvents {
     }
     PointVisibility.setSinglePointHidden(event);
     const id = MapUtils.queryPointId(map, event.point);
-    if (StoreHelpers.isLastPoint(store, options, id)) {
+    if (store.isLastPoint(options, id)) {
       mouseEvents.lastPointMouseEnter = true;
       mouseEvents.lastPointMouseLeave = false;
     }
@@ -200,7 +199,7 @@ export class PointEvents {
       if (mouseEvents.pointMouseDown) return;
     }
     const id = MapUtils.queryPointId(map, event.point);
-    if (StoreHelpers.isLastPoint(store, options, id)) {
+    if (store.isLastPoint(options, id)) {
       mouseEvents.lastPointMouseEnter = false;
       mouseEvents.lastPointMouseLeave = true;
     }
@@ -232,7 +231,7 @@ export class PointEvents {
 
     if (!selectedNode?.val) return;
 
-    if (StoreHelpers.isLastPoint(store, options, selectedNode.val.id)) {
+    if (store.isLastPoint(options, selectedNode.val.id)) {
       panel.hide();
     }
   };

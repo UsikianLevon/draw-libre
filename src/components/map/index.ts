@@ -7,8 +7,8 @@ export class MapEvents {
   private lineEvents: LineEvents;
 
   constructor(private readonly ctx: MapEventsCtx) {
-    this.pointEvents = new PointEvents(ctx);
-    this.lineEvents = new LineEvents(ctx);
+    this.pointEvents = new PointEvents(this.ctx);
+    this.lineEvents = new LineEvents(this.ctx);
     this.initEvents();
   }
 

@@ -1,7 +1,7 @@
 import type { ControlType } from "#app/types/index";
 import type { HTMLEvent } from "#app/types/helpers";
 import { Tooltip } from "#components/tooltip";
-import { CURSORS } from "#components/map/cursor/constants";
+import { CURSORS } from "#components/cursor/constants";
 import { DOM } from "#app/utils/dom";
 
 import { getButtonLabel } from "./helpers";

@@ -1,41 +1,6 @@
 import { Observable } from "#app/utils/observable";
+import { type Command, CompoundCommand } from "./command";
 import type { TimelineChangeEvent } from "./types";
-
-export interface Command {
-  type: string;
-  payload?: any;
-  execute(): void;
-  undo(): void;
-}
-
-export class CompoundCommand implements Command {
-  constructor(
-    public readonly type: string,
-    public readonly payload: any,
-    private commands: Command[] = [],
-  ) {}
-
-  add(cmd: Command) {
-    this.commands.push(cmd);
-  }
-
-  execute() {
-    if (!this.commands) return;
-
-    for (const cmd of this.commands) {
-      cmd.execute();
-    }
-  }
-
-  undo() {
-    if (!this.commands) return;
-
-    for (let i = this.commands.length - 1; i >= 0; i--) {
-      const command = this.commands[i];
-      command?.undo();
-    }
-  }
-}
 
 export class Timeline extends Observable<TimelineChangeEvent> {
   private transaction: CompoundCommand | null = null;
@@ -98,7 +63,7 @@ export class Timeline extends Observable<TimelineChangeEvent> {
   };
 
   public getUndoStackLength = () => {
-    return this.undoStack;
+    return this.undoStack.length;
   };
 
   public resetStacks = () => {

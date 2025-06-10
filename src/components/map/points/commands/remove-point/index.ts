@@ -1,4 +1,4 @@
-import type { Command } from "#app/history";
+import type { Command } from "#app/history/command";
 import type { Store } from "#app/store";
 import type { StoreChangeEventKeys } from "#app/store/types";
 import type { RequiredDrawOptions } from "#app/types";

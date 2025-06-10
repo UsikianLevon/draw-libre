@@ -1,5 +1,4 @@
-import { StoreHelpers } from "#app/store/index";
-import type { ButtonType, LatLng, Step } from "#app/types/index";
+import type { ButtonType, Step } from "#app/types/index";
 import type { HTMLEvent } from "#app/types/helpers";
 import { DOM } from "#app/utils/dom";
 import { Tooltip } from "#components/tooltip";
@@ -8,6 +7,7 @@ import { timeline } from "#app/history";
 import { renderer } from "#components/map/renderer";
 import { Context } from ".";
 import { View } from "./view";
+import { linkedListToArray } from "#app/store/init";
 
 export class Events {
   private tooltip: Tooltip;
@@ -145,7 +145,7 @@ export class Events {
   private onSaveClick = (event: Event) => {
     const { store, options } = this.ctx;
 
-    FireEvents.onSaveClick(this.ctx, StoreHelpers.toArray(store.head), event);
+    FireEvents.onSaveClick(this.ctx, linkedListToArray(store.head), event);
     this.tooltip.remove();
     if (options.panel.buttons.save.clearOnSave) {
       this.onRemoveAll(event);

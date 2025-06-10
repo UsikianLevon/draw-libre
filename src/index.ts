@@ -5,11 +5,11 @@ import { Panel } from "#components/panel";
 import { MapEvents } from "#components/map";
 import { Control } from "#components/side-control";
 import { DrawingMode } from "#components/map/mode";
-import { Cursor } from "#components/map/cursor";
+import { Cursor } from "#components/cursor";
 import { MouseEvents } from "#components/map/mouse-events/index";
 import { uuidv4 } from "#app/utils/helpers";
 import { DOM } from "#app/utils/dom";
-import { Store, StoreHelpers } from "#app/store/index";
+import { Store } from "#app/store/index";
 import { Options } from "#app/utils/options";
 import { Tiles } from "#components/map/tiles";
 import { renderer, Renderer } from "#components/map/renderer";
@@ -27,6 +27,7 @@ import type {
 } from "#components/map/types";
 
 import "./draw.css";
+import { linkedListToArray } from "#app/store/init";
 
 export default class DrawLibre implements IControl {
   private container: HTMLElement | undefined;
@@ -78,15 +79,16 @@ export default class DrawLibre implements IControl {
   onAdd = (map: UnifiedMap) => {
     this.store = new Store(this.defaultOptions);
     this.mode = new DrawingMode(this.defaultOptions);
-    this.tiles = new Tiles({ map, store: this.store, mode: this.mode, options: this.defaultOptions });
     this.renderer = renderer.initialize({
       map,
       store: this.store,
       options: this.defaultOptions,
       mode: this.mode,
     });
-    this.control = new Control({ options: this.defaultOptions, map, mode: this.mode });
     this.mouseEvents = new MouseEvents();
+    this.panel = new Panel({ map, mode: this.mode, options: this.defaultOptions, store: this.store });
+    this.control = new Control({ options: this.defaultOptions, map, mode: this.mode });
+    this.tiles = new Tiles({ map, store: this.store, mode: this.mode, options: this.defaultOptions });
     this.cursor = new Cursor({
       map,
       mode: this.mode,
@@ -94,7 +96,6 @@ export default class DrawLibre implements IControl {
       store: this.store,
       options: this.defaultOptions,
     });
-    this.panel = new Panel({ map, mode: this.mode, options: this.defaultOptions, store: this.store });
     this.mapEvents = new MapEvents({
       map,
       store: this.store,
@@ -184,7 +185,7 @@ export default class DrawLibre implements IControl {
    */
   getAllSteps = (type: "array" | "linkedlist" = "array") => {
     if (type === "array" && this.store) {
-      return StoreHelpers.toArray(this.store.head);
+      return linkedListToArray(this.store.head);
     }
     if (type === "linkedlist") {
       return {

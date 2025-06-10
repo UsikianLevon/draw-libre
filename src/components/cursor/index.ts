@@ -4,8 +4,8 @@ import { debounce, Spatial } from "#app/utils/helpers";
 import type { DrawingMode } from "#components/map/mode";
 import type { Store } from "#app/store/index";
 
-import type { MouseEvents } from "../mouse-events";
-import type { MouseEventsChangeEvent } from "../mouse-events/types";
+import type { MouseEvents } from "../map/mouse-events";
+import type { MouseEventsChangeEvent } from "../map/mouse-events/types";
 import { CURSORS, type TCursor } from "./constants";
 import type { RequiredDrawOptions } from "#app/types/index";
 

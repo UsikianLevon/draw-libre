@@ -1,5 +1,4 @@
 import { DOM } from "#app/dom";
-import { disableButton } from "#app/utils/helpers";
 import { Context } from ".";
 
 export class View {
@@ -28,7 +27,7 @@ export class View {
       button.classList.add("control-button-active");
     }
     if (disabled) {
-      disableButton(button);
+      DOM.disableButton(button);
     }
     DOM.create("span", `icon ${type} icon-medium`, button);
     return button;

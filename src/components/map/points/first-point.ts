@@ -1,9 +1,8 @@
-import type { MapEventsCtx } from "#app/types/index";
 import type { MapLayerMouseEvent } from "maplibre-gl";
 
 import { ELAYERS } from "#app/utils/geo_constants";
 import { Tooltip } from "#components/tooltip";
-import { togglePointCircleRadius } from "#components/map/tiles/helpers";
+import { togglePointCircleRadius } from "#components/map/tiles/utils";
 import type { StoreChangeEvent, StoreChangeEventKeys } from "#app/store/types";
 import { timeline } from "#app/history";
 
@@ -11,6 +10,7 @@ import type { DrawingModeChangeEvent } from "../mode/types";
 import { PointsFilter, PointVisibility } from "./helpers";
 import type { PrimaryPointEvents } from ".";
 import { CloseGeometryCommand } from "./commands/close-geometry";
+import type { TilesContext } from "../tiles";
 import { renderer } from "../renderer";
 
 export class FirstPoint {
@@ -18,7 +18,7 @@ export class FirstPoint {
   #tooltip: Tooltip;
 
   constructor(
-    private readonly ctx: MapEventsCtx,
+    private readonly ctx: TilesContext,
     private readonly baseEvents: PrimaryPointEvents,
   ) {
     this.#mouseDown = false;

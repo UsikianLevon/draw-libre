@@ -1,21 +1,23 @@
-import type { MapEventsCtx, LatLng } from "#app/types/index";
+import type { LatLng } from "#app/types/index";
 import type { MapLayerMouseEvent, MapTouchEvent } from "maplibre-gl";
 
-import { MapUtils, Spatial, throttle } from "#app/utils/helpers";
+import { throttle } from "#app/utils/helpers";
 import { ELAYERS } from "#app/utils/geo_constants";
 import { timeline } from "#app/history";
 import type { StoreChangeEvent } from "#app/store/types";
 
-import { FireEvents } from "../helpers";
+import { FireEvents } from "../fire-events";
 import { PointVisibility } from "./helpers";
 import { FirstPoint } from "./first-point";
-import { removeTransparentLine, addTransparentLine } from "../tiles/helpers";
+import { removeTransparentLine, addTransparentLine } from "../tiles/utils";
 import { AuxPoints } from "./aux-points";
 import type { DrawingModeChangeEvent } from "../mode/types";
 import { PointState } from "./point-state";
 import { PointTopologyManager } from "./point-topology-manager";
 import { MovePointCommand } from "./commands/move-point";
 import { renderer } from "../renderer";
+import { queryPointId, isFeatureTriggered, queryPoint, getGeometryIndex } from "../utils";
+import type { TilesContext } from "../tiles";
 
 export interface PrimaryPointEvents {
   onPointMouseEnter: (event: MapLayerMouseEvent) => void;
@@ -32,7 +34,7 @@ export class PointEvents {
   private pointState: PointState;
   private topologyManager: PointTopologyManager;
 
-  constructor(private readonly ctx: MapEventsCtx) {
+  constructor(private readonly ctx: TilesContext) {
     this.pointState = new PointState();
     this.topologyManager = new PointTopologyManager(ctx, this.pointState);
 
@@ -94,7 +96,7 @@ export class PointEvents {
 
   private onPointClick = (event: MapLayerMouseEvent) => {
     const { mouseEvents, store, map, options } = this.ctx;
-    const id = MapUtils.queryPointId(map, event.point);
+    const id = queryPointId(map, event.point);
 
     if (store.isLastPoint(options, id)) {
       mouseEvents.lastPointMouseClick = true;
@@ -112,7 +114,7 @@ export class PointEvents {
       store.reset();
       this.ctx.panel.hide();
     } else {
-      const id = MapUtils.queryPointId(this.ctx.map, event.point);
+      const id = queryPointId(this.ctx.map, event.point);
       const clickedNode = store.findNodeById(id);
 
       if (!clickedNode?.val) return;
@@ -123,7 +125,7 @@ export class PointEvents {
   };
 
   private onOwnGeometryLayersClick = (event: MapLayerMouseEvent) => {
-    return MapUtils.isFeatureTriggered(event, [
+    return isFeatureTriggered(event, [
       ELAYERS.PointsLayer,
       ELAYERS.FirstPointLayer,
       ELAYERS.LineLayerTransparent,
@@ -176,7 +178,7 @@ export class PointEvents {
       if (mouseEvents.pointMouseDown) return;
     }
     PointVisibility.setSinglePointHidden(event);
-    const id = MapUtils.queryPointId(map, event.point);
+    const id = queryPointId(map, event.point);
     if (store.isLastPoint(options, id)) {
       mouseEvents.lastPointMouseEnter = true;
       mouseEvents.lastPointMouseLeave = false;
@@ -198,7 +200,7 @@ export class PointEvents {
       }
       if (mouseEvents.pointMouseDown) return;
     }
-    const id = MapUtils.queryPointId(map, event.point);
+    const id = queryPointId(map, event.point);
     if (store.isLastPoint(options, id)) {
       mouseEvents.lastPointMouseEnter = false;
       mouseEvents.lastPointMouseLeave = true;
@@ -239,7 +241,7 @@ export class PointEvents {
   private setSelectedNode = (event: MapLayerMouseEvent | MapTouchEvent) => {
     const { store, map } = this.ctx;
 
-    const id = MapUtils.queryPointId(map, event.point);
+    const id = queryPointId(map, event.point);
     const node = store.findNodeById(id);
 
     if (node) {
@@ -264,8 +266,8 @@ export class PointEvents {
     removeTransparentLine(map);
     this.hideLastPointPanel();
 
-    const point = MapUtils.queryPoint(map, event.point);
-    const geometryIndex = Spatial.getGeometryIndex(store, point?.properties.id);
+    const point = queryPoint(map, event.point);
+    const geometryIndex = getGeometryIndex(store, point?.properties.id);
     this.pointState.setSelectedIdx(geometryIndex);
 
     if (mouseEvents) {

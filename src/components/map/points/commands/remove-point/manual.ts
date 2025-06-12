@@ -2,7 +2,7 @@ import type { Command } from "#app/history/command";
 import type { ListNode } from "#app/store";
 import type { StoreChangeEventKeys } from "#app/store/types";
 import type { Step } from "#app/types";
-import { FireEvents } from "#components/map/helpers";
+import { FireEvents } from "#components/map/fire-events";
 import type { RemoveCommanContext } from ".";
 
 interface RemovedPointSnapshot {

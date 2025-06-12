@@ -89,7 +89,7 @@ export const BREAK_PAINT_BASE = {
   "line-dasharray": [3, 3],
 };
 
-export const generateLayersToRender = (options: RequiredDrawOptions) => {
+export const generateLayers = (options: RequiredDrawOptions) => {
   return [
     {
       id: ELAYERS.SinglePointLayer,

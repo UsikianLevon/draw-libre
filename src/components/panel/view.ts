@@ -1,6 +1,5 @@
 import { DOM } from "#app/dom";
 import type { ButtonType, PanelImpl } from "#app/types";
-import { disableButton } from "#app/utils/helpers";
 import { Context } from ".";
 
 export class View {
@@ -33,7 +32,7 @@ export class View {
 
       const button = this.createButton(type, locale[type], size, this.buttonContainer);
       if (type === "undo" || type === "redo") {
-        disableButton(button);
+        DOM.disableButton(button);
       }
 
       this.buttons[type] = button;

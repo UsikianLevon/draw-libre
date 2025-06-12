@@ -1,198 +1,5 @@
-import type { MapLayerMouseEvent, MapMouseEvent } from "maplibre-gl";
-import type { LatLng, Point, Uuid } from "#app/types/index";
-import type { UnifiedMap } from "#app/types/map";
-import type { Store } from "#app/store/index";
-
-import { ELAYERS } from "./geo_constants";
-
-export class MapUtils {
-  static isFeatureTriggered(event: MapLayerMouseEvent, layerIds: string[]) {
-    const layers = event.target.queryRenderedFeatures(event.point, {
-      layers: layerIds,
-    });
-    return layers.some((layer) => layerIds.includes(layer.layer.id));
-  }
-
-  static getPixelCoordinates = (map: UnifiedMap, coords: LatLng) => {
-    const { lat, lng } = coords;
-    return map.project([lng, lat]);
-  };
-
-  static queryPointId = (map: UnifiedMap, point: MapMouseEvent["point"]) => {
-    const query = map.queryRenderedFeatures(point, {
-      layers: [ELAYERS.PointsLayer, ELAYERS.FirstPointLayer, ELAYERS.AuxiliaryPointLayer, ELAYERS.SinglePointLayer],
-    });
-
-    const id = query?.[0]?.properties.id;
-    return id;
-  };
-
-  static queryPoint = (map: UnifiedMap, point: MapMouseEvent["point"]) => {
-    const query = map.queryRenderedFeatures(point, {
-      layers: [ELAYERS.PointsLayer, ELAYERS.FirstPointLayer, ELAYERS.AuxiliaryPointLayer, ELAYERS.SinglePointLayer],
-    });
-    return query?.[0];
-  };
-}
-
-export class GeometryFactory {
-  private static collectGeometryCoordinates(store: Store): number[][] {
-    const coordinates = [];
-    let current = store.head;
-    const visitedNodes = new Set();
-
-    while (current !== null) {
-      if (visitedNodes.has(current.val?.id)) {
-        if (store.head && store.head.val) {
-          coordinates.push([store.head.val.lng, store.head.val.lat]);
-        }
-        break;
-      }
-      visitedNodes.add(current.val?.id);
-
-      if (current.val) {
-        coordinates.push([current.val.lng, current.val.lat]);
-      }
-      current = current.next;
-    }
-
-    return coordinates;
-  }
-
-  static getLine(current: [number, number], next: [number, number]) {
-    return {
-      type: "FeatureCollection",
-      features: [
-        {
-          type: "Feature",
-          properties: {},
-          geometry: {
-            type: "LineString",
-            coordinates: [current, next],
-          },
-        },
-      ],
-    };
-  }
-
-  static getAllLines(coordinates: number[][]) {
-    return {
-      type: "FeatureCollection",
-      features: [
-        {
-          type: "Feature",
-          properties: {},
-          geometry: {
-            type: "LineString",
-            coordinates: coordinates,
-          },
-        },
-      ],
-    };
-  }
-
-  static getPolygon(coordinates: number[][]) {
-    return {
-      type: "FeatureCollection",
-      features: [
-        {
-          type: "Feature",
-          properties: {},
-          geometry: {
-            type: "Polygon",
-            coordinates: [coordinates],
-          },
-        },
-      ],
-    };
-  }
-
-  static getPoints(store: Store) {
-    let current = store.head;
-    const pointFeatures = [];
-    const visitedNodes = new Set();
-
-    while (current !== null) {
-      if (visitedNodes.has(current.val?.id)) {
-        break;
-      }
-      if (current.val) {
-        const val = current.val;
-        const head = current.val.id === store.head?.val?.id;
-        pointFeatures.push({
-          type: "Feature",
-          properties: { id: val.id, lat: val.lat, lng: val.lng, isFirst: head, isAuxiliary: val.isAuxiliary },
-          geometry: {
-            type: "Point",
-            coordinates: [val.lng, val.lat],
-          },
-        });
-      }
-      visitedNodes.add(current.val?.id);
-      current = current.next;
-    }
-
-    return {
-      type: "FeatureCollection",
-      features: pointFeatures,
-    };
-  }
-
-  // CAUTION: render is dependent on this function
-  static getUnifiedFeatures(
-    store: Store,
-  ): GeoJSON.FeatureCollection<GeoJSON.LineString | GeoJSON.Polygon | GeoJSON.Point> {
-    const points = this.getPoints(store).features;
-    const coordinates = this.collectGeometryCoordinates(store);
-
-    const lines = this.getAllLines(coordinates).features;
-    const polygons = this.getPolygon(coordinates).features;
-
-    return {
-      type: "FeatureCollection",
-      features: [...points, ...lines, ...polygons],
-    } as GeoJSON.FeatureCollection<GeoJSON.LineString | GeoJSON.Polygon | GeoJSON.Point>;
-  }
-}
-
-export class Spatial {
-  static getGeometryIndex = (store: Store, id: Uuid) => {
-    let current = store.head;
-    let idx = 0;
-    const visitedNodes = new Set();
-    while (current !== null) {
-      if (visitedNodes.has(current.val?.id)) {
-        break;
-      }
-      if (current.val?.id === id) {
-        return idx;
-      }
-
-      visitedNodes.add(current.val?.id);
-      idx++;
-      current = current.next;
-    }
-    return -1;
-  };
-
-  // √((x1​−x2​)²+(y1​−y2​)²​)
-  static distance = (point1: Point, point2: Point) =>
-    Math.sqrt(Math.pow(point1.x - point2.x, 2) + Math.pow(point1.y - point2.y, 2));
-
-  static checkIfPointIsOnLine = (A: Point, B: Point, P: Point): boolean => {
-    const EPSILON = 0.1;
-
-    const AB = this.distance(A, B);
-    const AP = this.distance(A, P);
-    const PB = this.distance(P, B);
-
-    if (Math.abs(AP + PB - AB) < EPSILON) {
-      return true;
-    }
-
-    return false;
-  };
-}
+import type { AnyFunction } from "#app/types/helpers";
+import type { Uuid } from "#app/types/index";
 
 export const uuidv4 = (): Uuid => {
   if ("crypto" in window && "randomUUID" in window.crypto) {
@@ -234,7 +41,7 @@ export const uuidv4 = (): Uuid => {
   return parts.join("-") as Uuid;
 };
 
-export const throttle = (fn: (...args: any) => void, delay: number) => {
+export const throttle = (fn: AnyFunction, delay: number) => {
   let lastArgs: any;
   let shouldCall = true;
 
@@ -256,7 +63,7 @@ export const throttle = (fn: (...args: any) => void, delay: number) => {
   };
 };
 
-export const debounce = (fn: (...args: any) => void, delay: number) => {
+export const debounce = (fn: AnyFunction, delay: number) => {
   let timeout: number;
 
   return function (...args: any) {
@@ -265,16 +72,4 @@ export const debounce = (fn: (...args: any) => void, delay: number) => {
       fn(...args);
     }, delay);
   };
-};
-
-export const disableButton = (button: HTMLButtonElement | null) => {
-  if (!button) return;
-  button.setAttribute("disabled", "true");
-  button.setAttribute("aria-disabled", "true");
-};
-
-export const enableButton = (button: HTMLButtonElement | null) => {
-  if (!button) return;
-  button.removeAttribute("disabled");
-  button.removeAttribute("aria-disabled");
 };

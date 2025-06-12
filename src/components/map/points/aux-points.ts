@@ -1,21 +1,22 @@
 import type { MapLayerMouseEvent, MapTouchEvent } from "maplibre-gl";
 
-import type { MapEventsCtx, LatLng } from "#app/types/index";
+import type { LatLng } from "#app/types/index";
 import { ELAYERS } from "#app/utils/geo_constants";
 import { timeline } from "#app/history";
 import { AuxToPrimaryCommand } from "./commands/aux-to-primary";
-import { MapUtils } from "#app/utils/helpers";
 
-import { addTransparentLine } from "../tiles/helpers";
+import { addTransparentLine } from "../tiles/utils";
 import type { PrimaryPointEvents } from ".";
 import { MovePointCommand } from "./commands/move-point";
 import type { PointState } from "./point-state";
 import type { PointTopologyManager } from "./point-topology-manager";
 import { renderer } from "../renderer";
+import { isRightClick, queryPointId } from "../utils";
+import { TilesContext } from "../tiles";
 
 export class AuxPoints {
   constructor(
-    private readonly ctx: MapEventsCtx,
+    private readonly ctx: TilesContext,
     private readonly baseEvents: PrimaryPointEvents,
     private readonly pointState: PointState,
     private readonly topologyManager: PointTopologyManager,
@@ -65,11 +66,9 @@ export class AuxPoints {
   private onMouseDown = (event: MapLayerMouseEvent | MapTouchEvent) => {
     const { store, map } = this.ctx;
 
-    // right click TODO
-    if ((event.originalEvent as { button: number }).button === 2) {
-      return;
-    }
-    const id = MapUtils.queryPointId(map, event.point);
+    if (isRightClick(event)) return;
+
+    const id = queryPointId(map, event.point);
     const node = store.findNodeById(id);
 
     if (node) {

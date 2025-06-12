@@ -2,7 +2,7 @@ import type { ButtonType, Step } from "#app/types/index";
 import type { HTMLEvent } from "#app/types/helpers";
 import { DOM } from "#app/dom";
 import { Tooltip } from "#components/tooltip";
-import { FireEvents } from "#components/map/helpers";
+import { FireEvents } from "#components/map/fire-events";
 import { timeline } from "#app/history";
 import { renderer } from "#components/map/renderer";
 import { linkedListToArray } from "#app/store/init";

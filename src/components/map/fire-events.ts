@@ -1,10 +1,10 @@
 import type { UnifiedMap } from "#app/types/map";
-import type { LatLng, StepId, Step, MapEventsCtx } from "#app/types/index";
+import type { LatLng, StepId, Step } from "#app/types/index";
 import { EVENTS } from "#app/utils/constants";
 import type { DrawingMode } from "./mode";
 import type { Mode } from "./mode/types";
+import { TilesContext } from "./tiles";
 
-// TODO this shouldn't be here and it's just bunch of static methods in a class, which is bad.
 export class FireEvents {
   static addPoint(step: Step & { total: number }, map: UnifiedMap, mode: DrawingMode) {
     map.fire(EVENTS.ADD, {
@@ -103,7 +103,7 @@ export class FireEvents {
   static removeAllPoints(map: UnifiedMap, originalEvent: Event) {
     map.fire(EVENTS.REMOVEALL, { originalEvent });
   }
-  static onSaveClick(context: Pick<MapEventsCtx, "map" | "mode">, steps: Step[], originalEvent: Event) {
+  static onSaveClick(context: Pick<TilesContext, "map" | "mode">, steps: Step[], originalEvent: Event) {
     const { map, mode } = context;
 
     map.fire(EVENTS.SAVE, {

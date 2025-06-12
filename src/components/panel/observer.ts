@@ -1,7 +1,7 @@
 import type { LatLng } from "#app/types/index";
-import { disableButton, enableButton } from "#app/utils/helpers";
 import type { StoreChangeEvent } from "#app/store/types";
 import type { DrawingModeChangeEvent } from "#components/map/mode/types";
+import { DOM } from "#app/dom";
 import { timeline } from "#app/history";
 import { TimelineChangeEvent } from "#app/history/types";
 import { Context } from ".";
@@ -26,17 +26,17 @@ export class Observer {
     const { type, data } = event;
     if (type === "REDO_STACK_CHANGED") {
       if (!data) {
-        disableButton(this.ctx.view.getButton("redo"));
+        DOM.disableButton(this.ctx.view.getButton("redo"));
       } else {
-        enableButton(this.ctx.view.getButton("redo"));
+        DOM.enableButton(this.ctx.view.getButton("redo"));
       }
     }
 
     if (type === "UNDO_STACK_CHANGED") {
       if (!data) {
-        disableButton(this.ctx.view.getButton("undo"));
+        DOM.disableButton(this.ctx.view.getButton("undo"));
       } else {
-        enableButton(this.ctx.view.getButton("undo"));
+        DOM.enableButton(this.ctx.view.getButton("undo"));
       }
     }
   };

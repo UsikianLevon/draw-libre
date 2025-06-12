@@ -1,8 +1,9 @@
 import type { Command } from "#app/history/command";
 import type { ListNode } from "#app/store";
 import type { StoreChangeEventKeys } from "#app/store/types";
-import type { MapEventsCtx, Step, StepId } from "#app/types";
-import { FireEvents } from "#components/map/helpers";
+import type { Step, StepId } from "#app/types";
+import { FireEvents } from "#components/map/fire-events";
+import { TilesContext } from "#components/map/tiles";
 import type { RemoveCommanContext } from ".";
 import { PointHelpers } from "../../helpers";
 
@@ -104,7 +105,7 @@ export class RemovePointAutoCommand implements Command {
     }
   }
 
-  private breakGeometryIfNeeded = (ctx: Pick<MapEventsCtx, "store" | "options">): boolean => {
+  private breakGeometryIfNeeded = (ctx: Pick<TilesContext, "store" | "options">): boolean => {
     const { store } = ctx;
 
     if (store.circular.canBreak() && store.circular.isCircular()) {

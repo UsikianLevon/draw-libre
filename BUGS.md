@@ -1,5 +1,5 @@
 - [ ] Panel class needs to be cut in half
-- [ ] Check the Events class logic. Why did you decide to put eveything in one place.
+- [x] Check the Events class logic. Why did you decide to put eveything in one place.
 - [ ] PointEvents must be gunned down
 - [ ] think about a way to make the panel less annoying(opaque in some cases OR maybe give the user a way to use the functionality through the API)
 - [x] check all events of the API
@@ -10,5 +10,6 @@
 - [x] gun down the DynamicLineEvents class
 - [x] if the head was red and then we removed all points, it should be reset, otherwise there's a flash of redness on next point add event
 - [ ] gun down closedGeometry inside DrawingMode class? seems like a relic
+- [ ] cursor bug when mouse move on a line
 
 - [ ] ok with the state of the app and ready to write tests?

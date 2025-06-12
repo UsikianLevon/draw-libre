@@ -1,12 +1,12 @@
-import type { MapEventsCtx } from "#app/types/index";
-import { LineEvents } from "./line";
-import { PointEvents } from "./points";
+import { LineEvents } from "../line";
+import { PointEvents } from "../points";
+import { TilesContext } from ".";
 
-export class MapEvents {
+export class Events {
   private pointEvents: PointEvents;
   private lineEvents: LineEvents;
 
-  constructor(private readonly ctx: MapEventsCtx) {
+  constructor(private readonly ctx: TilesContext) {
     this.pointEvents = new PointEvents(this.ctx);
     this.lineEvents = new LineEvents(this.ctx);
     this.initEvents();

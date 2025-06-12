@@ -119,15 +119,5 @@ export interface ControlOptions {
   parent: HTMLElement;
 }
 
-export type MapEventsCtx = {
-  map: UnifiedMap;
-  panel: Panel;
-  store: Store;
-  control: Control;
-  options: RequiredDrawOptions;
-  mouseEvents: MouseEvents;
-  mode: DrawingMode;
-};
-
 export type ButtonType = keyof Required<NonNullable<PanelImpl["buttons"]>>;
 export type ControlType = "line" | "polygon" | "break";

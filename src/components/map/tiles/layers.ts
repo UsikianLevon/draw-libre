@@ -1,10 +1,10 @@
 import type { StoreChangeEvent, StoreChangeEventKeys } from "#app/store/types";
-import { ELAYERS, generateLayersToRender } from "#app/utils/geo_constants";
+import { ELAYERS, generateLayers } from "#app/utils/geo_constants";
 import { debounce } from "#app/utils/helpers";
-import type { Context } from ".";
+import { TilesContext } from ".";
 
 export class Layers {
-  constructor(private readonly ctx: Context) {}
+  constructor(private readonly ctx: TilesContext) {}
 
   public init() {
     this.add();
@@ -47,7 +47,7 @@ export class Layers {
   }, 10);
 
   private add = () => {
-    const LAYERS_TO_RENDER = generateLayersToRender(this.ctx.options);
+    const LAYERS_TO_RENDER = generateLayers(this.ctx.options);
 
     for (const layer of LAYERS_TO_RENDER) {
       if (!this.ctx.map.getLayer(layer.id)) {

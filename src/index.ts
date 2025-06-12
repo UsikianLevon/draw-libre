@@ -13,7 +13,6 @@ import type {
 } from "#components/map/types";
 
 import { Panel } from "#components/panel";
-import { MapEvents } from "#components/map";
 import { Control } from "#components/side-control";
 import { DrawingMode } from "#components/map/mode";
 import { Cursor } from "#components/cursor";
@@ -21,19 +20,18 @@ import { MouseEvents } from "#components/map/mouse-events/index";
 import { uuidv4 } from "#app/utils/helpers";
 import { DOM } from "#app/dom";
 import { Store } from "#app/store/index";
-import { Tiles } from "#components/map/tiles";
 import { renderer, Renderer } from "#components/map/renderer";
 import { linkedListToArray } from "#app/store/init";
 import { checkInitialStepsOptionOnErrors, initOptions } from "#app/options";
 
 import "./draw.css";
+import { Tiles } from "#components/map/tiles";
 
 export default class DrawLibre implements IControl {
   private container: HTMLElement | undefined;
   private store: Store | undefined;
   private mode: DrawingMode | undefined;
   private defaultOptions: RequiredDrawOptions;
-  private mapEvents: MapEvents | undefined;
   private tiles: Tiles | undefined;
   private panel: Panel | undefined;
   private control: Control | undefined;
@@ -87,22 +85,21 @@ export default class DrawLibre implements IControl {
     this.mouseEvents = new MouseEvents();
     this.panel = new Panel({ map, mode: this.mode, options: this.defaultOptions, store: this.store });
     this.control = new Control({ options: this.defaultOptions, map, mode: this.mode });
-    this.tiles = new Tiles({ map, store: this.store, mode: this.mode, options: this.defaultOptions });
+    this.tiles = new Tiles({
+      map,
+      store: this.store,
+      mode: this.mode,
+      options: this.defaultOptions,
+      control: this.control,
+      panel: this.panel,
+      mouseEvents: this.mouseEvents,
+    });
     this.cursor = new Cursor({
       map,
       mode: this.mode,
       mouseEvents: this.mouseEvents,
       store: this.store,
       options: this.defaultOptions,
-    });
-    this.mapEvents = new MapEvents({
-      map,
-      store: this.store,
-      options: this.defaultOptions,
-      panel: this.panel,
-      control: this.control,
-      mode: this.mode,
-      mouseEvents: this.mouseEvents,
     });
 
     this.mode.pingConsumers();
@@ -128,7 +125,6 @@ export default class DrawLibre implements IControl {
   onRemove = () => {
     this.cursor?.remove();
     this.tiles?.remove();
-    this.mapEvents?.remove();
     this.panel?.destroy();
     this.store?.reset();
     this.mode?.unsubscribe();

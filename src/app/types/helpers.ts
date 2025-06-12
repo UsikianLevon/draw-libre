@@ -1,4 +1,4 @@
-type AnyFunction = (...args: any[]) => any;
+export type AnyFunction = (...args: any) => any;
 export type DeepRequired<T> = T extends AnyFunction
   ? T // if T is a function, return it
   : {

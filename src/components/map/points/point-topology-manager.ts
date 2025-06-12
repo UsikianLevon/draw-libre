@@ -1,17 +1,18 @@
 import type { MapLayerMouseEvent } from "maplibre-gl";
 
 import type { ListNode } from "#app/store/index";
-import type { MapEventsCtx, LatLng, Step } from "#app/types/index";
+import type { LatLng, Step } from "#app/types/index";
 
 import { PointHelpers } from "./helpers";
 import type { PointState } from "./point-state";
 import { AddPointCommand } from "./commands/add-point";
 import { timeline } from "#app/history";
 import { RemovePointCommand } from "./commands/remove-point";
+import type { TilesContext } from "../tiles";
 
 export class PointTopologyManager {
   constructor(
-    private readonly ctx: MapEventsCtx,
+    private readonly ctx: TilesContext,
     private readonly state: PointState,
   ) {}
 

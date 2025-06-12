@@ -1,6 +1,6 @@
-import { FireEvents } from "#components/map/helpers";
+import { DOM } from "#app/dom";
+import { FireEvents } from "#components/map/fire-events";
 import { DrawingModeChangeEvent, Mode } from "#components/map/mode/types";
-import { disableButton, enableButton } from "#app/utils/helpers";
 import { Context } from ".";
 import { View } from "./view";
 
@@ -51,10 +51,10 @@ export class Observer {
     }
 
     if (!data) {
-      disableButton(breakButton);
+      DOM.disableButton(breakButton);
     } else {
       if (mode.getClosedGeometry()) {
-        enableButton(breakButton);
+        DOM.enableButton(breakButton);
       }
     }
   };
@@ -64,35 +64,16 @@ export class Observer {
     const { lineButton, breakButton, polygonButton } = this.ctx.view;
 
     const { mode } = this.ctx;
+    const currentMode = mode.getMode();
 
-    if (data) {
-      if (breakButton) {
-        enableButton(breakButton);
-      }
-      if (mode.getMode() === "polygon") {
-        if (lineButton) {
-          disableButton(lineButton);
-        }
-      }
-      if (mode.getMode() === "line") {
-        if (polygonButton) {
-          disableButton(polygonButton);
-        }
-      }
-    } else {
-      if (breakButton) {
-        disableButton(breakButton);
-      }
-      if (mode.getMode() === "polygon") {
-        if (lineButton) {
-          enableButton(lineButton);
-        }
-      }
-      if (mode.getMode() === "line") {
-        if (polygonButton) {
-          enableButton(polygonButton);
-        }
-      }
+    if (breakButton) {
+      data ? DOM.enableButton(breakButton) : DOM.disableButton(breakButton);
+    }
+    if (currentMode === "polygon" && lineButton) {
+      data ? DOM.disableButton(lineButton) : DOM.enableButton(lineButton);
+    }
+    if (currentMode === "line" && polygonButton) {
+      data ? DOM.disableButton(polygonButton) : DOM.enableButton(polygonButton);
     }
   };
 

@@ -11,7 +11,7 @@ import { PointVisibility } from "../points/helpers";
 import { InsertPointCommand } from "../points/commands/insert-point";
 import { renderer } from "../renderer";
 import { isFeatureTriggered } from "../utils";
-import { TilesContext } from "../tiles/events";
+import { TilesContext } from "../tiles";
 
 // √((x1​−x2​)²+(y1​−y2​)²​)
 const distance = (point1: Point, point2: Point) =>

@@ -1,5 +1,5 @@
 import { HTMLEvent } from "#app/types/helpers";
-import { DOM } from "#app/utils/dom";
+import { DOM } from "#app/dom";
 import "./tooltip.css";
 
 interface CreateOptions {
@@ -32,14 +32,14 @@ export class Tooltip {
     return this;
   };
 
-  #activateAnimation = () => {
+  private activateAnimation = () => {
     const notActive = !this.label?.classList.value.includes("popup-text-active");
     if (notActive) {
       this.label?.classList.add("popup-text-active");
     }
   };
 
-  #getLabelDimensions = () => {
+  private getLabelDimensions = () => {
     if (!this.label) return { width: 0, height: 0 };
 
     return {
@@ -48,9 +48,9 @@ export class Tooltip {
     };
   };
 
-  #getLeftPosition = (event: HTMLEvent<HTMLElement>): Position => {
+  private getLeftPosition = (event: HTMLEvent<HTMLElement>): Position => {
     const { bottom, left } = event.target.getBoundingClientRect();
-    const { width: labelWidth, height: labelHeight } = this.#getLabelDimensions();
+    const { width: labelWidth, height: labelHeight } = this.getLabelDimensions();
 
     return {
       x: left - BASE_X_OFFSET_FROM_ELEMENT - labelWidth,
@@ -58,9 +58,9 @@ export class Tooltip {
     };
   };
 
-  #getBottomPosition = (event: HTMLEvent<HTMLElement>): Position => {
+  private getBottomPosition = (event: HTMLEvent<HTMLElement>): Position => {
     const { bottom, left, right } = event.target.getBoundingClientRect();
-    const { width: labelWidth } = this.#getLabelDimensions();
+    const { width: labelWidth } = this.getLabelDimensions();
 
     const elementCenterX = (right - left) / 2 + left;
     return {
@@ -71,10 +71,10 @@ export class Tooltip {
 
   getPosition = (event: HTMLEvent<HTMLElement>, position: "left" | "bottom"): Position => {
     if (position === "left") {
-      return this.#getLeftPosition(event);
+      return this.getLeftPosition(event);
     }
 
-    return this.#getBottomPosition(event);
+    return this.getBottomPosition(event);
   };
 
   setPosition = (pos: Position) => {
@@ -83,7 +83,7 @@ export class Tooltip {
       this.container.style.left = `${x}px`;
       this.container.style.top = `${y}px`;
     }
-    this.#activateAnimation();
+    this.activateAnimation();
   };
 
   remove = () => {

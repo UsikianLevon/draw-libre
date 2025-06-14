@@ -1,7 +1,7 @@
-import type { Command } from "#app/history";
 import type { ListNode, Store } from "#app/store";
 import type { StoreChangeEventKeys } from "#app/store/types";
 import type { Step } from "#app/types";
+import type { Command } from "#app/history/command";
 import { PointHelpers } from "../helpers";
 
 interface Snapshot {

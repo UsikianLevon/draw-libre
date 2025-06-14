@@ -1,17 +1,16 @@
-import type { MapEventsCtx } from "#app/types/index";
 import type { MapLayerMouseEvent } from "maplibre-gl";
 
-import { Spatial } from "#app/utils/helpers";
 import { ELAYERS } from "#app/utils/geo_constants";
 import { Tooltip } from "#components/tooltip";
-import { togglePointCircleRadius } from "#components/map/tiles/helpers";
+import { togglePointCircleRadius } from "#components/map/tiles/utils";
+import type { StoreChangeEvent, StoreChangeEventKeys } from "#app/store/types";
+import { timeline } from "#app/history";
 
 import type { DrawingModeChangeEvent } from "../mode/types";
 import { PointsFilter, PointVisibility } from "./helpers";
 import type { PrimaryPointEvents } from ".";
-import type { StoreChangeEvent, StoreChangeEventKeys } from "#app/store/types";
-import { timeline } from "#app/history";
 import { CloseGeometryCommand } from "./commands/close-geometry";
+import type { TilesContext } from "../tiles";
 import { renderer } from "../renderer";
 
 export class FirstPoint {
@@ -19,7 +18,7 @@ export class FirstPoint {
   #tooltip: Tooltip;
 
   constructor(
-    private readonly ctx: MapEventsCtx,
+    private readonly ctx: TilesContext,
     private readonly baseEvents: PrimaryPointEvents,
   ) {
     this.#mouseDown = false;
@@ -43,7 +42,9 @@ export class FirstPoint {
 
   public initLayer() {
     const { map } = this.ctx;
-    map.setLayoutProperty(ELAYERS.FirstPointLayer, "visibility", "visible");
+    if (map.getLayer(ELAYERS.FirstPointLayer)) {
+      map.setLayoutProperty(ELAYERS.FirstPointLayer, "visibility", "visible");
+    }
   }
 
   private initBaseEvents = () => {
@@ -169,10 +170,10 @@ export class FirstPoint {
   };
 
   private onFirstPointMouseEnter = (event: MapLayerMouseEvent) => {
-    const { mode, mouseEvents, store, options } = this.ctx;
+    const { mode, mouseEvents, store } = this.ctx;
     mouseEvents.firstPointMouseEnter = true;
     if (mode.getClosedGeometry() || this.#mouseDown) return;
-    if (Spatial.canCloseGeometry(store, options)) {
+    if (store.circular.canClose()) {
       const { x, y } = event.originalEvent;
       if (x && y) {
         const Y_OFFSET = 14;

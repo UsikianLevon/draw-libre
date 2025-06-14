@@ -1,6 +1,6 @@
 import type { UnifiedMap } from "#app/types/map";
 
-import { ELAYERS, FIRST_POINT_COLOR, FIRST_POINT_RADIUS, generateLayersToRender } from "#app/utils/geo_constants";
+import { ELAYERS, FIRST_POINT_COLOR, FIRST_POINT_RADIUS, generateLayers } from "#app/utils/geo_constants";
 import type { RequiredDrawOptions } from "#app/types/index";
 
 const firstPointCircleRadius = (map: UnifiedMap) => {
@@ -29,7 +29,7 @@ export const removeTransparentLine = (map: UnifiedMap) => {
 
 export const addTransparentLine = (map: UnifiedMap, options: RequiredDrawOptions) => {
   if (map.getLayer(ELAYERS.LineLayerTransparent)) return;
-  const LAYERS_TO_RENDER = generateLayersToRender(options);
+  const LAYERS_TO_RENDER = generateLayers(options);
   const transparentLayer = LAYERS_TO_RENDER.find((layer) => layer.id === ELAYERS.LineLayerTransparent);
   if (transparentLayer) {
     map.addLayer(transparentLayer);

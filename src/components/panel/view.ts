@@ -1,6 +1,5 @@
-import { DOM } from "#app/utils/dom";
+import { DOM } from "#app/dom";
 import type { ButtonType, PanelImpl } from "#app/types";
-import { disableButton } from "#app/utils/helpers";
 import { Context } from ".";
 
 export class View {
@@ -9,15 +8,15 @@ export class View {
   private buttons: Partial<Record<ButtonType, HTMLButtonElement>> = {};
 
   constructor(private readonly ctx: Pick<Context, "map" | "options">) {
-    this.root = DOM.create("div", "dashboard-container");
-    this.buttonContainer = DOM.create("div", "dashboard", this.root);
+    this.root = DOM.create("div", "mdl-dashboard-container");
+    this.buttonContainer = DOM.create("div", "mdl-dashboard", this.root);
 
     this.renderButtons();
     ctx.map.getContainer().appendChild(this.root);
   }
 
   private createButton(type: ButtonType, title: string, size: PanelImpl["size"], container: HTMLElement) {
-    const button = DOM.create("button", `panel-button panel-button-${size}`, container);
+    const button = DOM.create("button", `mdl-panel-button mdl-panel-button-${size}`, container);
     button.setAttribute("data-type", type);
     button.setAttribute("aria-label", title);
     DOM.create("span", `icon ${type} icon-${size}`, button);
@@ -33,7 +32,7 @@ export class View {
 
       const button = this.createButton(type, locale[type], size, this.buttonContainer);
       if (type === "undo" || type === "redo") {
-        disableButton(button);
+        DOM.disableButton(button);
       }
 
       this.buttons[type] = button;

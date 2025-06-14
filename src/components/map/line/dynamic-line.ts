@@ -1,13 +1,16 @@
 import type { GeoJSONSource, MapLayerMouseEvent, PointLike } from "maplibre-gl";
 
-import type { MapEventsCtx, LatLng } from "#app/types/index";
+import type { LatLng } from "#app/types/index";
 import { ELAYERS, ESOURCES, LINE_BASE } from "#app/utils/geo_constants";
 import type { StoreChangeEvent } from "#app/store/types";
-import { debounce, GeometryFactory, MapUtils, throttle } from "#app/utils/helpers";
+import { debounce, throttle } from "#app/utils/helpers";
 import { EVENTS } from "#app/utils/constants";
 
 import type { PointRightClickRemoveEvent, UndoEvent } from "../types";
 import type { MouseEventsChangeEvent, MapMouseEvent } from "../mouse-events/types";
+import { getLine } from "../renderer/geojson-builder";
+import { isFeatureTriggered } from "../utils";
+import type { TilesContext } from "../tiles";
 
 const LINE_DYNAMIC_THROTTLE_TIME = 17; // 60 FPS
 
@@ -19,7 +22,7 @@ export class DynamicLineEvents {
   private onMouseMoveThrottled: (event: MapLayerMouseEvent) => void;
   private onStoreEventsDebounced: (event: StoreChangeEvent) => void;
 
-  constructor(private readonly ctx: MapEventsCtx) {
+  constructor(private readonly ctx: TilesContext) {
     this.visible = true;
     this.onMouseMoveThrottled = throttle(this.onLineMove, LINE_DYNAMIC_THROTTLE_TIME);
     this.onStoreEventsDebounced = debounce(this.onStoreEventsConsumer, 10);
@@ -100,7 +103,7 @@ export class DynamicLineEvents {
     const { map } = this.ctx;
     map.on("click", this.onMapClick);
     map.on("mousemove", this.onMouseMoveThrottled);
-    map.on(EVENTS.REMOVEALL, this.hide);
+    map.on(EVENTS.REMOVE_ALL, this.hide);
     map.on(EVENTS.UNDO, this.onUndoRedoClick);
     map.on(EVENTS.REDO, this.onUndoRedoClick);
     map.on(EVENTS.RIGHTCLICKREMOVE, this.onRightClickRemove);
@@ -111,7 +114,7 @@ export class DynamicLineEvents {
 
     map.off("click", this.onMapClick);
     map.off("mousemove", this.onMouseMoveThrottled);
-    map.off(EVENTS.REMOVEALL, this.hide);
+    map.off(EVENTS.REMOVE_ALL, this.hide);
     map.off(EVENTS.UNDO, this.onUndoRedoClick);
     map.off(EVENTS.REDO, this.onUndoRedoClick);
     map.off(EVENTS.RIGHTCLICKREMOVE, this.onRightClickRemove);
@@ -141,7 +144,7 @@ export class DynamicLineEvents {
       const current = [this.firstPoint.lng, this.firstPoint.lat] as [number, number];
       const next = [this.secondPoint.lng, this.secondPoint.lat] as [number, number];
 
-      this.lineFeature = GeometryFactory.getLine(current, next);
+      this.lineFeature = getLine(current, next);
 
       map.setLayoutProperty(ELAYERS.LineDynamicLayer, "visibility", "visible");
       if (this.secondPoint) {
@@ -168,7 +171,7 @@ export class DynamicLineEvents {
 
   private onMapClick = (event: MapLayerMouseEvent) => {
     const { mode } = this.ctx;
-    const lineClick = MapUtils.isFeatureTriggered(event, [ELAYERS.LineLayerTransparent, ELAYERS.LineLayer]);
+    const lineClick = isFeatureTriggered(event, [ELAYERS.LineLayerTransparent, ELAYERS.LineLayer]);
     if (lineClick && mode.getBreak()) {
       this.secondPoint = { lng: event.lngLat.lng, lat: event.lngLat.lat };
     }
@@ -182,8 +185,8 @@ export class DynamicLineEvents {
 
     if (!store.circular.isCircular()) {
       const latLng = event.target.unproject({ x: event.originalEvent.x, y: event.originalEvent.y } as PointLike);
-      this.secondPoint = { lng: latLng.lng, lat: latLng.lat };
       this.firstPoint = store.tail?.val as LatLng;
+      this.secondPoint = { lng: latLng.lng, lat: latLng.lat };
       this.show();
     }
 

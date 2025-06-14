@@ -1,5 +1,5 @@
 import type { RequiredDrawOptions } from "#app/types/index";
-import { Observable } from "#app/utils/observable";
+import { Observable } from "#app/observable";
 
 import type { DrawingModeChangeEvent, Mode } from "./types";
 

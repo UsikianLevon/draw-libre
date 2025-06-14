@@ -5,7 +5,7 @@ import type { UnifiedMap } from "#app/types/map";
 import type { Store } from "#app/store/index";
 import type { DrawingMode } from "#components/map/mode";
 import { ESOURCES } from "#app/utils/geo_constants";
-import { GeometryFactory } from "#app/utils/helpers";
+import { getUnifiedFeatures } from "./geojson-builder";
 
 interface Context {
   map: UnifiedMap;
@@ -28,7 +28,7 @@ export class Renderer {
 
   public initialize(ctx: Context): Renderer | null {
     this.ctx = ctx;
-    this.unifiedGeoJSON = GeometryFactory.getUnifiedFeatures(this.ctx.store);
+    this.unifiedGeoJSON = getUnifiedFeatures(this.ctx.store);
     this.execute();
 
     return Renderer.instance;
@@ -51,7 +51,7 @@ export class Renderer {
   private updateLine(featureIdx: number, newCoord: LatLng) {
     const { mode } = this.getContext();
 
-    // -2 because line is always the second to last feature. Check GeometryFactory.getUnifiedFeatures
+    // -2 because line is always the second to last feature. Check getUnifiedFeatures
     const line = this.unifiedGeoJSON.features.at(-2)?.geometry.coordinates;
     if (!line) return;
     line[featureIdx] = [newCoord.lng, newCoord.lat];
@@ -64,7 +64,7 @@ export class Renderer {
   private updatePolygon(featureIdx: number, newCoord: LatLng) {
     const { mode } = this.getContext();
 
-    // -1 because polygon is always the last feature. Check GeometryFactory.getUnifiedFeatures
+    // -1 because polygon is always the last feature. Check getUnifiedFeatures
     const polygon = this.unifiedGeoJSON.features.at(-1)?.geometry.coordinates[0] as number[][];
 
     if (!polygon) return;
@@ -76,7 +76,7 @@ export class Renderer {
   }
 
   private updatePoint(featureIdx: number, newCoord: LatLng) {
-    // points are always the first feature. Check GeometryFactory.getUnifiedFeatures
+    // points are always the first feature. Check getUnifiedFeatures
     const feature = this.unifiedGeoJSON?.features?.[featureIdx];
     if (feature?.geometry?.coordinates) {
       feature.geometry.coordinates = [newCoord.lng, newCoord.lat];
@@ -129,7 +129,7 @@ export class Renderer {
   public execute() {
     const { map, store } = this.getContext();
 
-    this.unifiedGeoJSON = GeometryFactory.getUnifiedFeatures(store);
+    this.unifiedGeoJSON = getUnifiedFeatures(store);
     const unifiedSource = map.getSource(ESOURCES.UnifiedSource) as GeoJSONSource;
 
     if (unifiedSource) {

@@ -1,15 +1,16 @@
 import { GeoJSONSource, MapLayerMouseEvent } from "maplibre-gl";
 
 import type { ListNode } from "#app/store/index";
-import type { MapEventsCtx } from "#app/types/index";
 import { ELAYERS, ESOURCES } from "#app/utils/geo_constants";
-import { GeometryFactory, throttle } from "#app/utils/helpers";
+import { throttle } from "#app/utils/helpers";
+import { timeline } from "#app/history";
 
 import { isOnLine } from "./utils";
-import { FireEvents } from "../helpers";
-import { timeline } from "#app/history";
+import { FireEvents } from "../fire-events";
 import { BreakGeometryCommand } from "./commands/break-geometry";
 import { renderer } from "../renderer";
+import { getLine } from "../renderer/geojson-builder";
+import type { TilesContext } from "../tiles";
 
 const LINE_BREAK_THROTTLE_TIME = 15;
 
@@ -17,7 +18,7 @@ export class LineBreakEvents {
   private current: ListNode | null;
   private throttledOnLineEnter: (event: MapLayerMouseEvent) => void;
 
-  constructor(private readonly ctx: MapEventsCtx) {
+  constructor(private readonly ctx: TilesContext) {
     this.current = null;
     this.throttledOnLineEnter = throttle(this.onLineEnterBreak, LINE_BREAK_THROTTLE_TIME);
   }
@@ -94,7 +95,7 @@ export class LineBreakEvents {
     const lineSource = map.getSource(ESOURCES.LineSourceBreak) as GeoJSONSource;
     const { current, next } = this.getLinePoints(this.current);
 
-    const lineBreakData = GeometryFactory.getLine(current, next);
+    const lineBreakData = getLine(current, next);
     if (!lineBreakData) return;
 
     lineSource.setData(lineBreakData as any);

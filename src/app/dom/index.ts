@@ -57,4 +57,16 @@ export class DOM {
       node.classList.remove(className);
     }
   }
+
+  static disableButton = (button: HTMLButtonElement | null) => {
+    if (!button) return;
+    button.setAttribute("disabled", "true");
+    button.setAttribute("aria-disabled", "true");
+  };
+
+  static enableButton = (button: HTMLButtonElement | null) => {
+    if (!button) return;
+    button.removeAttribute("disabled");
+    button.removeAttribute("aria-disabled");
+  };
 }

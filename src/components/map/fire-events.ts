@@ -1,10 +1,10 @@
 import type { UnifiedMap } from "#app/types/map";
-import type { LatLng, StepId, Step, MapEventsCtx } from "#app/types/index";
+import type { LatLng, StepId, Step } from "#app/types/index";
 import { EVENTS } from "#app/utils/constants";
 import type { DrawingMode } from "./mode";
 import type { Mode } from "./mode/types";
+import { TilesContext } from "./tiles";
 
-// TODO this shouldn't be here and it's just bunch of static methods in a class, which is bad.
 export class FireEvents {
   static addPoint(step: Step & { total: number }, map: UnifiedMap, mode: DrawingMode) {
     map.fire(EVENTS.ADD, {
@@ -22,7 +22,7 @@ export class FireEvents {
     });
   }
   static movePoint(step: { end: LatLng; id: StepId; start: LatLng; total: number }, map: UnifiedMap) {
-    map.fire(EVENTS.MOVEEND, {
+    map.fire(EVENTS.MOVE_END, {
       id: step.id,
       start_coordinates: {
         lat: step.start.lat,
@@ -59,7 +59,7 @@ export class FireEvents {
     });
   }
   static leavePoint(step: Step & { total: number }, map: UnifiedMap) {
-    map.fire(EVENTS.POINTLEAVE, {
+    map.fire(EVENTS.POINT_LEAVE, {
       id: step.id,
       coordinates: {
         lat: step.lat,
@@ -96,14 +96,14 @@ export class FireEvents {
   }
 
   static modeChanged(map: UnifiedMap, mode: Mode | "break") {
-    map.fire(EVENTS.MODECHANGED, {
+    map.fire(EVENTS.MODE_CHANGED, {
       mode,
     });
   }
   static removeAllPoints(map: UnifiedMap, originalEvent: Event) {
-    map.fire(EVENTS.REMOVEALL, { originalEvent });
+    map.fire(EVENTS.REMOVE_ALL, { originalEvent });
   }
-  static onSaveClick(context: Pick<MapEventsCtx, "map" | "mode">, steps: Step[], originalEvent: Event) {
+  static onSaveClick(context: Pick<TilesContext, "map" | "mode">, steps: Step[], originalEvent: Event) {
     const { map, mode } = context;
 
     map.fire(EVENTS.SAVE, {
@@ -119,4 +119,12 @@ export class FireEvents {
   static onLineBreak(map: UnifiedMap) {
     map.fire(EVENTS.BREAK);
   }
+
+  static onUndoStackChange = (map: UnifiedMap, length?: number) => {
+    map.fire(EVENTS.UNDO_STACK_CHANGED, { length });
+  };
+
+  static onRedoStackChange = (map: UnifiedMap, length?: number) => {
+    map.fire(EVENTS.REDO_STACK_CHANGED, { length });
+  };
 }

@@ -5,3 +5,4 @@
 - [ ] A way to add many other shapes (but do users need this? Might be bloat—consider integrating through another library)
 - [ ] A way to export dots with or without auxiliary points
 - [ ] Add getContainer(panel) to the API for the user
+- [x] Give the user a way to use the panel functionality through the API, so he can disable the one I created if he doesn't like it.

@@ -1,8 +1,8 @@
 import { ESOURCES } from "#app/utils/geo_constants";
-import { Context } from ".";
+import { TilesContext } from ".";
 
 export class Sources {
-  constructor(private readonly ctx: Pick<Context, "map">) {}
+  constructor(private readonly ctx: Pick<TilesContext, "map">) {}
 
   init() {
     for (const source of Object.values(ESOURCES)) {

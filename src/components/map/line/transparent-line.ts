@@ -1,19 +1,21 @@
 import type { GeoJSONSource, MapLayerMouseEvent } from "maplibre-gl";
 
-import type { MapEventsCtx } from "#app/types/index";
 import { ELAYERS, ESOURCES } from "#app/utils/geo_constants";
-import { MapUtils, throttle } from "#app/utils/helpers";
-import { FireEvents } from "../helpers";
+import { throttle } from "#app/utils/helpers";
+
+import { FireEvents } from "../fire-events";
 import { PointVisibility } from "../points/helpers";
 import { checkIfPointClicked, insertStepIfOnLine, updateUIAfterInsert } from "./utils";
+import { isFeatureTriggered } from "../utils";
+import { TilesContext } from "#components/map/tiles";
 
-export const LINE_TRANSPARENT_THROTTLE_TIME = 22;
+export const LINE_TRANSPARENT_THROTTLE_TIME = 17;
 
 export class TransparentLineEvents {
   private isThrottled: boolean;
   private lastEvent: MapLayerMouseEvent | null;
 
-  constructor(private readonly ctx: MapEventsCtx) {
+  constructor(private readonly ctx: TilesContext) {
     this.isThrottled = false;
     this.lastEvent = null;
   }
@@ -61,7 +63,7 @@ export class TransparentLineEvents {
   };
 
   private onLineMove = throttle((event: MapLayerMouseEvent) => {
-    if (MapUtils.isFeatureTriggered(event, [ELAYERS.PointsLayer, ELAYERS.FirstPointLayer])) return;
+    if (isFeatureTriggered(event, [ELAYERS.PointsLayer, ELAYERS.FirstPointLayer])) return;
     if (this.ctx.mouseEvents.pointMouseDown || this.ctx.mouseEvents.pointMouseEnter) return;
 
     this.lastEvent = event;
@@ -78,7 +80,7 @@ export class TransparentLineEvents {
 
   private onLineEnter = (event: MapLayerMouseEvent) => {
     if (this.ctx.mouseEvents.pointMouseDown || this.ctx.mouseEvents.pointMouseEnter) return;
-    if (MapUtils.isFeatureTriggered(event, [ELAYERS.PointsLayer, ELAYERS.FirstPointLayer])) return;
+    if (isFeatureTriggered(event, [ELAYERS.PointsLayer, ELAYERS.FirstPointLayer])) return;
 
     this.ctx.mouseEvents.lineMouseEnter = true;
     PointVisibility.setSinglePointVisible(event);

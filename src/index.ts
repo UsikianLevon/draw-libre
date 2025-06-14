@@ -1,19 +1,5 @@
 import type { IControl, UnifiedMap } from "#app/types/map";
-
 import type { DrawOptions, LatLng, RequiredDrawOptions, Step, StepId } from "#app/types/index";
-import { Panel } from "#components/panel";
-import { MapEvents } from "#components/map";
-import { Control } from "#components/side-control";
-import { DrawingMode } from "#components/map/mode";
-import { Cursor } from "#components/map/cursor";
-import { MouseEvents } from "#components/map/mouse-events/index";
-import { uuidv4 } from "#app/utils/helpers";
-import { DOM } from "#app/utils/dom";
-import { Store, StoreHelpers } from "#app/store/index";
-import { Options } from "#app/utils/options";
-import { Tiles } from "#components/map/tiles";
-import { renderer, Renderer } from "#components/map/renderer";
-
 import type {
   UndoEvent,
   PointAddEvent,
@@ -24,30 +10,46 @@ import type {
   RemoveAllEvent,
   SaveEvent,
   ModeChangeEvent,
+  UndoStackChangeEvent,
+  RedoStackChangeEvent,
 } from "#components/map/types";
 
+import { Panel } from "#components/panel";
+import { Control } from "#components/side-control";
+import { DrawingMode } from "#components/map/mode";
+import { Cursor } from "#components/cursor";
+import { MouseEvents } from "#components/map/mouse-events/index";
+import { uuidv4 } from "#app/utils/helpers";
+import { DOM } from "#app/dom";
+import { Store } from "#app/store/index";
+import { renderer, Renderer } from "#components/map/renderer";
+import { linkedListToArray } from "#app/store/init";
+import { checkInitialStepsOptionOnErrors, initOptions } from "#app/options";
+
 import "./draw.css";
+import { Tiles } from "#components/map/tiles";
+import { MapTimelineAdapter } from "#app/history/map-adapter";
 
 export default class DrawLibre implements IControl {
   private container: HTMLElement | undefined;
   private store: Store | undefined;
   private mode: DrawingMode | undefined;
   private defaultOptions: RequiredDrawOptions;
-  private mapEvents: MapEvents | undefined;
   private tiles: Tiles | undefined;
   private panel: Panel | undefined;
   private control: Control | undefined;
   private cursor: Cursor | undefined;
   private mouseEvents: MouseEvents | undefined;
+  private timelineAdapter: MapTimelineAdapter | undefined;
 
   private renderer: Renderer | null = null;
   static instance: DrawLibre | null = null;
 
   private constructor(options?: DrawOptions) {
-    this.defaultOptions = Options.init(options);
+    this.defaultOptions = initOptions(options);
 
     if (this.defaultOptions.initial) {
-      Options.checkInitialStepsOption(this.defaultOptions.initial);
+      checkInitialStepsOptionOnErrors(this.defaultOptions.initial);
     }
   }
 
@@ -78,15 +80,24 @@ export default class DrawLibre implements IControl {
   onAdd = (map: UnifiedMap) => {
     this.store = new Store(this.defaultOptions);
     this.mode = new DrawingMode(this.defaultOptions);
-    this.tiles = new Tiles({ map, store: this.store, mode: this.mode, options: this.defaultOptions });
     this.renderer = renderer.initialize({
       map,
       store: this.store,
       options: this.defaultOptions,
       mode: this.mode,
     });
-    this.control = new Control({ options: this.defaultOptions, map, mode: this.mode });
     this.mouseEvents = new MouseEvents();
+    this.panel = new Panel({ map, mode: this.mode, options: this.defaultOptions, store: this.store });
+    this.control = new Control({ options: this.defaultOptions, map, mode: this.mode });
+    this.tiles = new Tiles({
+      map,
+      store: this.store,
+      mode: this.mode,
+      options: this.defaultOptions,
+      control: this.control,
+      panel: this.panel,
+      mouseEvents: this.mouseEvents,
+    });
     this.cursor = new Cursor({
       map,
       mode: this.mode,
@@ -94,17 +105,8 @@ export default class DrawLibre implements IControl {
       store: this.store,
       options: this.defaultOptions,
     });
-    this.panel = new Panel({ map, mode: this.mode, options: this.defaultOptions, store: this.store });
-    this.mapEvents = new MapEvents({
-      map,
-      store: this.store,
-      options: this.defaultOptions,
-      panel: this.panel,
-      control: this.control,
-      mode: this.mode,
-      mouseEvents: this.mouseEvents,
-    });
 
+    this.timelineAdapter = new MapTimelineAdapter(map);
     this.mode.pingConsumers();
     this.store.pingConsumers();
     this.container = this.control.getContainer();
@@ -128,11 +130,11 @@ export default class DrawLibre implements IControl {
   onRemove = () => {
     this.cursor?.remove();
     this.tiles?.remove();
-    this.mapEvents?.remove();
     this.panel?.destroy();
     this.store?.reset();
     this.mode?.unsubscribe();
     this.control?.destroy();
+    this.timelineAdapter?.destroy();
 
     if (this.container) {
       DOM.remove(this.container);
@@ -144,7 +146,7 @@ export default class DrawLibre implements IControl {
    *
    * @param step - The step to add to the store, which can be of type Step or LatLng.
    */
-  setSteps = (value: Step[] | LatLng[]) => {
+  public setSteps = (value: Step[] | LatLng[]) => {
     if (Array.isArray(value)) {
       for (const step of value) {
         const newStep = { ...step, id: (step as Step).id || uuidv4() };
@@ -162,7 +164,7 @@ export default class DrawLibre implements IControl {
    * @param id - The ID of the step to retrieve.
    * @returns The step with the specified ID, or null if not found.
    */
-  findStepById = (id: StepId) => {
+  public findStepById = (id: StepId) => {
     return this.store?.findStepById(id);
   };
 
@@ -172,7 +174,7 @@ export default class DrawLibre implements IControl {
    * @param id - The ID of the node to retrieve.
    * @returns The node with the specified ID, or null if not found.
    */
-  findNodeById = (id: StepId) => {
+  public findNodeById = (id: StepId) => {
     return this.store?.findNodeById(id);
   };
 
@@ -182,9 +184,9 @@ export default class DrawLibre implements IControl {
    * @param type - The type of collection to return, either "array" or "ll" (linked list).
    * @returns An array of all steps or the linked list of steps.
    */
-  getAllSteps = (type: "array" | "linkedlist" = "array") => {
+  public getAllSteps = (type: "array" | "linkedlist" = "array") => {
     if (type === "array" && this.store) {
-      return StoreHelpers.toArray(this.store.head);
+      return linkedListToArray(this.store.head);
     }
     if (type === "linkedlist") {
       return {
@@ -196,14 +198,27 @@ export default class DrawLibre implements IControl {
     throw new Error("Invalid type specified. Use 'array' or 'linkedlist'.");
   };
 
-  setOptions = (fn: (options: RequiredDrawOptions) => RequiredDrawOptions) => {
+  public setOptions = (fn: (options: RequiredDrawOptions) => RequiredDrawOptions) => {
     this.defaultOptions = fn(this.defaultOptions);
   };
 
-  /**
-   * Removes all steps.
-   */
-  removeAllSteps = () => {
+  public undo = (e: Event): void => {
+    this.panel?.api()?.undo(e);
+  };
+
+  public redo = (e: Event): void => {
+    this.panel?.api()?.redo(e);
+  };
+
+  public clear = (): void => {
+    this.panel?.api()?.clear();
+  };
+
+  public save = (): void => {
+    this.panel?.api()?.save();
+  };
+
+  public removeAllSteps = () => {
     this.store?.reset();
     this.panel?.destroy();
     this.renderer?.execute();
@@ -222,5 +237,7 @@ export type {
   SaveEvent,
   UndoEvent,
   ModeChangeEvent,
+  UndoStackChangeEvent,
+  RedoStackChangeEvent,
   UnifiedMap,
 };

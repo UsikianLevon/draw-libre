@@ -1,8 +1,9 @@
-import type { Command } from "#app/history";
 import type { ListNode, Store } from "#app/store";
 import type { StoreChangeEventKeys } from "#app/store/types";
 import type { RequiredDrawOptions, Step, StepId } from "#app/types";
 import type { DrawingMode } from "#components/map/mode";
+import type { Command } from "#app/history/command";
+
 import { PointHelpers } from "../helpers";
 
 export class CloseGeometryCommand implements Command {

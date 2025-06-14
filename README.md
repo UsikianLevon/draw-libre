@@ -137,6 +137,8 @@ Available events:
 - `mdl:removeall` (RemoveAllEvent) -- Fired when all points are removed by clicking the delete button
 - `mdl:save` (SaveEvent) -- Fired when the save button is clicked
 - `mdl:modechanged` (ModeChangeEvent) -- Fired when the drawing mode is changed
+- `mdl:undostackchanged` (UndoStackChangeEvent) -- Fired when the undo stack is changed
+- `mdl:redostackchanged` (RedoStackChangeEvent) -- Fired when the redo stack is changed
 
 ### Methods
 
@@ -157,6 +159,16 @@ draw.setSteps(steps: {lat: number; lng: number; id?: string}[])
 
 // Remove all steps
 draw.removeAllSteps()
+
+// If you don't like the panel, you can hide it in options and use these handlers to create your own panel
+// Clear all steps from the drawing
+draw.clear()
+// Save the current drawing state
+draw.save()
+// Undo the last action. Pass the original(!) DOM event when the dynamic line is enabled. Check the mdl:undostackchanged to disable/enable the button
+draw.undo(e)
+// Redo the last undone action. Pass the original(!) DOM event when the dynamic line is enabled. Check the mdl:redostackchanged to disable/enable the button
+draw.redo(e)
 
 // Update options. Note that options are immutable, so return a new object with spread values.
 draw.setOptions((options: RequiredDrawOptions) => {

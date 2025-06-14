@@ -1,11 +1,9 @@
-import { PointHelpers } from "#components/map/points/helpers";
-import type { Initial, LatLng, RequiredDrawOptions, Step, StepId } from "#app/types/index";
-import { uuidv4 } from "#app/utils/helpers";
-import { Observable } from "#app/utils/observable";
+import type { RequiredDrawOptions, Step, StepId } from "#app/types/index";
+import { Observable } from "#app/observable";
 
-import { ERRORS } from "./errors";
 import { StoreChangeEvent } from "./types";
-import { Circular } from "./policies/circular";
+import { Circular } from "./circular";
+import { initStore } from "./init";
 
 export class ListNode {
   val: Step | null;
@@ -27,8 +25,8 @@ export class Store extends Observable<StoreChangeEvent> {
 
   constructor(private readonly options?: RequiredDrawOptions) {
     super();
-    let list = StoreHelpers.initStore(options);
-    this.circular = new Circular(this, options);
+    let list = initStore(this.options);
+    this.circular = new Circular(this, this.options);
     this.map = list ? list.map : new Map<StepId, ListNode>();
     this.head = list ? list.head : null;
     this.tail = list ? list.tail : null;
@@ -67,10 +65,10 @@ export class Store extends Observable<StoreChangeEvent> {
     this.pingConsumers();
   };
 
-  public insertAfter = (node: ListNode, step: Step) => {
+  public insertAfter = (node: ListNode, stepToInsert: Step) => {
     if (!node) return null;
 
-    const newNode = new ListNode(step);
+    const newNode = new ListNode(stepToInsert);
     newNode.prev = node;
     newNode.next = node.next;
 
@@ -85,7 +83,7 @@ export class Store extends Observable<StoreChangeEvent> {
     }
 
     node.next = newNode;
-    this.map.set(step.id, newNode);
+    this.map.set(stepToInsert.id, newNode);
     this.size++;
     this.pingConsumers();
     return newNode;
@@ -135,6 +133,13 @@ export class Store extends Observable<StoreChangeEvent> {
     return node ? node : null;
   }
 
+  public isLastPoint = (options: RequiredDrawOptions, id: StepId): boolean => {
+    if (options.pointGeneration === "auto" && this.tail?.next === this.head) {
+      return this.tail?.prev?.val?.id === id;
+    }
+    return this.tail?.val?.id === id;
+  };
+
   public reset = () => {
     this.head = null;
     this.tail = null;
@@ -155,94 +160,4 @@ export class Store extends Observable<StoreChangeEvent> {
       },
     });
   };
-}
-
-export class StoreHelpers {
-  static isLastPoint = (store: Store, options: RequiredDrawOptions, id: StepId): boolean => {
-    if (options.pointGeneration === "auto" && store.tail?.next === store.head) {
-      return store.tail?.prev?.val?.id === id;
-    }
-    return store.tail?.val?.id === id;
-  };
-
-  static initStore(options?: RequiredDrawOptions): Store | null {
-    if (!options?.initial) return null;
-
-    const emptyInitialOptions = options && options.initial && !options.initial.steps.length;
-    if (emptyInitialOptions) {
-      throw new Error(ERRORS["EMPTY_INITIAL_STATE"]);
-    }
-
-    const initialOptionsProvided = options && options.initial.steps;
-    if (initialOptionsProvided) {
-      return StoreHelpers.fromArray(options.initial, options.pointGeneration);
-    }
-
-    return null;
-  }
-
-  private static generateIdForSteps = (stepsWithoutIds: LatLng[]): Step[] => {
-    return stepsWithoutIds.map((step, idx) => {
-      return { ...step, isAuxiliary: false, isFirst: idx === 0, id: uuidv4() };
-    });
-  };
-
-  static buildStepSequence(
-    initialSteps: Step[],
-    closeGeometry: Initial["closeGeometry"],
-    pointGeneration: RequiredDrawOptions["pointGeneration"],
-  ): Store {
-    const store = new Store();
-    const steps = closeGeometry ? initialSteps.slice(0, -1) : initialSteps;
-
-    steps.forEach((step, idx) => {
-      store.push(step);
-
-      // if we are at the end of the array and there's no next point
-      // we need to create an auxiliary point with the first point
-      // to close the geometry
-      if (pointGeneration === "auto") {
-        const isNextPointAvailable = steps[idx + 1];
-        if (isNextPointAvailable) {
-          const auxPoint = PointHelpers.createAuxiliaryPoint(step, steps[idx + 1] as Step);
-          store.push(auxPoint);
-        } else if (closeGeometry) {
-          const auxPoint = PointHelpers.createAuxiliaryPoint(step, steps[0] as Step);
-          store.push(auxPoint);
-        }
-      }
-    });
-
-    return store;
-  }
-
-  static fromArray(initialOptions: Initial, pointGeneration: RequiredDrawOptions["pointGeneration"]): Store | null {
-    const { steps: initialSteps, closeGeometry, generateId } = initialOptions;
-    const steps = generateId ? this.generateIdForSteps(initialSteps) : initialSteps;
-    const list = this.buildStepSequence(steps as Step[], closeGeometry, pointGeneration);
-
-    if (closeGeometry && list.tail && list.head) {
-      list.tail.next = list.head;
-      list.head.prev = list.tail;
-    }
-    return list;
-  }
-
-  static toArray(head: ListNode | null): Step[] {
-    if (!head) return [];
-
-    const visitedNodes = new Set<ListNode>();
-    const result: Step[] = [];
-
-    let current: ListNode | null = head;
-    while (current !== null) {
-      if (visitedNodes.has(current)) break;
-
-      visitedNodes.add(current);
-      result.push(current.val as Step);
-      current = current.next;
-    }
-
-    return result;
-  }
 }

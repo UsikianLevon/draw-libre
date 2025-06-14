@@ -1,20 +1,6 @@
 import type { RequiredDrawOptions } from "#app/types/index";
 import type { AddLayerObject } from "maplibre-gl";
 
-export const POLYGON_BASE = {
-  type: "FeatureCollection",
-  features: [
-    {
-      type: "Feature",
-      properties: {},
-      geometry: {
-        type: "Polygon",
-        coordinates: [],
-      },
-    },
-  ],
-};
-
 export const LINE_BASE = {
   type: "FeatureCollection",
   features: [
@@ -23,20 +9,6 @@ export const LINE_BASE = {
       properties: {},
       geometry: {
         type: "LineString",
-        coordinates: [],
-      },
-    },
-  ],
-};
-
-export const POINT_BASE = {
-  type: "FeatureCollection",
-  features: [
-    {
-      type: "Feature",
-      properties: {},
-      geometry: {
-        type: "Point",
         coordinates: [],
       },
     },
@@ -117,7 +89,7 @@ export const BREAK_PAINT_BASE = {
   "line-dasharray": [3, 3],
 };
 
-export const generateLayersToRender = (options: RequiredDrawOptions) => {
+export const generateLayers = (options: RequiredDrawOptions) => {
   return [
     {
       id: ELAYERS.SinglePointLayer,

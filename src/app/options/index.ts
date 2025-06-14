@@ -1,6 +1,5 @@
-import { ERRORS } from "#app/store/errors";
+import { ERRORS } from "#app/store/init";
 import { Initial, DrawOptions, RequiredDrawOptions } from "#app/types/index";
-import { DEFAULT_OPTIONS } from "./constants";
 import {
   ON_LINE_POINT_PAINT_BASE,
   FIRST_POINT_PAINT_BASE,
@@ -9,69 +8,67 @@ import {
   POLYGON_PAINT_BASE,
   BREAK_PAINT_BASE,
   AUXILIARY_POINT_PAINT_BASE,
-} from "./geo_constants";
+} from "../utils/geo_constants";
+import { DEFAULT_OPTIONS } from "./constants";
 
-export class Options {
-  static allStepsHaveIds(steps: Initial["steps"]): boolean {
-    return steps.every((step) => "id" in step && step.id !== undefined);
-  }
+function allStepsHaveIds(steps: Initial["steps"]): boolean {
+  return steps.every((step) => "id" in step && step.id !== undefined);
+}
 
-  static checkIfMissingIds(steps: Initial["steps"], generateId: Initial["generateId"]) {
-    const idGenerationIsOff = !generateId;
-    const idsNotProvided = !this.allStepsHaveIds(steps);
-    if (idGenerationIsOff && idsNotProvided) {
-      throw new Error(ERRORS["MISSING_IDS"]);
-    }
-  }
-
-  static checkIfEnoughPointsToClose(steps: Initial["steps"], closeGeometry: Initial["closeGeometry"]) {
-    const minLengthToCloseGeometry = 3;
-    if (closeGeometry && steps.length < minLengthToCloseGeometry) {
-      throw new Error(ERRORS["NOT_ENOUGH_POINTS_TO_CLOSE"]);
-    }
-  }
-
-  static checkIfPolygonIsClosed(options: Initial) {
-    const { closeGeometry, steps } = options;
-    if (steps) {
-      const firstLng = steps[0]?.lng;
-      const lastLng = steps[steps.length - 1]?.lng;
-      const firstLat = steps[0]?.lat;
-      const lastLat = steps[steps.length - 1]?.lat;
-      const firstAndLastNotEqual = firstLng !== lastLng || firstLat !== lastLat;
-      if (firstAndLastNotEqual && closeGeometry) {
-        throw new Error(ERRORS["FIRST_LAST_POINT_NOT_EQUAL"]);
-      }
-    }
-  }
-
-  static checkInitialStepsOption(options: Initial): void {
-    const { closeGeometry, generateId, steps } = options;
-    // if we have ids for all steps and id generation is off
-    this.checkIfMissingIds(steps, generateId);
-    // If we want to close the geometry, we need at least 3 points
-    this.checkIfEnoughPointsToClose(steps, closeGeometry);
-    // If the geometry is a polygon, closeGeometry must be true.
-    this.checkIfPolygonIsClosed(options);
-  }
-
-  static init(options?: DrawOptions): RequiredDrawOptions {
-    if (!options) {
-      return DEFAULT_OPTIONS;
-    }
-
-    return {
-      pointGeneration: options.pointGeneration ?? DEFAULT_OPTIONS.pointGeneration,
-      panel: generatePanelOptions(options),
-      modes: generateModeOptions(options),
-      layersPaint: generateLayersOptions(options),
-      initial: options.initial || DEFAULT_OPTIONS["initial"],
-      locale: generateLocaleOptions(options),
-      dynamicLine: options.dynamicLine ?? DEFAULT_OPTIONS.dynamicLine,
-    } as RequiredDrawOptions;
+function checkIfMissingIds(steps: Initial["steps"], generateId: Initial["generateId"]) {
+  const idGenerationIsOff = !generateId;
+  const idsNotProvided = !allStepsHaveIds(steps);
+  if (idGenerationIsOff && idsNotProvided) {
+    throw new Error(ERRORS["MISSING_IDS"]);
   }
 }
 
+function checkIfEnoughPointsToClose(steps: Initial["steps"], closeGeometry: Initial["closeGeometry"]) {
+  const minLengthToCloseGeometry = 3;
+  if (closeGeometry && steps.length < minLengthToCloseGeometry) {
+    throw new Error(ERRORS["NOT_ENOUGH_POINTS_TO_CLOSE"]);
+  }
+}
+
+function checkIfPolygonIsClosed(options: Initial) {
+  const { closeGeometry, steps } = options;
+  if (steps) {
+    const firstLng = steps[0]?.lng;
+    const lastLng = steps[steps.length - 1]?.lng;
+    const firstLat = steps[0]?.lat;
+    const lastLat = steps[steps.length - 1]?.lat;
+    const firstAndLastNotEqual = firstLng !== lastLng || firstLat !== lastLat;
+    if (firstAndLastNotEqual && closeGeometry) {
+      throw new Error(ERRORS["FIRST_LAST_POINT_NOT_EQUAL"]);
+    }
+  }
+}
+
+export function checkInitialStepsOptionOnErrors(options: Initial): void {
+  const { closeGeometry, generateId, steps } = options;
+  // if we have ids for all steps and id generation is off
+  checkIfMissingIds(steps, generateId);
+  // If we want to close the geometry, we need at least 3 points
+  checkIfEnoughPointsToClose(steps, closeGeometry);
+  // If the geometry is a polygon, closeGeometry must be true.
+  checkIfPolygonIsClosed(options);
+}
+
+export function initOptions(options?: DrawOptions): RequiredDrawOptions {
+  if (!options) {
+    return DEFAULT_OPTIONS;
+  }
+
+  return {
+    pointGeneration: options.pointGeneration ?? DEFAULT_OPTIONS.pointGeneration,
+    panel: generatePanelOptions(options),
+    modes: generateModeOptions(options),
+    layersPaint: generateLayersOptions(options),
+    initial: options.initial || DEFAULT_OPTIONS["initial"],
+    locale: generateLocaleOptions(options),
+    dynamicLine: options.dynamicLine ?? DEFAULT_OPTIONS.dynamicLine,
+  } as RequiredDrawOptions;
+}
 function generatePanelOptions(options: DrawOptions): RequiredDrawOptions["panel"] {
   return {
     size: options.panel?.size || DEFAULT_OPTIONS.panel.size,

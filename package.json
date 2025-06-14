@@ -1,6 +1,6 @@
 {
   "name": "draw-libre",
-  "version": "0.5.0",
+  "version": "0.5.1",
   "description": "Draw a line/polygon on a maplibre or mapbox map",
   "private": false,
   "type": "module",
@@ -38,8 +38,12 @@
     "maplibre-gl": ">=2"
   },
   "peerDependenciesMeta": {
-    "mapbox-gl":   { "optional": true },
-    "maplibre-gl": { "optional": true }
+    "mapbox-gl": {
+      "optional": true
+    },
+    "maplibre-gl": {
+      "optional": true
+    }
   },
   "devDependencies": {
     "@types/mapbox-gl": "3.1.0",

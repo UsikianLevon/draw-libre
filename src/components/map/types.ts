@@ -84,3 +84,15 @@ export interface ModeChangeEvent {
   target: UnifiedMap;
   type: "mdl:modechanged";
 }
+
+export interface UndoStackChangeEvent {
+  mode: Mode | "break";
+  target: UnifiedMap;
+  type: "mdl:undostackchanged";
+}
+
+export interface RedoStackChangeEvent {
+  mode: Mode | "break";
+  target: UnifiedMap;
+  type: "mdl:redostackchanged";
+}

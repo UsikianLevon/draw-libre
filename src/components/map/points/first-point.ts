@@ -42,7 +42,9 @@ export class FirstPoint {
 
   public initLayer() {
     const { map } = this.ctx;
-    map.setLayoutProperty(ELAYERS.FirstPointLayer, "visibility", "visible");
+    if (map.getLayer(ELAYERS.FirstPointLayer)) {
+      map.setLayoutProperty(ELAYERS.FirstPointLayer, "visibility", "visible");
+    }
   }
 
   private initBaseEvents = () => {

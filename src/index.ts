@@ -10,6 +10,8 @@ import type {
   RemoveAllEvent,
   SaveEvent,
   ModeChangeEvent,
+  UndoStackChangeEvent,
+  RedoStackChangeEvent,
 } from "#components/map/types";
 
 import { Panel } from "#components/panel";
@@ -26,6 +28,7 @@ import { checkInitialStepsOptionOnErrors, initOptions } from "#app/options";
 
 import "./draw.css";
 import { Tiles } from "#components/map/tiles";
+import { MapTimelineAdapter } from "#app/history/map-adapter";
 
 export default class DrawLibre implements IControl {
   private container: HTMLElement | undefined;
@@ -37,6 +40,7 @@ export default class DrawLibre implements IControl {
   private control: Control | undefined;
   private cursor: Cursor | undefined;
   private mouseEvents: MouseEvents | undefined;
+  private timelineAdapter: MapTimelineAdapter | undefined;
 
   private renderer: Renderer | null = null;
   static instance: DrawLibre | null = null;
@@ -102,6 +106,7 @@ export default class DrawLibre implements IControl {
       options: this.defaultOptions,
     });
 
+    this.timelineAdapter = new MapTimelineAdapter(map);
     this.mode.pingConsumers();
     this.store.pingConsumers();
     this.container = this.control.getContainer();
@@ -129,6 +134,7 @@ export default class DrawLibre implements IControl {
     this.store?.reset();
     this.mode?.unsubscribe();
     this.control?.destroy();
+    this.timelineAdapter?.destroy();
 
     if (this.container) {
       DOM.remove(this.container);
@@ -140,7 +146,7 @@ export default class DrawLibre implements IControl {
    *
    * @param step - The step to add to the store, which can be of type Step or LatLng.
    */
-  setSteps = (value: Step[] | LatLng[]) => {
+  public setSteps = (value: Step[] | LatLng[]) => {
     if (Array.isArray(value)) {
       for (const step of value) {
         const newStep = { ...step, id: (step as Step).id || uuidv4() };
@@ -158,7 +164,7 @@ export default class DrawLibre implements IControl {
    * @param id - The ID of the step to retrieve.
    * @returns The step with the specified ID, or null if not found.
    */
-  findStepById = (id: StepId) => {
+  public findStepById = (id: StepId) => {
     return this.store?.findStepById(id);
   };
 
@@ -168,7 +174,7 @@ export default class DrawLibre implements IControl {
    * @param id - The ID of the node to retrieve.
    * @returns The node with the specified ID, or null if not found.
    */
-  findNodeById = (id: StepId) => {
+  public findNodeById = (id: StepId) => {
     return this.store?.findNodeById(id);
   };
 
@@ -178,7 +184,7 @@ export default class DrawLibre implements IControl {
    * @param type - The type of collection to return, either "array" or "ll" (linked list).
    * @returns An array of all steps or the linked list of steps.
    */
-  getAllSteps = (type: "array" | "linkedlist" = "array") => {
+  public getAllSteps = (type: "array" | "linkedlist" = "array") => {
     if (type === "array" && this.store) {
       return linkedListToArray(this.store.head);
     }
@@ -192,14 +198,27 @@ export default class DrawLibre implements IControl {
     throw new Error("Invalid type specified. Use 'array' or 'linkedlist'.");
   };
 
-  setOptions = (fn: (options: RequiredDrawOptions) => RequiredDrawOptions) => {
+  public setOptions = (fn: (options: RequiredDrawOptions) => RequiredDrawOptions) => {
     this.defaultOptions = fn(this.defaultOptions);
   };
 
-  /**
-   * Removes all steps.
-   */
-  removeAllSteps = () => {
+  public undo = (e: Event): void => {
+    this.panel?.api()?.undo(e);
+  };
+
+  public redo = (e: Event): void => {
+    this.panel?.api()?.redo(e);
+  };
+
+  public clear = (): void => {
+    this.panel?.api()?.clear();
+  };
+
+  public save = (): void => {
+    this.panel?.api()?.save();
+  };
+
+  public removeAllSteps = () => {
     this.store?.reset();
     this.panel?.destroy();
     this.renderer?.execute();
@@ -218,5 +237,7 @@ export type {
   SaveEvent,
   UndoEvent,
   ModeChangeEvent,
+  UndoStackChangeEvent,
+  RedoStackChangeEvent,
   UnifiedMap,
 };

@@ -1,7 +1,7 @@
 - [ ] Panel class needs to be cut in half
 - [x] Check the Events class logic. Why did you decide to put eveything in one place.
 - [ ] PointEvents must be gunned down
-- [ ] think about a way to make the panel less annoying(opaque in some cases OR maybe give the user a way to use the functionality through the API)
+- [x] think about a way to make the panel less annoying(opaque in some cases OR maybe give the user a way to use the functionality through the API)
 - [x] check all events of the API
 - [x] redo button in the API
 - [x] flickering on hover in the side panel
@@ -9,7 +9,6 @@
 - [x] dynamic line is not working sometimes after placing a point(placing and moving fast?)
 - [x] gun down the DynamicLineEvents class
 - [x] if the head was red and then we removed all points, it should be reset, otherwise there's a flash of redness on next point add event
-- [ ] gun down closedGeometry inside DrawingMode class? seems like a relic
-- [ ] cursor bug when mouse move on a line
+- [x] cursor bug when mouse move on a line
 
 - [ ] ok with the state of the app and ready to write tests?

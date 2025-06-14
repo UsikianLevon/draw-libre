@@ -110,4 +110,5 @@ export class Panel {
 
   public show = () => this.setVisible(true);
   public hide = () => this.setVisible(false);
+  public api = () => this.events.api();
 }

@@ -1,79 +1,48 @@
-import type { ButtonType, Step } from "#app/types/index";
+import type { ButtonType } from "#app/types/index";
 import type { HTMLEvent } from "#app/types/helpers";
 import { DOM } from "#app/dom";
 import { Tooltip } from "#components/tooltip";
-import { FireEvents } from "#components/map/fire-events";
-import { timeline } from "#app/history";
-import { renderer } from "#components/map/renderer";
-import { linkedListToArray } from "#app/store/init";
 import { View } from "./view";
 import { Context } from ".";
+import { Actions } from "./actions";
 
 export class Events {
   private tooltip: Tooltip;
+  private actions: Actions | null = null;
 
   constructor(private readonly ctx: Context & { view: View }) {
     this.tooltip = new Tooltip();
+    this.actions = new Actions(this.ctx);
   }
 
-  public initEvents() {
-    const undoButton = this.ctx.view.getButton("undo");
-
-    if (undoButton) {
-      DOM.addEventListener(undoButton, "click", this.onUndoClick);
-      DOM.addEventListener(undoButton, "mouseenter", this.onMouseEnter as EventListenerOrEventListenerObject);
-      DOM.addEventListener(undoButton, "mouseleave", this.onMouseLeave);
-    }
-
-    const redoButton = this.ctx.view.getButton("redo");
-    if (redoButton) {
-      DOM.addEventListener(redoButton, "click", this.onRedoClick);
-      DOM.addEventListener(redoButton, "mouseenter", this.onMouseEnter as EventListenerOrEventListenerObject);
-      DOM.addEventListener(redoButton, "mouseleave", this.onMouseLeave);
-    }
-
-    const deleteButton = this.ctx.view.getButton("delete");
-    if (deleteButton) {
-      DOM.addEventListener(deleteButton, "click", this.onRemoveAll);
-      DOM.addEventListener(deleteButton, "mouseenter", this.onMouseEnter as EventListenerOrEventListenerObject);
-      DOM.addEventListener(deleteButton, "mouseleave", this.onMouseLeave);
-    }
-
-    const saveButton = this.ctx.view.getButton("save");
-    if (saveButton) {
-      DOM.addEventListener(saveButton, "click", this.onSaveClick);
-      DOM.addEventListener(saveButton, "mouseenter", this.onMouseEnter as EventListenerOrEventListenerObject);
-      DOM.addEventListener(saveButton, "mouseleave", this.onMouseLeave);
-    }
+  private addButtonListeners(type: ButtonType, handler: (e: Event) => void): void {
+    const btn = this.ctx.view.getButton(type);
+    if (!btn) return;
+    DOM.addEventListener(btn, "click", handler);
+    DOM.addEventListener(btn, "mouseenter", this.onMouseEnter);
+    DOM.addEventListener(btn, "mouseleave", this.onMouseLeave);
   }
 
-  public removeEvents() {
-    const undoButton = this.ctx.view.getButton("undo");
-    if (undoButton) {
-      DOM.removeEventListener(undoButton, "click", this.onUndoClick);
-      DOM.removeEventListener(undoButton, "mouseenter", this.onMouseEnter as EventListenerOrEventListenerObject);
-      DOM.removeEventListener(undoButton, "mouseleave", this.onMouseLeave);
-    }
-    const redoButton = this.ctx.view.getButton("redo");
-    if (redoButton) {
-      DOM.removeEventListener(redoButton, "click", this.onRedoClick);
-      DOM.removeEventListener(redoButton, "mouseenter", this.onMouseEnter as EventListenerOrEventListenerObject);
-      DOM.removeEventListener(redoButton, "mouseleave", this.onMouseLeave);
-    }
+  private removeButtonListeners(type: ButtonType, onClick: (e: Event) => void): void {
+    const btn = this.ctx.view.getButton(type);
+    if (!btn) return;
+    DOM.removeEventListener(btn, "click", onClick);
+    DOM.removeEventListener(btn, "mouseenter", this.onMouseEnter);
+    DOM.removeEventListener(btn, "mouseleave", this.onMouseLeave);
+  }
 
-    const deleteButton = this.ctx.view.getButton("delete");
-    if (deleteButton) {
-      DOM.removeEventListener(deleteButton, "click", this.onRemoveAll);
-      DOM.removeEventListener(deleteButton, "mouseenter", this.onMouseEnter as EventListenerOrEventListenerObject);
-      DOM.removeEventListener(deleteButton, "mouseleave", this.onMouseLeave);
-    }
+  public initEvents(): void {
+    this.addButtonListeners("undo", this.onUndoClick);
+    this.addButtonListeners("redo", this.onRedoClick);
+    this.addButtonListeners("delete", this.onClearClick);
+    this.addButtonListeners("save", this.onSaveClick);
+  }
 
-    const saveButton = this.ctx.view.getButton("save");
-    if (saveButton) {
-      DOM.removeEventListener(saveButton, "click", this.onSaveClick);
-      DOM.removeEventListener(saveButton, "mouseenter", this.onMouseEnter as EventListenerOrEventListenerObject);
-      DOM.removeEventListener(saveButton, "mouseleave", this.onMouseLeave);
-    }
+  public removeEvents(): void {
+    this.removeButtonListeners("undo", this.onUndoClick);
+    this.removeButtonListeners("redo", this.onRedoClick);
+    this.removeButtonListeners("delete", this.onClearClick);
+    this.removeButtonListeners("save", this.onSaveClick);
   }
 
   private getButtonLabel = (type: ButtonType) => {
@@ -89,8 +58,9 @@ export class Events {
     return LABELS[type];
   };
 
-  private onMouseEnter = (event: HTMLEvent<HTMLButtonElement>) => {
-    const type = event.target.getAttribute("data-type") as ButtonType;
+  private onMouseEnter = (event: Event) => {
+    const target = event.target as HTMLElement;
+    const type = target.getAttribute("data-type") as ButtonType;
     if (type) {
       const label = this.getButtonLabel(type);
 
@@ -99,7 +69,7 @@ export class Events {
           label,
           placement: "bottom",
         })
-        .setPosition(this.tooltip.getPosition(event, "bottom"));
+        .setPosition(this.tooltip.getPosition(event as HTMLEvent<HTMLElement>, "bottom"));
     }
   };
 
@@ -107,48 +77,27 @@ export class Events {
     this.tooltip.remove();
   };
 
-  private onRemoveAll = (event: Event) => {
-    const { mode, view, store, map } = this.ctx;
-    store.reset();
-    view.hide();
-    mode.reset();
+  private onUndoClick = (e: Event): void => {
+    this.actions?.undo(e);
     this.tooltip.remove();
-    timeline.resetStacks();
-    renderer.resetGeometries();
-    FireEvents.removeAllPoints(map, event);
   };
 
-  private onUndoClick = (event: Event) => {
-    const { store, map, view } = this.ctx;
-    const hasSomethingToRedo = timeline.getRedoStackLength();
-
-    // hasSomethingToRedo prevents from resetting the store when we still have something to redo and are trying to remove the last point by undoing
-    if (store.size === 1 && hasSomethingToRedo) {
-      store.reset();
-      this.ctx.view.hide();
-    } else {
-      timeline.undo();
-    }
+  private onRedoClick = (e: Event): void => {
+    this.actions?.redo(e);
     this.tooltip.remove();
-    FireEvents.undo({ ...(store.tail?.val as Step), total: store.size }, map, event);
-    renderer.execute();
   };
 
-  private onRedoClick = (event: Event) => {
-    const { store, map } = this.ctx;
-
-    timeline.redo();
-    FireEvents.redo({ ...(store.tail?.val as Step), total: store.size }, map, event);
-    renderer.execute();
-  };
-
-  private onSaveClick = (event: Event) => {
-    const { store, options } = this.ctx;
-
-    FireEvents.onSaveClick(this.ctx, linkedListToArray(store.head), event);
+  private onClearClick = (e: Event): void => {
+    this.actions?.clear(e);
     this.tooltip.remove();
-    if (options.panel.buttons.save.clearOnSave) {
-      this.onRemoveAll(event);
-    }
   };
+
+  private onSaveClick = (e: Event): void => {
+    this.actions?.save(e);
+    this.tooltip.remove();
+  };
+
+  public api() {
+    return this.actions;
+  }
 }

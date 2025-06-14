@@ -2,33 +2,35 @@
 
 # DrawLibre
 
-> Early supporter? Your ⭐ makes a difference! ❤️
+> Early supporter? Your ⭐ makes a difference!
 
-## Features
+📣 **Using React?** There's an official wrapper available: [draw-libre-react](https://github.com/UsikianLevon/draw-libre-react) — no need to write glue code!
 
-- Undo/redo
-- Can break a closed geometry
-- Draw linestrings (including closed ones) and polygons
-- Compatible with maplibre-gl(v2-v5) and mapbox-gl(v1-v3) and all projections
-- Customizable UI and controls
-- Event-driven architecture for easy integration
+## ✨ Features
 
-### Manual Point Generation (extra points are added when a line is clicked)
+- 🔁 Undo/redo
+- ✂️ Can break a closed geometry
+- 🖊️ Draw linestrings (including closed ones) and polygons
+- 🌍 Compatible with maplibre-gl (v2–v5) and mapbox-gl (v1–v3) and all projections
+- 🧩 Customizable UI and controls
+- ⚡ Event-driven architecture for easy integration
+
+### 🎯 Manual Point Generation (extra points are added when a line is clicked)
 
 <img src="https://i.giphy.com/media/v1.Y2lkPTc5MGI3NjExaDZscnowMHNndmtiZzcwb3Bvc2Y2b29qbHdndndndGE3Mzk5Z2Q0cSZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/m6lig0ZCfL45FZQo7b/giphy.gif" width="800" alt="Manual Point Generation">
 
-### Automatic Point Generation (an auxiliary point is generated between every two primary points.)
+### 🤖 Automatic Point Generation (an auxiliary point is generated between every two primary points.)
 
 <img src="https://media2.giphy.com/media/v1.Y2lkPTc5MGI3NjExY2VieG1rd3ZkaWt5azVhYWpqaWEwZnVybGdjYW90d2xwNWwzeWtzayZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/6ohjkf9L1NWUESTaQA/giphy.gif" width="800" alt="Automatic Point Generation">
 </section>
 
-## Installation
+## 📦 Installation
 
 ```bash
 npm install draw-libre
 ```
 
-## Quick Start
+## ⚡ Quick Start
 
 ```javascript
 import maplibregl from "maplibre-gl";
@@ -47,9 +49,9 @@ map.on("load", (event) => {
 });
 ```
 
-## API
+## ⚙️ API
 
-### Configuration
+### 🛠️ Configuration
 
 ```javascript
 const draw = DrawLibre.getInstance({
@@ -114,7 +116,7 @@ const draw = DrawLibre.getInstance({
 });
 ```
 
-### Events
+### 📡 Events
 
 Import events from the library:
 
@@ -128,19 +130,19 @@ map.on(mdl:add, (event: PointAddEvent) => {
 
 Available events:
 
-- `mdl:rightclickremove` (PointRightClickRemoveEvent) -- Fired when a point is removed by right-clicking on it.
-- `mdl:pointenter` (PointEnterEvent) -- Fired when the cursor enters a point
-- `mdl:pointleave` (PointLeaveEvent) -- Fired when the cursor leaves a point
-- `mdl:moveend` (PointMoveEvent) -- Fired when a point is moved
-- `mdl:add` (PointAddEvent) -- Fired when a point is added
-- `mdl:undo` (UndoEvent) -- Fired when the undo button is clicked
-- `mdl:removeall` (RemoveAllEvent) -- Fired when all points are removed by clicking the delete button
-- `mdl:save` (SaveEvent) -- Fired when the save button is clicked
-- `mdl:modechanged` (ModeChangeEvent) -- Fired when the drawing mode is changed
-- `mdl:undostackchanged` (UndoStackChangeEvent) -- Fired when the undo stack is changed
-- `mdl:redostackchanged` (RedoStackChangeEvent) -- Fired when the redo stack is changed
+- `mdl:rightclickremove` (PointRightClickRemoveEvent) — Fired when a point is removed by right-clicking on it.
+- `mdl:pointenter` (PointEnterEvent) — Fired when the cursor enters a point
+- `mdl:pointleave` (PointLeaveEvent) — Fired when the cursor leaves a point
+- `mdl:moveend` (PointMoveEvent) — Fired when a point is moved
+- `mdl:add` (PointAddEvent) — Fired when a point is added
+- `mdl:undo` (UndoEvent) — Fired when the undo button is clicked
+- `mdl:removeall` (RemoveAllEvent) — Fired when all points are removed by clicking the delete button
+- `mdl:save` (SaveEvent) — Fired when the save button is clicked
+- `mdl:modechanged` (ModeChangeEvent) — Fired when the drawing mode is changed
+- `mdl:undostackchanged` (UndoStackChangeEvent) — Fired when the undo stack is changed
+- `mdl:redostackchanged` (RedoStackChangeEvent) — Fired when the redo stack is changed
 
-### Methods
+### 🧠 Methods
 
 ```javascript
 const draw = DrawLibre.getInstance();
@@ -190,6 +192,6 @@ draw.setOptions((options: RequiredDrawOptions) => {
 });
 ```
 
-## License
+## 📄 License
 
 This project is licensed under the [MIT License](https://opensource.org/licenses/MIT).

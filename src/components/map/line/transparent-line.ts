@@ -8,23 +8,49 @@ import { PointVisibility } from "../points/helpers";
 import { checkIfPointClicked, insertStepIfOnLine, updateUIAfterInsert } from "./utils";
 import { isFeatureTriggered } from "../utils";
 import { TilesContext } from "#components/map/tiles";
+import { DrawingModeChangeEvent } from "../mode/types";
 
 export const LINE_TRANSPARENT_THROTTLE_TIME = 17;
 
 export class TransparentLineEvents {
+  private eventsInited = false;
   private isThrottled: boolean;
   private lastEvent: MapLayerMouseEvent | null;
 
   constructor(private readonly ctx: TilesContext) {
     this.isThrottled = false;
     this.lastEvent = null;
+    this.initConsumers();
   }
+
+  private initConsumers = () => {
+    this.ctx.mode.addObserver(this.mapModeConsumer);
+  };
+
+  public removeConsumers = () => {
+    this.ctx.mode.removeObserver(this.mapModeConsumer);
+  };
+
+  private mapModeConsumer = (event: DrawingModeChangeEvent) => {
+    const { type, data } = event;
+
+    if (type === "MODE_CHANGED" && !data) {
+      if (this.eventsInited) {
+        this.removeEvents();
+      }
+    } else if (type === "MODE_CHANGED" && data) {
+      if (!this.eventsInited) {
+        this.initEvents();
+      }
+    }
+  };
 
   initEvents() {
     this.ctx.map.on("click", ELAYERS.LineLayerTransparent, this.onLineClick);
     this.ctx.map.on("mousemove", ELAYERS.LineLayerTransparent, this.onLineMove);
     this.ctx.map.on("mouseenter", ELAYERS.LineLayerTransparent, this.onLineEnter);
     this.ctx.map.on("mouseleave", ELAYERS.LineLayerTransparent, this.onLineLeave);
+    this.eventsInited = true;
   }
 
   removeEvents() {
@@ -32,6 +58,7 @@ export class TransparentLineEvents {
     this.ctx.map.off("mousemove", ELAYERS.LineLayerTransparent, this.onLineMove);
     this.ctx.map.off("mouseenter", ELAYERS.LineLayerTransparent, this.onLineEnter);
     this.ctx.map.off("mouseleave", ELAYERS.LineLayerTransparent, this.onLineLeave);
+    this.eventsInited = false;
   }
 
   private onLineClick = (event: MapLayerMouseEvent) => {

@@ -6,6 +6,7 @@ import {
   LINE_PAINT_BASE,
   POLYGON_PAINT_BASE,
   BREAK_PAINT_BASE,
+  AUXILIARY_POINT_PAINT_BASE,
 } from "#app/utils/geo_constants";
 
 export const DEFAULT_OPTIONS: RequiredDrawOptions = {
@@ -33,6 +34,7 @@ export const DEFAULT_OPTIONS: RequiredDrawOptions = {
     },
   },
   layersPaint: {
+    auxiliaryPoint: AUXILIARY_POINT_PAINT_BASE,
     onLinePoint: ON_LINE_POINT_PAINT_BASE,
     firstPoint: FIRST_POINT_PAINT_BASE,
     points: POINTS_PAINT_BASE,

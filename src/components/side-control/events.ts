@@ -94,18 +94,27 @@ export class Events {
     const { mode } = this.ctx;
     const { lineButton } = this.ctx.view;
 
-    if (mode.getMode() === "line") return;
+    if (mode.getMode() === "line") {
+      mode.setMode(null);
+      this.removeActiveClass();
+      return;
+    }
 
     this.removeActiveClass();
     lineButton?.classList.add("control-button-active");
     mode.setMode("line");
+    console.log(mode.getMode());
   };
 
   onPolygonClick = () => {
     const { mode } = this.ctx;
     const { polygonButton } = this.ctx.view;
 
-    if (mode.getMode() === "polygon") return;
+    if (mode.getMode() === "polygon") {
+      mode.setMode(null);
+      this.removeActiveClass();
+      return;
+    }
 
     this.removeActiveClass();
     polygonButton?.classList.add("control-button-active");

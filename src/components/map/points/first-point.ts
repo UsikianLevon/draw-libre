@@ -14,29 +14,30 @@ import type { TilesContext } from "../tiles";
 import { renderer } from "../renderer";
 
 export class FirstPoint {
-  #mouseDown: boolean;
-  #tooltip: Tooltip;
+  private mouseDown: boolean;
+  private tooltip: Tooltip;
+  private eventsInited = false;
 
   constructor(
     private readonly ctx: TilesContext,
     private readonly baseEvents: PrimaryPointEvents,
   ) {
-    this.#mouseDown = false;
-    this.#tooltip = new Tooltip();
+    this.mouseDown = false;
+    this.tooltip = new Tooltip();
 
     this.initLayer();
-    this.initEvents();
+    this.init();
   }
 
   private initConsumers = () => {
     const { mode, store } = this.ctx;
-    mode.addObserver(this.onMapModeChanggeConsumer);
+    mode.addObserver(this.onMapModeChangeConsumer);
     store.addObserver(this.onStoreChangeConsumer);
   };
 
   private removeConsumers = () => {
     const { mode, store } = this.ctx;
-    mode.removeObserver(this.onMapModeChanggeConsumer);
+    mode.removeObserver(this.onMapModeChangeConsumer);
     store.removeObserver(this.onStoreChangeConsumer);
   };
 
@@ -58,7 +59,7 @@ export class FirstPoint {
     map.on("touchstart", ELAYERS.FirstPointLayer, this.baseEvents.onPointMouseDown);
   };
 
-  private initEvents() {
+  private initEvents = () => {
     const { map } = this.ctx;
 
     map.on("click", ELAYERS.FirstPointLayer, this.onFirstPointClick);
@@ -67,6 +68,11 @@ export class FirstPoint {
     map.on("mouseup", ELAYERS.FirstPointLayer, this.onFirstPointMouseUp);
     map.on("mousedown", ELAYERS.FirstPointLayer, this.onFirstPointMouseDown);
     this.initBaseEvents();
+    this.eventsInited = true;
+  };
+
+  private init() {
+    this.initEvents();
     this.initConsumers();
   }
 
@@ -81,7 +87,7 @@ export class FirstPoint {
     map.off("touchstart", ELAYERS.FirstPointLayer, this.baseEvents.onPointMouseDown);
   };
 
-  public removeEvents() {
+  private removeEvents() {
     const { map } = this.ctx;
 
     map.off("click", ELAYERS.FirstPointLayer, this.onFirstPointClick);
@@ -89,12 +95,27 @@ export class FirstPoint {
     map.off("mouseleave", ELAYERS.FirstPointLayer, this.onFirstPointMouseLeave);
     map.off("mouseup", ELAYERS.FirstPointLayer, this.onFirstPointMouseUp);
     this.removeBaseEvents();
+    this.eventsInited = false;
+  }
+
+  public remove() {
+    this.removeEvents();
     this.removeConsumers();
   }
 
-  private onMapModeChanggeConsumer = (event: DrawingModeChangeEvent) => {
+  private onMapModeChangeConsumer = (event: DrawingModeChangeEvent) => {
     const { map, options } = this.ctx;
     const { type, data } = event;
+
+    if (type === "MODE_CHANGED" && !data) {
+      if (this.eventsInited) {
+        this.removeEvents();
+      }
+    } else if (type === "MODE_CHANGED" && data) {
+      if (!this.eventsInited) {
+        this.initEvents();
+      }
+    }
 
     if (type === "MODE_CHANGED") {
       if (data === "line" && !options.modes.line.closeGeometry) {
@@ -138,21 +159,21 @@ export class FirstPoint {
   };
 
   private onFirstPointMouseDown = () => {
-    this.#mouseDown = true;
-    this.#tooltip.remove();
+    this.mouseDown = true;
+    this.tooltip.remove();
   };
 
   private onFirstPointMouseUp = () => {
-    this.#mouseDown = false;
+    this.mouseDown = false;
   };
 
   private onFirstPointMouseLeave = () => {
     const { mouseEvents } = this.ctx;
 
-    if (this.#mouseDown) return;
+    if (this.mouseDown) return;
 
     mouseEvents.firstPointMouseLeave = true;
-    this.#tooltip.remove();
+    this.tooltip.remove();
   };
 
   private getTitle = () => {
@@ -172,16 +193,16 @@ export class FirstPoint {
   private onFirstPointMouseEnter = (event: MapLayerMouseEvent) => {
     const { mode, mouseEvents, store } = this.ctx;
     mouseEvents.firstPointMouseEnter = true;
-    if (mode.getClosedGeometry() || this.#mouseDown) return;
+    if (mode.getClosedGeometry() || this.mouseDown) return;
     if (store.circular.canClose()) {
       const { x, y } = event.originalEvent;
       if (x && y) {
         const Y_OFFSET = 14;
 
-        this.#tooltip.create({ label: this.getTitle(), placement: "bottom" });
+        this.tooltip.create({ label: this.getTitle(), placement: "bottom" });
 
-        const X_OFFSET = this.#tooltip.label ? this.#tooltip.label.clientWidth / 2 : 0;
-        this.#tooltip.setPosition({ x: x - X_OFFSET, y: y + Y_OFFSET });
+        const X_OFFSET = this.tooltip.label ? this.tooltip.label.clientWidth / 2 : 0;
+        this.tooltip.setPosition({ x: x - X_OFFSET, y: y + Y_OFFSET });
       }
     }
   };

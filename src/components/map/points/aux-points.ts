@@ -13,8 +13,10 @@ import type { PointTopologyManager } from "./point-topology-manager";
 import { renderer } from "../renderer";
 import { isRightClick, queryPointId } from "../utils";
 import { TilesContext } from "../tiles";
+import { DrawingModeChangeEvent } from "../mode/types";
 
 export class AuxPoints {
+  private eventsInited = false;
   constructor(
     private readonly ctx: TilesContext,
     private readonly baseEvents: PrimaryPointEvents,
@@ -22,6 +24,7 @@ export class AuxPoints {
     private readonly topologyManager: PointTopologyManager,
   ) {
     this.initEvents();
+    this.initConsumers();
   }
 
   private initBaseEvents = () => {
@@ -46,6 +49,28 @@ export class AuxPoints {
     map.off("touchstart", ELAYERS.AuxiliaryPointLayer, this.baseEvents.onPointMouseDown);
   };
 
+  private initConsumers = () => {
+    this.ctx.mode.addObserver(this.onMapModeChangeConsumer);
+  };
+
+  public removeConsumers = () => {
+    this.ctx.mode.removeObserver(this.onMapModeChangeConsumer);
+  };
+
+  private onMapModeChangeConsumer = (event: DrawingModeChangeEvent) => {
+    const { type, data } = event;
+
+    if (type === "MODE_CHANGED" && !data) {
+      if (this.eventsInited) {
+        this.removeEvents();
+      }
+    } else if (type === "MODE_CHANGED" && data) {
+      if (!this.eventsInited) {
+        this.initEvents();
+      }
+    }
+  };
+
   private initEvents() {
     const { map } = this.ctx;
 
@@ -53,6 +78,7 @@ export class AuxPoints {
     map.on("touchstart", ELAYERS.AuxiliaryPointLayer, this.onMouseDown);
     // PointsLayer becasue aux is already false
     this.initBaseEvents();
+    this.eventsInited = true;
   }
 
   public removeEvents() {
@@ -61,6 +87,7 @@ export class AuxPoints {
     map.off("touchstart", ELAYERS.AuxiliaryPointLayer, this.onMouseDown);
 
     this.removeBaseEvents();
+    this.eventsInited = false;
   }
 
   private onMouseDown = (event: MapLayerMouseEvent | MapTouchEvent) => {

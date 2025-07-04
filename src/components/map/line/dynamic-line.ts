@@ -11,6 +11,8 @@ import type { MouseEventsChangeEvent, MapMouseEvent } from "../mouse-events/type
 import { getLine } from "../renderer/geojson-builder";
 import { isFeatureTriggered } from "../utils";
 import type { TilesContext } from "../tiles";
+import { hideDynamicLine } from "./utils";
+import { DrawingModeChangeEvent } from "../mode/types";
 
 const LINE_DYNAMIC_THROTTLE_TIME = 17; // 60 FPS
 
@@ -33,15 +35,24 @@ export class DynamicLineEvents {
   private initConsumers() {
     this.ctx.store.addObserver(this.onStoreEventsDebounced);
     this.ctx.mouseEvents.addObserver(this.onMouseEventsConsumer);
+    this.ctx.mode.addObserver(this.mapModeConsumer);
   }
 
   public removeConsumers = () => {
     this.ctx.store.removeObserver(this.onStoreEventsDebounced);
     this.ctx.mouseEvents.removeObserver(this.onMouseEventsConsumer);
+    this.ctx.mode.removeObserver(this.mapModeConsumer);
+  };
+
+  private mapModeConsumer = (event: DrawingModeChangeEvent) => {
+    if (event.type === "MODE_CHANGED" && !event.data) {
+      this.hide();
+    }
   };
 
   private onMouseEventsConsumer = (event: MouseEventsChangeEvent) => {
     const { store } = this.ctx;
+    if (this.ctx.mode.getMode() === null) return;
     if (store.circular.isCircular()) {
       this.hide();
       return;
@@ -76,6 +87,7 @@ export class DynamicLineEvents {
 
   private onStoreEventsConsumer = (event: StoreChangeEvent) => {
     const { store } = this.ctx;
+    if (this.ctx.mode.getMode() === null) return;
     if (store.circular.isCircular()) {
       this.hide();
 
@@ -128,13 +140,7 @@ export class DynamicLineEvents {
     this.lineFeature = null;
     map.off("mousemove", this.onMouseMoveThrottled);
 
-    const lineSource = map.getSource(ESOURCES.LineDynamicSource) as GeoJSONSource;
-    if (lineSource) {
-      lineSource.setData(LINE_BASE as GeoJSON.FeatureCollection);
-    }
-    if (map.getLayer(ELAYERS.LineDynamicLayer)) {
-      map.setLayoutProperty(ELAYERS.LineDynamicLayer, "visibility", "none");
-    }
+    hideDynamicLine(map);
   };
 
   private show = () => {

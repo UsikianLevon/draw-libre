@@ -74,11 +74,29 @@ export class Observer {
       this.ctx.view.hide();
     }
     if (type === "MODE_CHANGED" && data) {
-      if (store.tail?.val) {
-        this.ctx.setPanelLocation({
-          lat: store.tail?.val?.lat,
-          lng: store.tail?.val?.lng,
-        });
+      if (this.ctx.store.circular.isCircular()) {
+        if (this.ctx.options.pointGeneration === "auto") {
+          if (store.tail?.prev?.val) {
+            this.ctx.setPanelLocation({
+              lat: store.tail.prev.val.lat,
+              lng: store.tail.prev.val.lng,
+            });
+          }
+        } else {
+          if (store.tail?.val) {
+            this.ctx.setPanelLocation({
+              lat: store.tail.val.lat,
+              lng: store.tail.val.lng,
+            });
+          }
+        }
+      } else {
+        if (store.tail?.val) {
+          this.ctx.setPanelLocation({
+            lat: store.tail.val.lat,
+            lng: store.tail.val.lng,
+          });
+        }
       }
     }
   };

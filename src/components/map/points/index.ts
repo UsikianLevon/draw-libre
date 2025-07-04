@@ -28,6 +28,7 @@ export interface PrimaryPointEvents {
 }
 // TODO messy: clean this up
 export class PointEvents {
+  private eventsInited = false;
   private events: PrimaryPointEvents;
   private firstPoint: FirstPoint | null;
   private auxPoints: AuxPoints | null;
@@ -57,9 +58,10 @@ export class PointEvents {
   private removeConsumers = () => {
     this.ctx.mode.removeObserver(this.mapModeConsumer);
     this.ctx.store.removeObserver(this.storeEventsConsumer);
+    this.auxPoints?.removeConsumers();
   };
 
-  public init = () => {
+  private initEvents = () => {
     const { map } = this.ctx;
     map.on("click", this.onMapClick);
     map.on("dblclick", this.onMapDblClick);
@@ -71,11 +73,15 @@ export class PointEvents {
     map.on("mouseup", ELAYERS.PointsLayer, this.onPointMouseUp);
     map.on("touchend", ELAYERS.PointsLayer, this.onPointMouseUp);
     map.on("touchstart", ELAYERS.PointsLayer, this.onPointMouseDown);
+    this.eventsInited = true;
+  };
 
+  public init = () => {
+    this.initEvents();
     this.initConsumers();
   };
 
-  public remove = () => {
+  private removeEvents = () => {
     const { map } = this.ctx;
     map.off("click", this.onMapClick);
     map.off("dblclick", this.onMapDblClick);
@@ -88,8 +94,12 @@ export class PointEvents {
     map.off("mouseup", ELAYERS.PointsLayer, this.onPointMouseUp);
     map.off("touchend", ELAYERS.PointsLayer, this.onPointMouseUp);
     map.off("touchstart", ELAYERS.PointsLayer, this.onPointMouseDown);
+    this.eventsInited = false;
+  };
 
-    this.firstPoint?.removeEvents();
+  public remove = () => {
+    this.removeEvents();
+    this.firstPoint?.remove();
     this.auxPoints?.removeEvents();
     this.removeConsumers();
   };
@@ -222,7 +232,18 @@ export class PointEvents {
   };
 
   private mapModeConsumer = (event: DrawingModeChangeEvent) => {
-    if (event.type === "BREAK_CHANGED" || event.type === "MODE_CHANGED") {
+    const { type, data } = event;
+    if (type === "MODE_CHANGED" && !data) {
+      if (this.eventsInited) {
+        this.removeEvents();
+      }
+    } else if (type === "MODE_CHANGED" && data) {
+      if (!this.eventsInited) {
+        this.initEvents();
+      }
+    }
+
+    if (type === "BREAK_CHANGED" || type === "MODE_CHANGED") {
       this.pointState.reset();
     }
   };

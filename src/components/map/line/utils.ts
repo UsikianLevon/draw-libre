@@ -1,9 +1,9 @@
-import type { MapLayerMouseEvent } from "maplibre-gl";
+import type { GeoJSONSource, MapLayerMouseEvent } from "maplibre-gl";
 import type { Step, Point } from "#app/types/index";
 import type { UnifiedMap } from "#app/types/map";
 import type { Store } from "#app/store/index";
 
-import { ELAYERS } from "#app/utils/geo_constants";
+import { ELAYERS, ESOURCES, LINE_BASE } from "#app/utils/geo_constants";
 import { uuidv4 } from "#app/utils/helpers";
 import { timeline } from "#app/history";
 
@@ -73,4 +73,14 @@ export const updateUIAfterInsert = (event: MapLayerMouseEvent, context: Pick<Til
 
 export const checkIfPointClicked = (event: MapLayerMouseEvent) => {
   return isFeatureTriggered(event, [ELAYERS.PointsLayer, ELAYERS.FirstPointLayer, ELAYERS.AuxiliaryPointLayer]);
+};
+
+export const hideDynamicLine = (map: UnifiedMap) => {
+  const lineSource = map.getSource(ESOURCES.LineDynamicSource) as GeoJSONSource;
+  if (lineSource) {
+    lineSource.setData(LINE_BASE as GeoJSON.FeatureCollection);
+  }
+  if (map.getLayer(ELAYERS.LineDynamicLayer)) {
+    map.setLayoutProperty(ELAYERS.LineDynamicLayer, "visibility", "none");
+  }
 };

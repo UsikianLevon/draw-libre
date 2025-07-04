@@ -53,6 +53,7 @@ export class LineEvents {
   private removeConsumers() {
     this.ctx.mode.removeObserver(this.mapModeConsumer);
     this.ctx.mouseEvents.removeObserver(this.mouseEventsConsumer);
+    this.transparent?.removeConsumers();
     if (this.ctx.options.dynamicLine) {
       this.dynamic?.removeConsumers();
     }
@@ -70,7 +71,7 @@ export class LineEvents {
   private mouseEventsConsumer = (event: MouseEventsChangeEvent) => {
     const { type, data } = event;
     const { mode } = this.ctx;
-    if (!data || !mode.getBreak()) return;
+    if (!data || !mode.getBreak() || mode.getMode() === null) return;
 
     switch (type) {
       case "pointMouseDown":

@@ -171,25 +171,6 @@ draw.save()
 draw.undo(e)
 // Redo the last undone action. Pass the original(!) DOM event when the dynamic line is enabled. Check the mdl:redostackchanged to disable/enable the button
 draw.redo(e)
-
-// Update options. Note that options are immutable, so return a new object with spread values.
-draw.setOptions((options: RequiredDrawOptions) => {
-  return {
-    ...options,
-    locale: {
-      ...options.locale,
-      save: "Save update",
-    },
-    modes: {
-      ...options.modes,
-      line: {
-        ...options.modes.line,
-        closeGeometry: false,
-      },
-    },
-    dynamicLine: false,
-  };
-});
 ```
 
 ## 📄 License

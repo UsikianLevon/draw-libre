@@ -198,10 +198,6 @@ export default class DrawLibre implements IControl {
     throw new Error("Invalid type specified. Use 'array' or 'linkedlist'.");
   };
 
-  public setOptions = (fn: (options: RequiredDrawOptions) => RequiredDrawOptions) => {
-    this.defaultOptions = fn(this.defaultOptions);
-  };
-
   public undo = (e: Event): void => {
     this.panel?.api()?.undo(e);
   };

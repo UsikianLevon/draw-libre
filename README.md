@@ -1,36 +1,38 @@
-<section >
-
 # DrawLibre
 
-> Early supporter? Your ⭐ makes a difference!
+A drawing tool for [MapLibre GL](https://maplibre.org/) and [Mapbox GL](https://docs.mapbox.com/mapbox-gl-js/) maps. Draw linestrings (open and closed) and polygons with undo/redo, geometry breaking, and full style customization.
 
-📣 **Using React?** There's an official wrapper available: [draw-libre-react](https://github.com/UsikianLevon/draw-libre-react) — no need to write glue code!
+Works with maplibre-gl v2–v5, mapbox-gl v1–v3, and all projections.
 
-## ✨ Features
+**React users:** check out [draw-libre-react](https://github.com/UsikianLevon/draw-libre-react).
 
-- 🔁 Undo/redo
-- ✂️ Can break a closed geometry
-- 🖊️ Draw linestrings (including closed ones) and polygons
-- 🌍 Compatible with maplibre-gl (v2–v5) and mapbox-gl (v1–v3) and all projections
-- 🧩 Customizable UI and controls
-- ⚡ Event-driven architecture for easy integration
+## Features
 
-### 🎯 Manual Point Generation (extra points are added when a line is clicked)
+- Draw linestrings and polygons
+- Close open linestrings, break closed geometries
+- Undo/redo
+- Manual or automatic midpoint generation
+- Initialize from existing GeoJSON
+- Customizable controls, labels, and layer styles
+- Event-driven — subscribe to point add/remove/move, mode changes, save, etc.
 
-<img src="https://i.giphy.com/media/v1.Y2lkPTc5MGI3NjExaDZscnowMHNndmtiZzcwb3Bvc2Y2b29qbHdndndndGE3Mzk5Z2Q0cSZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/m6lig0ZCfL45FZQo7b/giphy.gif" width="800" alt="Manual Point Generation">
+### Point generation modes
 
-### 🤖 Automatic Point Generation (an auxiliary point is generated between every two primary points.)
+**Manual** — click on a line segment to insert a point:
 
-<img src="https://media2.giphy.com/media/v1.Y2lkPTc5MGI3NjExY2VieG1rd3ZkaWt5azVhYWpqaWEwZnVybGdjYW90d2xwNWwzeWtzayZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/6ohjkf9L1NWUESTaQA/giphy.gif" width="800" alt="Automatic Point Generation">
-</section>
+<img src="https://i.giphy.com/media/v1.Y2lkPTc5MGI3NjExaDZscnowMHNndmtiZzcwb3Bvc2Y2b29qbHdndndndGE3Mzk5Z2Q0cSZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/m6lig0ZCfL45FZQo7b/giphy.gif" width="800" alt="Manual point generation">
 
-## 📦 Installation
+**Auto** — midpoints are generated between every two primary points:
+
+<img src="https://media2.giphy.com/media/v1.Y2lkPTc5MGI3NjExY2VieG1rd3ZkaWt5azVhYWpqaWEwZnVybGdjYW90d2xwNWwzeWtzayZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/6ohjkf9L1NWUESTaQA/giphy.gif" width="800" alt="Automatic point generation">
+
+## Installation
 
 ```bash
 npm install draw-libre
 ```
 
-## ⚡ Quick Start
+## Quick start
 
 ```javascript
 import maplibregl from "maplibre-gl";
@@ -38,47 +40,51 @@ import DrawLibre from "draw-libre";
 import "draw-libre/dist/index.css";
 
 const map = new maplibregl.Map({
-  container: ...,
-  style: ...,
+  container: "map",
+  style: "https://demotiles.maplibre.org/style.json",
 });
 
 const draw = DrawLibre.getInstance();
 
-map.on("load", (event) => {
-  event.target.addControl(draw, "top-left");
+map.on("load", (e) => {
+  e.target.addControl(draw, "top-left");
 });
 ```
 
-## ⚙️ API
+## Configuration
 
-### 🛠️ Configuration
+All options are optional.
 
 ```javascript
 const draw = DrawLibre.getInstance({
-  pointGeneration: "manual", // or "auto"; pointGeneration controls whether additional points are automatically generated on the line or if you place them manually by clicking.
+  // "manual" (default) — click on a segment to add a point
+  // "auto" — midpoints are generated automatically
+  pointGeneration: "manual",
+
   modes: {
-    initial: null, // default value; can be "line" or "polygon". Initial mode for drawing
-    breakGeometry: { visible: true }, // Controls visibility of the break geometry button
+    initial: null, // starting mode: null | "line" | "polygon"
+    breakGeometry: { visible: true },
     line: {
-      closeGeometry: true, // Enables/disables ability to close a LineString
-      visible: true, // Controls visibility of the line drawing button
+      closeGeometry: true, // allow closing a linestring
+      visible: true,
     },
-    polygon: { visible: true }, // Controls visibility of the polygon drawing button
+    polygon: { visible: true },
   },
+
   panel: {
-    size: "medium", // "large" || "small" - Controls size of the panel that appears after pressing a button
+    size: "medium", // "small" | "medium" | "large"
     buttons: {
-      delete: { visible: true }, // Controls visibility of the delete all points button
-      redo: { visible: true }
+      delete: { visible: true },
+      redo: { visible: true },
+      undo: { visible: true },
       save: {
-        clearOnSave: true, // Whether to clear all points after saving
-        visible: true, // Controls visibility of the save button
+        clearOnSave: true, // clear drawing after save
+        visible: true,
       },
-      undo: { visible: true }, // Controls visibility of the undo button
     },
   },
+
   locale: {
-    // Customize button labels and tooltips
     break: "Break",
     closeLine: "Close",
     createPolygon: "Create",
@@ -89,8 +95,10 @@ const draw = DrawLibre.getInstance({
     undo: "Undo",
     redo: "Redo",
   },
+
+  // Override layer paint properties.
+  // See MapLibre style spec for available options.
   layersPaint: {
-    // Customize layer styles here. Refer to MapLibre's layer specifications for options.
     onLinePoint: {}, // CircleLayerSpecification["paint"]
     firstPoint: {}, // CircleLayerSpecification["paint"]
     points: {}, // CircleLayerSpecification["paint"]
@@ -98,16 +106,19 @@ const draw = DrawLibre.getInstance({
     polygon: {}, // FillLayerSpecification["paint"]
     breakLine: {}, // LineLayerSpecification["paint"]
   },
-  dynamicLine: true, // Whether to draw a dynamic line following the cursor after placing the first point. It's always false for mobile phones(when the viewport is less than 768)
+
+  // Show a dynamic line following the cursor after placing the first point.
+  // Always false on viewports < 768px.
+  dynamicLine: true,
+
+  // Initialize with existing geometry
   initial: {
-    // Initialize with pre-existing GeoJSON data
-    closeGeometry: false, // Specify if the geometry is closed. Must be true if the geometry type is polygon.
-    generateId: true, // Whether to generate unique IDs for your geometries. Should be true if there are no IDs for each point in `steps`.
-    geometry: "line", // "line" | "polygon" - Specifies the type of geometry to initialize
+    geometry: "line", // "line" | "polygon"
+    closeGeometry: false, // must be true for polygons
+    generateId: true, // auto-generate IDs if not present in steps
     steps: [
-      // Array of {id?: string | number, lat: number, lng: number}
-      // The first and the last point should be the same if the geometry is closed.
-      // The closeGeometry also should be true in this case.
+      // { id?: string | number, lat: number, lng: number }
+      // For closed geometries, first and last point must match.
       { lat: 40, lng: 30 },
       { lat: 31, lng: 21 },
       { lat: 31, lng: 21 },
@@ -116,63 +127,60 @@ const draw = DrawLibre.getInstance({
 });
 ```
 
-### 📡 Events
-
-Import events from the library:
+## Events
 
 ```javascript
 import DrawLibre, { type PointAddEvent } from "draw-libre";
 
-map.on(mdl:add, (event: PointAddEvent) => {
-  console.log("Add event", event);
+map.on("mdl:add", (event: PointAddEvent) => {
+  console.log(event);
 });
 ```
 
-Available events:
+| Event                  | Type                         | Description                   |
+| ---------------------- | ---------------------------- | ----------------------------- |
+| `mdl:add`              | `PointAddEvent`              | Point added                   |
+| `mdl:rightclickremove` | `PointRightClickRemoveEvent` | Point removed via right-click |
+| `mdl:pointenter`       | `PointEnterEvent`            | Cursor entered a point        |
+| `mdl:pointleave`       | `PointLeaveEvent`            | Cursor left a point           |
+| `mdl:moveend`          | `PointMoveEvent`             | Point drag finished           |
+| `mdl:undo`             | `UndoEvent`                  | Undo triggered                |
+| `mdl:removeall`        | `RemoveAllEvent`             | All points deleted            |
+| `mdl:save`             | `SaveEvent`                  | Save triggered                |
+| `mdl:modechanged`      | `ModeChangeEvent`            | Drawing mode changed          |
+| `mdl:undostackchanged` | `UndoStackChangeEvent`       | Undo stack updated            |
+| `mdl:redostackchanged` | `RedoStackChangeEvent`       | Redo stack updated            |
 
-- `mdl:rightclickremove` (PointRightClickRemoveEvent) — Fired when a point is removed by right-clicking on it.
-- `mdl:pointenter` (PointEnterEvent) — Fired when the cursor enters a point
-- `mdl:pointleave` (PointLeaveEvent) — Fired when the cursor leaves a point
-- `mdl:moveend` (PointMoveEvent) — Fired when a point is moved
-- `mdl:add` (PointAddEvent) — Fired when a point is added
-- `mdl:undo` (UndoEvent) — Fired when the undo button is clicked
-- `mdl:removeall` (RemoveAllEvent) — Fired when all points are removed by clicking the delete button
-- `mdl:save` (SaveEvent) — Fired when the save button is clicked
-- `mdl:modechanged` (ModeChangeEvent) — Fired when the drawing mode is changed
-- `mdl:undostackchanged` (UndoStackChangeEvent) — Fired when the undo stack is changed
-- `mdl:redostackchanged` (RedoStackChangeEvent) — Fired when the redo stack is changed
-
-### 🧠 Methods
+## Methods
 
 ```javascript
 const draw = DrawLibre.getInstance();
 
-// Retrieves a step from the store by its ID.
+// Find a step or node by ID
 draw.findStepById(id: string)
-
-// Retrieves a node from the store by its ID.
 draw.findNodeById(id: string)
 
-// Get all steps, optionally specifying the return type. Selecting 'linkedlist' will return a circular doubly linked list. Have fun.
+// Get all steps as an array or a circular doubly linked list
 draw.getAllSteps(type?: "array" | "linkedlist")
 
-// Set new steps. If ID is not provided, it will be generated automatically
-draw.setSteps(steps: {lat: number; lng: number; id?: string}[])
+// Replace all steps. IDs are generated if not provided.
+draw.setSteps(steps: { lat: number; lng: number; id?: string }[])
 
 // Remove all steps
 draw.removeAllSteps()
-
-// If you don't like the panel, you can hide it in options and use these handlers to create your own panel
-// Clear all steps from the drawing
-draw.clear()
-// Save the current drawing state
-draw.save()
-// Undo the last action. Pass the original(!) DOM event when the dynamic line is enabled. Check the mdl:undostackchanged to disable/enable the button
-draw.undo(e)
-// Redo the last undone action. Pass the original(!) DOM event when the dynamic line is enabled. Check the mdl:redostackchanged to disable/enable the button
-draw.redo(e)
 ```
 
-## 📄 License
+If you hide the built-in panel, you can drive the drawing programmatically:
 
-This project is licensed under the [MIT License](https://opensource.org/licenses/MIT).
+```javascript
+draw.clear(); // remove all steps
+draw.save(); // trigger save
+draw.undo(e); // undo last action (pass the DOM event when dynamicLine is on)
+draw.redo(e); // redo last undone action (same note about DOM event)
+```
+
+Check `mdl:undostackchanged` / `mdl:redostackchanged` to know when undo/redo are available.
+
+## License
+
+[MIT](https://opensource.org/licenses/MIT)

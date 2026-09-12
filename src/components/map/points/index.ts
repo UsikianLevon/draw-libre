@@ -2,6 +2,7 @@ import type { LatLng, Step, StepId } from "#app/types/index";
 import type { MapLayerMouseEvent, MapTouchEvent } from "maplibre-gl";
 
 import { throttle } from "#app/utils/helpers";
+import { EVENTS } from "#app/utils/constants";
 import { ELAYERS } from "#app/utils/geo_constants";
 import { timeline } from "#app/history";
 import type { StoreChangeEvent } from "#app/store/types";
@@ -38,6 +39,7 @@ export class PointEvents {
   private removeButton: RemoveButton;
   private pressedStep: Step | null = null;
   private pressActive = false;
+  private suppressedStepId: StepId | null = null;
 
   constructor(private readonly ctx: TilesContext) {
     this.pointState = new PointState();
@@ -75,6 +77,7 @@ export class PointEvents {
     map.on("click", this.onMapClick);
     map.on("dblclick", this.onMapDblClick);
     map.on("mousemove", this.onPointerHover);
+    map.on(EVENTS.ADD, this.onPointAdded);
 
     map.on("mouseenter", ELAYERS.PointsLayer, this.onPointMouseEnter);
     map.on("mouseleave", ELAYERS.PointsLayer, this.onPointMouseLeave);
@@ -97,6 +100,7 @@ export class PointEvents {
     map.off("dblclick", this.onMapDblClick);
     map.off("mousemove", this.onPointerHover);
     map.off("mousemove", this.onMapMouseMove);
+    map.off(EVENTS.ADD, this.onPointAdded);
 
     map.off("mouseenter", ELAYERS.PointsLayer, this.onPointMouseEnter);
     map.off("mouseleave", ELAYERS.PointsLayer, this.onPointMouseLeave);
@@ -164,6 +168,11 @@ export class PointEvents {
     renderer.execute();
   };
 
+  // события стора приходят и на redo, событие добавления только на действие пользователя
+  private onPointAdded = (event: { id: StepId }) => {
+    this.suppressedStepId = event.id;
+  };
+
   private onMoveLeftClickUp = (event: MapLayerMouseEvent) => {
     const mouseLeftClickUp = event.originalEvent.buttons === 0;
     if (mouseLeftClickUp) {
@@ -192,6 +201,14 @@ export class PointEvents {
     if (mouseEvents.pointMouseDown) return;
 
     const id = queryPointId(map, event.point);
+
+    if (id !== this.suppressedStepId) {
+      this.suppressedStepId = null;
+    } else if (id) {
+      this.removeButton.hide();
+      return;
+    }
+
     const step = id ? store.findStepById(id) : null;
 
     if (step && !step.isAuxiliary) {
@@ -243,16 +260,21 @@ export class PointEvents {
     );
   };
 
+  private dismissButton = () => {
+    this.suppressedStepId = null;
+    this.removeButton.hide();
+  };
+
   private storeEventsConsumer = (event: StoreChangeEvent) => {
     if (event.type === "STORE_CLEARED") {
       this.pointState.reset();
-      this.removeButton.hide();
+      this.dismissButton();
       return;
     }
 
     if (event.type === "STORE_MUTATED" && event.data?.size === 0) {
       this.pointState.reset();
-      this.removeButton.hide();
+      this.dismissButton();
     }
   };
 
@@ -270,7 +292,7 @@ export class PointEvents {
 
     if (type === "BREAK_CHANGED" || type === "MODE_CHANGED") {
       this.pointState.reset();
-      this.removeButton.hide();
+      this.dismissButton();
     }
   };
 
@@ -305,6 +327,7 @@ export class PointEvents {
 
     if (isRightClick(event)) return;
 
+    this.suppressedStepId = null;
     this.setSelectedNode(event);
     this.pressedStep = this.pointState.getSelectedNode()?.val ?? null;
     this.pressActive = true;

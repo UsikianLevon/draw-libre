@@ -29,6 +29,61 @@ test("the button goes away when the pointer leaves the point", async ({ drawMap 
   await drawMap.removeButton.expectHidden();
 });
 
+test("a point you have just placed keeps its button until the pointer comes back to it", async ({ drawMap }) => {
+  await drawMap.open();
+  const only = drawMap.layout.line.first;
+
+  await drawMap.drawPoint(only);
+  await drawMap.hoverPoint(drawMap.layout.offsetFrom(only, 3, 0));
+
+  await drawMap.removeButton.expectHidden();
+
+  await drawMap.parkPointer();
+  await drawMap.hoverPoint(only);
+
+  await drawMap.removeButton.expectVisible();
+});
+
+test("drawing a line in a row never flashes a button", async ({ drawMap }) => {
+  await drawMap.open();
+  const line = drawMap.layout.line;
+
+  for (const at of [line.first, line.middle, line.last]) {
+    await drawMap.drawPoint(at);
+    await drawMap.hoverPoint(drawMap.layout.offsetFrom(at, 3, 0));
+    await drawMap.removeButton.expectHidden();
+  }
+});
+
+test("a point inserted into the line waits for a real hover before showing its button", async ({ drawMap }) => {
+  await drawMap.open();
+  const pair = drawMap.layout.rowPair;
+  await drawMap.drawPoint(pair.left);
+  await drawMap.drawPoint(pair.right);
+
+  await drawMap.drawPoint(pair.midpoint);
+  await drawMap.hoverPoint(drawMap.layout.offsetFrom(pair.midpoint, 3, 0));
+
+  await drawMap.removeButton.expectHidden();
+
+  await drawMap.parkPointer();
+  await drawMap.hoverPoint(pair.midpoint);
+
+  await drawMap.removeButton.expectVisible();
+});
+
+test("the click right after placing a point lands on the map instead of a remove button", async ({ drawMap }) => {
+  await drawMap.open();
+  const first = drawMap.layout.line.first;
+
+  await drawMap.drawPoint(first);
+  await drawMap.hoverPoint(drawMap.layout.offsetFrom(first, 3, 0));
+  await drawMap.drawPoint(drawMap.layout.offsetFrom(first, 25, 0));
+
+  await drawMap.events.expectCount("mdl:add", 2);
+  await drawMap.events.expectNever("mdl:pointremove");
+});
+
 test("the button follows the pointer straight from one point to the next", async ({ drawMap }) => {
   const line = await drawMap.openWithLine();
   await drawMap.hoverPoint(line.middle);
@@ -144,6 +199,7 @@ test("removing the only point empties the drawing", async ({ drawMap }) => {
   const only = drawMap.layout.line.first;
   await drawMap.drawPoint(only);
 
+  await drawMap.parkPointer();
   await drawMap.hoverPoint(only);
   await drawMap.removePointUnderPointer();
 

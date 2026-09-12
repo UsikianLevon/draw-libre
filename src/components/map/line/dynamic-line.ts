@@ -1,12 +1,12 @@
 import type { GeoJSONSource, MapLayerMouseEvent, PointLike } from "maplibre-gl";
 
+import { DOM } from "#app/dom";
 import type { LatLng } from "#app/types/index";
 import { ELAYERS, ESOURCES, LINE_BASE } from "#app/utils/geo_constants";
 import type { StoreChangeEvent } from "#app/store/types";
 import { debounce, throttle } from "#app/utils/helpers";
 import { EVENTS } from "#app/utils/constants";
 
-import type { PointRightClickRemoveEvent, UndoEvent } from "../types";
 import type { MouseEventsChangeEvent, MapMouseEvent } from "../mouse-events/types";
 import { getLine } from "../renderer/geojson-builder";
 import { isFeatureTriggered } from "../utils";
@@ -20,6 +20,7 @@ export class DynamicLineEvents {
   private visible: boolean;
   private firstPoint: LatLng | null = null;
   private secondPoint: LatLng | null = null;
+  private pointer: LatLng | null = null;
   private lineFeature: any;
   private onMouseMoveThrottled: (event: MapLayerMouseEvent) => void;
   private onStoreEventsDebounced: (event: StoreChangeEvent) => void;
@@ -104,7 +105,7 @@ export class DynamicLineEvents {
     } else if (event.type === "STORE_POINT_ADD") {
       if (store.size > 0) {
         this.firstPoint = store.tail?.val as LatLng;
-        this.secondPoint = store.tail?.val as LatLng;
+        this.secondPoint = this.freeEnd();
         this.show();
         this.visible = true;
       }
@@ -118,7 +119,8 @@ export class DynamicLineEvents {
     map.on(EVENTS.REMOVE_ALL, this.hide);
     map.on(EVENTS.UNDO, this.onUndoRedoClick);
     map.on(EVENTS.REDO, this.onUndoRedoClick);
-    map.on(EVENTS.RIGHTCLICKREMOVE, this.onRightClickRemove);
+    map.on(EVENTS.POINT_REMOVE, this.onPointRemove);
+    DOM.addEventListener(map.getContainer(), "pointermove", this.onPointerMove);
   };
 
   public removeEvents = () => {
@@ -129,7 +131,8 @@ export class DynamicLineEvents {
     map.off(EVENTS.REMOVE_ALL, this.hide);
     map.off(EVENTS.UNDO, this.onUndoRedoClick);
     map.off(EVENTS.REDO, this.onUndoRedoClick);
-    map.off(EVENTS.RIGHTCLICKREMOVE, this.onRightClickRemove);
+    map.off(EVENTS.POINT_REMOVE, this.onPointRemove);
+    DOM.removeEventListener(map.getContainer(), "pointermove", this.onPointerMove);
   };
 
   public hide = () => {
@@ -175,6 +178,20 @@ export class DynamicLineEvents {
     this.renderLineOnMouseMove(event.lngLat);
   };
 
+  private onPointerMove = (event: Event) => {
+    const { map } = this.ctx;
+    const { clientX, clientY } = event as PointerEvent;
+    const box = map.getContainer().getBoundingClientRect();
+    const latLng = map.unproject([clientX - box.left, clientY - box.top] as PointLike);
+
+    this.pointer = { lng: latLng.lng, lat: latLng.lat };
+  };
+
+  private freeEnd = (): LatLng => {
+    const { store } = this.ctx;
+    return this.pointer ?? (store.tail?.val as LatLng);
+  };
+
   private onMapClick = (event: MapLayerMouseEvent) => {
     const { mode } = this.ctx;
     const lineClick = isFeatureTriggered(event, [ELAYERS.LineLayerTransparent, ELAYERS.LineLayer]);
@@ -186,13 +203,12 @@ export class DynamicLineEvents {
     this.hide();
   };
 
-  private onUndoRedoClick = (event: UndoEvent) => {
+  private onUndoRedoClick = () => {
     const { store } = this.ctx;
 
     if (!store.circular.isCircular()) {
-      const latLng = event.target.unproject({ x: event.originalEvent.x, y: event.originalEvent.y } as PointLike);
       this.firstPoint = store.tail?.val as LatLng;
-      this.secondPoint = { lng: latLng.lng, lat: latLng.lat };
+      this.secondPoint = this.freeEnd();
       this.show();
     }
 
@@ -201,11 +217,11 @@ export class DynamicLineEvents {
     }
   };
 
-  private onRightClickRemove = (event: PointRightClickRemoveEvent) => {
+  private onPointRemove = () => {
     const { store } = this.ctx;
     if (!store.circular.isCircular()) {
-      this.secondPoint = { lng: event.coordinates.lng, lat: event.coordinates.lat };
       this.firstPoint = store.tail?.val as LatLng;
+      this.secondPoint = this.freeEnd();
       this.show();
     }
     if (store.size === 0) {

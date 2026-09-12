@@ -1,5 +1,5 @@
 export const EVENTS = {
-  RIGHTCLICKREMOVE: "mdl:rightclickremove",
+  POINT_REMOVE: "mdl:pointremove",
   POINTENTER: "mdl:pointenter",
   POINT_LEAVE: "mdl:pointleave",
   MOVE_END: "mdl:moveend",

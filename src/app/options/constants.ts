@@ -54,5 +54,6 @@ export const DEFAULT_OPTIONS: RequiredDrawOptions = {
     break: "Split",
     closeLine: "Close the line",
     createPolygon: "Create a polygon",
+    removePoint: "Remove point",
   },
 };

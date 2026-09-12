@@ -36,8 +36,8 @@ export class FireEvents {
       timestamp: Date.now(),
     });
   }
-  static pointRemoveRightClick(step: Step & { total: number }, map: UnifiedMap) {
-    map.fire(EVENTS.RIGHTCLICKREMOVE, {
+  static removePoint(step: Step & { total: number }, map: UnifiedMap) {
+    map.fire(EVENTS.POINT_REMOVE, {
       id: step.id,
       coordinates: {
         lat: step.lat,

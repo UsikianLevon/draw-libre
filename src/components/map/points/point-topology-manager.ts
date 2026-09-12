@@ -84,10 +84,6 @@ export class PointTopologyManager {
   public removePoint(id: string): void {
     const { store, options, mode, map } = this.ctx;
 
-    if (store.size === 1) {
-      store.reset();
-    } else {
-      timeline.commit(new RemovePointCommand({ store, options, mode, map, nodeId: id }));
-    }
+    timeline.commit(new RemovePointCommand({ store, options, mode, map, nodeId: id }));
   }
 }

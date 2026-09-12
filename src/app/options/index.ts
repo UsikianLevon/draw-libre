@@ -185,5 +185,6 @@ function generateLocaleOptions(options: DrawOptions): RequiredDrawOptions["local
     break: options.locale?.break ?? DEFAULT_OPTIONS.locale.break,
     closeLine: options.locale?.closeLine ?? DEFAULT_OPTIONS.locale.closeLine,
     createPolygon: options.locale?.createPolygon ?? DEFAULT_OPTIONS.locale.createPolygon,
+    removePoint: options.locale?.removePoint ?? DEFAULT_OPTIONS.locale.removePoint,
   };
 }

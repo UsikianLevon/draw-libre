@@ -11,6 +11,7 @@ Works with maplibre-gl v2–v5, mapbox-gl v1–v3, and all projections.
 - Draw linestrings and polygons
 - Close open linestrings, break closed geometries
 - Undo/redo
+- Remove a point with the cross button that appears when you hover or tap it
 - Manual or automatic midpoint generation
 - Initialize from existing GeoJSON
 - Customizable controls, labels, and layer styles
@@ -91,6 +92,7 @@ const draw = DrawLibre.getInstance({
     delete: "Delete",
     line: "Line",
     polygon: "Polygon",
+    removePoint: "Remove point",
     save: "Save",
     undo: "Undo",
     redo: "Redo",
@@ -137,19 +139,19 @@ map.on("mdl:add", (event: PointAddEvent) => {
 });
 ```
 
-| Event                  | Type                         | Description                   |
-| ---------------------- | ---------------------------- | ----------------------------- |
-| `mdl:add`              | `PointAddEvent`              | Point added                   |
-| `mdl:rightclickremove` | `PointRightClickRemoveEvent` | Point removed via right-click |
-| `mdl:pointenter`       | `PointEnterEvent`            | Cursor entered a point        |
-| `mdl:pointleave`       | `PointLeaveEvent`            | Cursor left a point           |
-| `mdl:moveend`          | `PointMoveEvent`             | Point drag finished           |
-| `mdl:undo`             | `UndoEvent`                  | Undo triggered                |
-| `mdl:removeall`        | `RemoveAllEvent`             | All points deleted            |
-| `mdl:save`             | `SaveEvent`                  | Save triggered                |
-| `mdl:modechanged`      | `ModeChangeEvent`            | Drawing mode changed          |
-| `mdl:undostackchanged` | `UndoStackChangeEvent`       | Undo stack updated            |
-| `mdl:redostackchanged` | `RedoStackChangeEvent`       | Redo stack updated            |
+| Event                  | Type                   | Description            |
+| ---------------------- | ---------------------- | ---------------------- |
+| `mdl:add`              | `PointAddEvent`        | Point added            |
+| `mdl:pointremove`      | `PointRemoveEvent`     | Point removed          |
+| `mdl:pointenter`       | `PointEnterEvent`      | Cursor entered a point |
+| `mdl:pointleave`       | `PointLeaveEvent`      | Cursor left a point    |
+| `mdl:moveend`          | `PointMoveEvent`       | Point drag finished    |
+| `mdl:undo`             | `UndoEvent`            | Undo triggered         |
+| `mdl:removeall`        | `RemoveAllEvent`       | All points deleted     |
+| `mdl:save`             | `SaveEvent`            | Save triggered         |
+| `mdl:modechanged`      | `ModeChangeEvent`      | Drawing mode changed   |
+| `mdl:undostackchanged` | `UndoStackChangeEvent` | Undo stack updated     |
+| `mdl:redostackchanged` | `RedoStackChangeEvent` | Redo stack updated     |
 
 ## Methods
 
@@ -175,8 +177,8 @@ If you hide the built-in panel, you can drive the drawing programmatically:
 ```javascript
 draw.clear(); // remove all steps
 draw.save(); // trigger save
-draw.undo(e); // undo last action (pass the DOM event when dynamicLine is on)
-draw.redo(e); // redo last undone action (same note about DOM event)
+draw.undo(e); // undo last action (the DOM event is what makes mdl:undo fire)
+draw.redo(e); // redo last undone action (same for mdl:redo)
 ```
 
 Check `mdl:undostackchanged` / `mdl:redostackchanged` to know when undo/redo are available.

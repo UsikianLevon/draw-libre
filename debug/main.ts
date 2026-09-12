@@ -52,7 +52,6 @@ const LINE_STEPS: Step[] = [
   { id: "debug-c", lat: 10, lng: 10 },
 ];
 
-// initOptions rejects a closed geometry whose first and last point differ
 const POLYGON_STEPS: Step[] = [...LINE_STEPS, { id: "debug-d", lat: 10, lng: -10 }];
 
 const byId = <T extends HTMLElement>(id: string): T => {
@@ -196,8 +195,6 @@ let draw: DrawLibre | null = null;
 function mount() {
   if (draw) {
     map.removeControl(draw as unknown as maplibregl.IControl);
-    // onRemove leaves the static instance in place, so getInstance would hand back
-    // the control built with the previous options
     DrawLibre.instance = null;
   }
   draw = DrawLibre.getInstance(readOptions());

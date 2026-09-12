@@ -11,4 +11,4 @@
 - [x] if the head was red and then we removed all points, it should be reset, otherwise there's a flash of redness on next point add event
 - [x] cursor bug when mouse move on a line
 
-- [ ] ok with the state of the app and ready to write tests?
+- [x] ok with the state of the app and ready to write tests?

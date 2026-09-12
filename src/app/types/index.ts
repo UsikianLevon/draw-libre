@@ -81,6 +81,7 @@ interface Locale {
   break?: string;
   closeLine?: string;
   createPolygon?: string;
+  removePoint?: string;
 }
 
 export interface DrawOptions {

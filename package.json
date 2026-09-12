@@ -8,10 +8,14 @@
     "build": "tsup",
     "build:w": "tsup --watch",
     "dev": "tsc -w",
-    "lint": "tsc",
+    "debug": "vite --port 5174 --strictPort",
+    "lint": "tsc && tsc -p tsconfig.e2e.json",
     "prettier": "prettier --write .",
     "exports": "attw --pack .",
-    "ci": "npm run lint && npm run prettier && npm run build",
+    "test": "npm run test:unit && npm run test:e2e",
+    "test:unit": "vitest run",
+    "test:e2e": "playwright test",
+    "ci": "npm run lint && npm run prettier && npm run build && npm run test",
     "release": "npm run ci",
     "prepublishOnly": "npm run ci"
   },
@@ -46,11 +50,17 @@
     }
   },
   "devDependencies": {
+    "@playwright/test": "^1.63.0",
     "@types/mapbox-gl": "3.1.0",
-    "@types/node": "20.12.8",
+    "@types/node": "^22.20.2",
+    "@vitest/browser-playwright": "^5.0.0",
+    "maplibre-gl": "^5.24.0",
+    "playwright": "^1.63.0",
     "prettier": "3.2.5",
     "tsup": "8.2.2",
-    "typescript": "5.4.5"
+    "typescript": "5.4.5",
+    "vite": "^8.3.0",
+    "vitest": "^5.0.0"
   },
   "main": "dist/index.js",
   "browser": "dist/index.js",

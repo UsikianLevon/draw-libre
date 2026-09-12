@@ -1,4 +1,4 @@
-import type { LatLng } from "#app/types/index";
+import type { LatLng, Step, StepId } from "#app/types/index";
 import type { MapLayerMouseEvent, MapTouchEvent } from "maplibre-gl";
 
 import { throttle } from "#app/utils/helpers";
@@ -16,8 +16,9 @@ import { PointState } from "./point-state";
 import { PointTopologyManager } from "./point-topology-manager";
 import { MovePointCommand } from "./commands/move-point";
 import { renderer } from "../renderer";
-import { queryPointId, isFeatureTriggered, queryPoint, getGeometryIndex } from "../utils";
+import { queryPointId, isFeatureTriggered, queryPoint, getGeometryIndex, isRightClick } from "../utils";
 import type { TilesContext } from "../tiles";
+import { RemoveButton } from "#components/remove-button";
 
 export interface PrimaryPointEvents {
   onPointMouseEnter: (event: MapLayerMouseEvent) => void;
@@ -34,6 +35,9 @@ export class PointEvents {
   private auxPoints: AuxPoints | null;
   private pointState: PointState;
   private topologyManager: PointTopologyManager;
+  private removeButton: RemoveButton;
+  private pressedStep: Step | null = null;
+  private pressActive = false;
 
   constructor(private readonly ctx: TilesContext) {
     this.pointState = new PointState();
@@ -48,6 +52,11 @@ export class PointEvents {
     };
     this.firstPoint = new FirstPoint(this.ctx, this.events);
     this.auxPoints = new AuxPoints(this.ctx, this.events, this.pointState, this.topologyManager);
+    this.removeButton = new RemoveButton({
+      map: this.ctx.map,
+      options: this.ctx.options,
+      onRemove: this.onPointRemove,
+    });
   }
 
   private initConsumers = () => {
@@ -65,6 +74,7 @@ export class PointEvents {
     const { map } = this.ctx;
     map.on("click", this.onMapClick);
     map.on("dblclick", this.onMapDblClick);
+    map.on("mousemove", this.onPointerHover);
 
     map.on("mouseenter", ELAYERS.PointsLayer, this.onPointMouseEnter);
     map.on("mouseleave", ELAYERS.PointsLayer, this.onPointMouseLeave);
@@ -85,6 +95,7 @@ export class PointEvents {
     const { map } = this.ctx;
     map.off("click", this.onMapClick);
     map.off("dblclick", this.onMapDblClick);
+    map.off("mousemove", this.onPointerHover);
     map.off("mousemove", this.onMapMouseMove);
 
     map.off("mouseenter", ELAYERS.PointsLayer, this.onPointMouseEnter);
@@ -102,6 +113,7 @@ export class PointEvents {
     this.firstPoint?.remove();
     this.auxPoints?.removeEvents();
     this.removeConsumers();
+    this.removeButton.destroy();
   };
 
   private onPointClick = (event: MapLayerMouseEvent) => {
@@ -118,19 +130,12 @@ export class PointEvents {
     event.preventDefault();
   };
 
-  private onPointRemove = (event: MapLayerMouseEvent | MapTouchEvent) => {
+  private onPointRemove = (id: StepId) => {
     const { store } = this.ctx;
-    if (store.size === 1) {
-      store.reset();
-      this.ctx.panel.hide();
-    } else {
-      const id = queryPointId(this.ctx.map, event.point);
-      const clickedNode = store.findNodeById(id);
 
-      if (!clickedNode?.val) return;
+    if (!store.findStepById(id)) return;
 
-      this.topologyManager.removePoint(clickedNode.val.id);
-    }
+    this.topologyManager.removePoint(id);
     renderer.execute();
   };
 
@@ -181,6 +186,21 @@ export class PointEvents {
     }
   }, 17);
 
+  private onPointerHover = throttle((event: MapLayerMouseEvent) => {
+    const { mouseEvents, map, store } = this.ctx;
+
+    if (mouseEvents.pointMouseDown) return;
+
+    const id = queryPointId(map, event.point);
+    const step = id ? store.findStepById(id) : null;
+
+    if (step && !step.isAuxiliary) {
+      this.removeButton.show(step);
+    } else {
+      this.removeButton.hide();
+    }
+  }, 17);
+
   private onPointMouseEnter = (event: MapLayerMouseEvent) => {
     const { mouseEvents, map, store, options } = this.ctx;
     if (mouseEvents) {
@@ -224,10 +244,15 @@ export class PointEvents {
   };
 
   private storeEventsConsumer = (event: StoreChangeEvent) => {
-    if (event.type === "STORE_MUTATED") {
-      if (event.data?.size === 0) {
-        this.pointState.reset();
-      }
+    if (event.type === "STORE_CLEARED") {
+      this.pointState.reset();
+      this.removeButton.hide();
+      return;
+    }
+
+    if (event.type === "STORE_MUTATED" && event.data?.size === 0) {
+      this.pointState.reset();
+      this.removeButton.hide();
     }
   };
 
@@ -245,6 +270,7 @@ export class PointEvents {
 
     if (type === "BREAK_CHANGED" || type === "MODE_CHANGED") {
       this.pointState.reset();
+      this.removeButton.hide();
     }
   };
 
@@ -277,12 +303,11 @@ export class PointEvents {
 
     const { mouseEvents, map, store } = this.ctx;
 
-    if ((event.originalEvent as { button: number }).button === 2) {
-      this.onPointRemove(event);
-      return;
-    }
+    if (isRightClick(event)) return;
 
     this.setSelectedNode(event);
+    this.pressedStep = this.pointState.getSelectedNode()?.val ?? null;
+    this.pressActive = true;
 
     removeTransparentLine(map);
     this.hideLastPointPanel();
@@ -299,13 +324,20 @@ export class PointEvents {
 
     map.on("mousemove", this.onMapMouseMove);
     map.on("touchmove", this.onMapMouseMove);
+    map.on("mouseup", this.onPointMouseUp);
+    map.on("touchend", this.onPointMouseUp);
   };
 
   private onPointMouseUp = () => {
     const { mouseEvents, store, panel, map, options } = this.ctx;
 
+    if (!this.pressActive) return;
+    this.pressActive = false;
+
     map.off("mousemove", this.onMapMouseMove);
     map.off("touchmove", this.onMapMouseMove);
+    map.off("mouseup", this.onPointMouseUp);
+    map.off("touchend", this.onPointMouseUp);
 
     mouseEvents.pointMouseUp = true;
 
@@ -325,6 +357,7 @@ export class PointEvents {
         timeline.commit(new MovePointCommand(store, selectedNode, startCoordinates as LatLng, map));
         this.pointState.setMoved(false);
       }
+
       this.pointState.partialReset();
     }
 
@@ -334,5 +367,17 @@ export class PointEvents {
 
     addTransparentLine(map, options);
     renderer.execute();
+    this.showButtonForPressedStep();
+  };
+
+  private showButtonForPressedStep = () => {
+    const { store } = this.ctx;
+    const pressed = this.pressedStep;
+    this.pressedStep = null;
+
+    if (!pressed || pressed.isAuxiliary) return;
+    if (!store.findStepById(pressed.id)) return;
+
+    this.removeButton.show(pressed);
   };
 }

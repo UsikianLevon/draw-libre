@@ -1,0 +1,50 @@
+.mdl-point-remove {
+  background-color: #fff;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23333333' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M18 6 6 18'/%3E%3Cpath d='m6 6 12 12'/%3E%3C/svg%3E");
+  background-position: 50%;
+  background-repeat: no-repeat;
+  background-size: 13px 13px;
+  border: 0;
+  border-radius: 50%;
+  box-shadow: 0 1px 4px #00000059;
+  box-sizing: border-box;
+  cursor: pointer;
+  height: 26px;
+  left: 0;
+  outline: none;
+  padding: 0;
+  position: absolute;
+  top: 0;
+  width: 26px;
+  z-index: 1000000;
+}
+
+.mdl-point-remove:hover {
+  background-color: #f2f2f2;
+}
+
+.mdl-point-remove:active {
+  background-color: #e0e0e0;
+}
+
+.mdl-point-remove::before {
+  bottom: 0;
+  content: "";
+  position: absolute;
+  top: 0;
+  width: 5px;
+}
+
+.mdl-point-remove[data-side="right"]::before {
+  left: -5px;
+}
+
+.mdl-point-remove[data-side="left"]::before {
+  right: -5px;
+}
+
+.mdl-point-remove.hidden {
+  opacity: 0;
+  pointer-events: none;
+  visibility: hidden;
+}

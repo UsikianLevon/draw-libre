@@ -32,13 +32,13 @@ export interface SaveEvent {
   type: "mdl:save";
 }
 
-export interface PointRightClickRemoveEvent {
+export interface PointRemoveEvent {
   id: Uuid;
   total: number;
   timestamp: number;
   target: UnifiedMap;
   coordinates: LatLng;
-  type: "mdl:rightclickremove";
+  type: "mdl:pointremove";
 }
 
 export interface PointAddEvent {

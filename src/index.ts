@@ -3,7 +3,7 @@ import type { DrawOptions, LatLng, RequiredDrawOptions, Step, StepId } from "#ap
 import type {
   UndoEvent,
   PointAddEvent,
-  PointRightClickRemoveEvent,
+  PointRemoveEvent,
   PointEnterEvent,
   PointLeaveEvent,
   PointMoveEvent,
@@ -225,7 +225,7 @@ export type {
   DrawOptions,
   RequiredDrawOptions,
   PointAddEvent,
-  PointRightClickRemoveEvent,
+  PointRemoveEvent,
   PointEnterEvent,
   PointLeaveEvent,
   PointMoveEvent,

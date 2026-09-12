@@ -58,7 +58,7 @@ export class RemovePointManualCommand implements Command {
     if (ok) {
       this.ctx.mode.reset();
     }
-    FireEvents.pointRemoveRightClick({ ...(clickedNode?.val as Step), total: this.ctx.store.size }, this.ctx.map);
+    FireEvents.removePoint({ ...(clickedNode?.val as Step), total: this.ctx.store.size }, this.ctx.map);
     this.ctx.store.pingConsumers();
   };
 

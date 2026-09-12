@@ -5,6 +5,7 @@ import {
   FIRST_POINT_PAINT_BASE,
   POINTS_PAINT_BASE,
   LINE_PAINT_BASE,
+  DYNAMIC_LINE_PAINT_BASE,
   POLYGON_PAINT_BASE,
   BREAK_PAINT_BASE,
   AUXILIARY_POINT_PAINT_BASE,
@@ -113,6 +114,13 @@ function generateModeOptions(options: DrawOptions): RequiredDrawOptions["modes"]
 }
 
 function generateLayersOptions(options: DrawOptions): RequiredDrawOptions["layersPaint"] {
+  const line = {
+    "line-width": options.layersPaint?.line?.["line-width"] || LINE_PAINT_BASE["line-width"],
+    "line-color": options.layersPaint?.line?.["line-color"] || LINE_PAINT_BASE["line-color"],
+    "line-opacity": options.layersPaint?.line?.["line-opacity"] || LINE_PAINT_BASE["line-opacity"],
+    ...options.layersPaint?.line,
+  };
+
   return {
     onLinePoint: {
       "circle-radius": options.layersPaint?.onLinePoint?.["circle-radius"] || ON_LINE_POINT_PAINT_BASE["circle-radius"],
@@ -154,11 +162,11 @@ function generateLayersOptions(options: DrawOptions): RequiredDrawOptions["layer
         AUXILIARY_POINT_PAINT_BASE["circle-stroke-width"],
       ...options.layersPaint?.auxiliaryPoint,
     },
-    line: {
-      "line-width": options.layersPaint?.line?.["line-width"] || LINE_PAINT_BASE["line-width"],
-      "line-color": options.layersPaint?.line?.["line-color"] || LINE_PAINT_BASE["line-color"],
-      "line-opacity": options.layersPaint?.line?.["line-opacity"] || LINE_PAINT_BASE["line-opacity"],
-      ...options.layersPaint?.line,
+    line,
+    dynamicLine: {
+      ...line,
+      "line-dasharray": DYNAMIC_LINE_PAINT_BASE["line-dasharray"],
+      ...options.layersPaint?.dynamicLine,
     },
     polygon: {
       "fill-color": options.layersPaint?.polygon?.["fill-color"] || POLYGON_PAINT_BASE["fill-color"],

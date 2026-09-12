@@ -83,6 +83,11 @@ export const POINTS_PAINT_BASE = {
   "circle-stroke-width": 3,
 };
 
+export const DYNAMIC_LINE_PAINT_BASE = {
+  ...LINE_PAINT_BASE,
+  "line-dasharray": [4.5, 2.5],
+};
+
 export const BREAK_PAINT_BASE = {
   "line-width": 3,
   "line-color": "#FF6464",
@@ -114,7 +119,7 @@ export const generateLayers = (options: RequiredDrawOptions) => {
       id: ELAYERS.LineDynamicLayer,
       source: ESOURCES.LineDynamicSource,
       type: "line",
-      paint: options.layersPaint.line,
+      paint: options.layersPaint.dynamicLine,
       layout: {
         visibility: "none",
       },

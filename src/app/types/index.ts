@@ -67,6 +67,7 @@ export interface LayersPaint {
   points?: CircleLayerSpecification["paint"];
   auxiliaryPoint?: CircleLayerSpecification["paint"];
   line?: LineLayerSpecification["paint"];
+  dynamicLine?: LineLayerSpecification["paint"];
   polygon?: FillLayerSpecification["paint"];
   breakLine?: LineLayerSpecification["paint"];
 }

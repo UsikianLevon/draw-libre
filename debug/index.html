@@ -1,0 +1,180 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>draw-libre debug</title>
+    <link rel="icon" href="data:," />
+    <style>
+      html,
+      body {
+        height: 100%;
+        margin: 0;
+      }
+      body {
+        display: grid;
+        grid-template-columns: 260px 1fr;
+        grid-template-rows: 1fr 180px;
+        grid-template-areas:
+          "side map"
+          "log log";
+        font:
+          13px/1.4 system-ui,
+          sans-serif;
+        color: #1a1a1a;
+      }
+      #side {
+        grid-area: side;
+        overflow-y: auto;
+        padding: 12px;
+        border-right: 1px solid #d0d0d0;
+        background: #f7f7f7;
+      }
+      #map {
+        grid-area: map;
+      }
+      #log-panel {
+        grid-area: log;
+        display: flex;
+        flex-direction: column;
+        border-top: 1px solid #d0d0d0;
+        background: #fbfbfb;
+        min-height: 0;
+      }
+      fieldset {
+        margin: 0 0 12px;
+        padding: 8px;
+        border: 1px solid #d0d0d0;
+        border-radius: 4px;
+      }
+      legend {
+        padding: 0 4px;
+        color: #666;
+        font-size: 11px;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+      }
+      label {
+        display: block;
+        padding: 2px 0;
+        cursor: pointer;
+      }
+      select {
+        width: 100%;
+        margin-top: 2px;
+        font: inherit;
+      }
+      button {
+        font: inherit;
+        padding: 4px 10px;
+        cursor: pointer;
+      }
+      #log-head {
+        display: flex;
+        gap: 8px;
+        align-items: center;
+        padding: 6px 12px;
+        border-bottom: 1px solid #e4e4e4;
+        color: #666;
+        font-size: 11px;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+      }
+      #log-head button {
+        margin-left: auto;
+        text-transform: none;
+        letter-spacing: 0;
+      }
+      #log {
+        flex: 1;
+        overflow-y: auto;
+        margin: 0;
+        padding: 4px 12px;
+        list-style: none;
+        font-family: ui-monospace, monospace;
+        font-size: 12px;
+      }
+      #log li {
+        padding: 1px 0;
+        white-space: pre;
+      }
+      #log b {
+        display: inline-block;
+        min-width: 180px;
+        font-weight: 600;
+      }
+      #log time {
+        color: #999;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="side">
+      <fieldset>
+        <legend>pointGeneration</legend>
+        <label><input type="radio" name="generation" value="manual" checked /> manual</label>
+        <label><input type="radio" name="generation" value="auto" /> auto</label>
+      </fieldset>
+
+      <fieldset>
+        <legend>modes</legend>
+        <label>
+          initial
+          <select id="initial-mode">
+            <option value="line">line</option>
+            <option value="polygon">polygon</option>
+            <option value="none">null</option>
+          </select>
+        </label>
+        <label><input type="checkbox" id="mode-line" checked /> line.visible</label>
+        <label><input type="checkbox" id="close-geometry" checked /> line.closeGeometry</label>
+        <label><input type="checkbox" id="mode-polygon" checked /> polygon.visible</label>
+        <label><input type="checkbox" id="mode-break" checked /> breakGeometry.visible</label>
+      </fieldset>
+
+      <fieldset>
+        <legend>panel</legend>
+        <label>
+          size
+          <select id="panel-size">
+            <option value="small">small</option>
+            <option value="medium" selected>medium</option>
+            <option value="large">large</option>
+          </select>
+        </label>
+        <label><input type="checkbox" id="btn-undo" checked /> undo</label>
+        <label><input type="checkbox" id="btn-redo" checked /> redo</label>
+        <label><input type="checkbox" id="btn-delete" checked /> delete</label>
+        <label><input type="checkbox" id="btn-save" checked /> save</label>
+        <label><input type="checkbox" id="clear-on-save" checked /> save.clearOnSave</label>
+      </fieldset>
+
+      <fieldset>
+        <legend>misc</legend>
+        <label><input type="checkbox" id="dynamic-line" checked /> dynamicLine</label>
+        <label>
+          initial geometry
+          <select id="initial-geometry">
+            <option value="none">none</option>
+            <option value="line">line</option>
+            <option value="polygon">polygon</option>
+          </select>
+        </label>
+      </fieldset>
+
+      <button id="reset" type="button">Reset options</button>
+    </div>
+
+    <div id="map"></div>
+
+    <div id="log-panel">
+      <div id="log-head">
+        events
+        <button id="clear-log" type="button">Clear</button>
+      </div>
+      <ul id="log"></ul>
+    </div>
+
+    <script type="module" src="./main.ts"></script>
+  </body>
+</html>

@@ -10,6 +10,9 @@ import {
   AUXILIARY_POINT_PAINT_BASE,
 } from "#app/utils/geo_constants";
 
+export const interactionDefaults = (isCoarsePointer: boolean) =>
+  isCoarsePointer ? { lineHitRadius: 12, pointHitRadius: 20 } : { lineHitRadius: 7, pointHitRadius: 14 };
+
 export const DEFAULT_OPTIONS: RequiredDrawOptions = {
   pointGeneration: "manual",
   panel: {
@@ -44,6 +47,7 @@ export const DEFAULT_OPTIONS: RequiredDrawOptions = {
     polygon: POLYGON_PAINT_BASE,
     breakLine: BREAK_PAINT_BASE,
   },
+  interaction: interactionDefaults(false),
   initial: null,
   dynamicLine: true,
   locale: {

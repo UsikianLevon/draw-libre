@@ -42,6 +42,52 @@ export class MapCanvas {
     await this.page.mouse.click(at.x, at.y, { button: "right" });
   }
 
+  async pixelAt(at: Pixel): Promise<[number, number, number]> {
+    return this.page.evaluate(
+      (target) =>
+        new Promise<[number, number, number]>((resolve, reject) => {
+          const map = window.map;
+          const canvas = map.getCanvas();
+          const gl = canvas.getContext("webgl2") ?? canvas.getContext("webgl");
+          if (!gl) {
+            reject(new Error("no webgl context"));
+            return;
+          }
+
+          const box = canvas.getBoundingClientRect();
+          const ratio = canvas.width / box.width;
+          const x = Math.round((target.x - box.left) * ratio);
+          const y = Math.round((box.height - (target.y - box.top)) * ratio);
+
+          const read = () => {
+            const pixel = new Uint8Array(4);
+            gl.readPixels(x, y, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, pixel);
+            map.off("render", read);
+            resolve([pixel[0] ?? 0, pixel[1] ?? 0, pixel[2] ?? 0]);
+          };
+
+          map.on("render", read);
+          map.triggerRepaint();
+        }),
+      at,
+    );
+  }
+
+  async jumpTo(camera: { center?: [number, number]; bearing?: number; pitch?: number }) {
+    const idles = await this.idleCount();
+    await this.page.evaluate((target) => window.map.jumpTo(target), camera);
+    await this.waitUntilRepainted(idles);
+  }
+
+  async shiftWorldCopies(count: number) {
+    const idles = await this.idleCount();
+    await this.page.evaluate((copies) => {
+      const centre = window.map.getCenter();
+      window.map.setCenter([centre.lng + 360 * copies, centre.lat]);
+    }, count);
+    await this.waitUntilRepainted(idles);
+  }
+
   async hover(at: Pixel) {
     this.pointer = at;
     await this.page.mouse.move(at.x, at.y);
@@ -60,6 +106,16 @@ export class MapCanvas {
   async hoverThrough(at: Pixel) {
     await this.page.mouse.move(at.x, at.y, { steps: DRAG_STEPS });
     this.pointer = at;
+  }
+
+  async moveWithinOneTask(path: Pixel[]) {
+    await this.page.evaluate((points) => {
+      const canvas = window.map.getCanvas();
+      for (const point of points) {
+        canvas.dispatchEvent(new MouseEvent("mousemove", { clientX: point.x, clientY: point.y, bubbles: true }));
+      }
+    }, path);
+    this.pointer = path[path.length - 1] ?? this.pointer;
   }
 
   async release() {

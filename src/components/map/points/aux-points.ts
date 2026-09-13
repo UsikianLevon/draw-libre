@@ -5,7 +5,7 @@ import { ELAYERS } from "#app/utils/geo_constants";
 import { timeline } from "#app/history";
 import { AuxToPrimaryCommand } from "./commands/aux-to-primary";
 
-import { addTransparentLine } from "../tiles/utils";
+import { showTransparentLine } from "../tiles/utils";
 import type { PrimaryPointEvents } from ".";
 import { MovePointCommand } from "./commands/move-point";
 import type { PointState } from "./point-state";
@@ -30,23 +30,23 @@ export class AuxPoints {
   private initBaseEvents = () => {
     const { map } = this.ctx;
 
-    map.on("mouseenter", ELAYERS.AuxiliaryPointLayer, this.baseEvents.onPointMouseEnter);
-    map.on("mouseleave", ELAYERS.AuxiliaryPointLayer, this.baseEvents.onPointMouseLeave);
-    map.on("mousedown", ELAYERS.AuxiliaryPointLayer, this.baseEvents.onPointMouseDown);
-    map.on("mouseup", ELAYERS.PointsLayer, this.onMouseUp);
-    map.on("touchend", ELAYERS.PointsLayer, this.onMouseUp);
-    map.on("touchstart", ELAYERS.AuxiliaryPointLayer, this.baseEvents.onPointMouseDown);
+    map.on("mouseenter", ELAYERS.AuxiliaryPointHitLayer, this.baseEvents.onPointMouseEnter);
+    map.on("mouseleave", ELAYERS.AuxiliaryPointHitLayer, this.baseEvents.onPointMouseLeave);
+    map.on("mousedown", ELAYERS.AuxiliaryPointHitLayer, this.baseEvents.onPointMouseDown);
+    map.on("mouseup", ELAYERS.PointsHitLayer, this.onMouseUp);
+    map.on("touchend", ELAYERS.PointsHitLayer, this.onMouseUp);
+    map.on("touchstart", ELAYERS.AuxiliaryPointHitLayer, this.baseEvents.onPointMouseDown);
   };
 
   private removeBaseEvents = () => {
     const { map } = this.ctx;
 
-    map.off("mouseenter", ELAYERS.AuxiliaryPointLayer, this.baseEvents.onPointMouseEnter);
-    map.off("mouseleave", ELAYERS.AuxiliaryPointLayer, this.baseEvents.onPointMouseLeave);
-    map.off("mousedown", ELAYERS.AuxiliaryPointLayer, this.baseEvents.onPointMouseDown);
-    map.off("mouseup", ELAYERS.PointsLayer, this.onMouseUp);
-    map.off("touchend", ELAYERS.PointsLayer, this.onMouseUp);
-    map.off("touchstart", ELAYERS.AuxiliaryPointLayer, this.baseEvents.onPointMouseDown);
+    map.off("mouseenter", ELAYERS.AuxiliaryPointHitLayer, this.baseEvents.onPointMouseEnter);
+    map.off("mouseleave", ELAYERS.AuxiliaryPointHitLayer, this.baseEvents.onPointMouseLeave);
+    map.off("mousedown", ELAYERS.AuxiliaryPointHitLayer, this.baseEvents.onPointMouseDown);
+    map.off("mouseup", ELAYERS.PointsHitLayer, this.onMouseUp);
+    map.off("touchend", ELAYERS.PointsHitLayer, this.onMouseUp);
+    map.off("touchstart", ELAYERS.AuxiliaryPointHitLayer, this.baseEvents.onPointMouseDown);
   };
 
   private initConsumers = () => {
@@ -74,8 +74,8 @@ export class AuxPoints {
   private initEvents() {
     const { map } = this.ctx;
 
-    map.on("mousedown", ELAYERS.AuxiliaryPointLayer, this.onMouseDown);
-    map.on("touchstart", ELAYERS.AuxiliaryPointLayer, this.onMouseDown);
+    map.on("mousedown", ELAYERS.AuxiliaryPointHitLayer, this.onMouseDown);
+    map.on("touchstart", ELAYERS.AuxiliaryPointHitLayer, this.onMouseDown);
     // PointsLayer becasue aux is already false
     this.initBaseEvents();
     this.eventsInited = true;
@@ -83,8 +83,8 @@ export class AuxPoints {
 
   public removeEvents() {
     const { map } = this.ctx;
-    map.off("mousedown", ELAYERS.AuxiliaryPointLayer, this.onMouseDown);
-    map.off("touchstart", ELAYERS.AuxiliaryPointLayer, this.onMouseDown);
+    map.off("mousedown", ELAYERS.AuxiliaryPointHitLayer, this.onMouseDown);
+    map.off("touchstart", ELAYERS.AuxiliaryPointHitLayer, this.onMouseDown);
 
     this.removeBaseEvents();
     this.eventsInited = false;
@@ -132,6 +132,6 @@ export class AuxPoints {
       mouseEvents.pointMouseDown = false;
     }
 
-    addTransparentLine(map, options);
+    showTransparentLine(map);
   };
 }

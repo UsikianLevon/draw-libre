@@ -4,6 +4,7 @@ import { DrawingModes } from "../components/drawing-modes.component";
 import { DrawingPanel } from "../components/drawing-panel.component";
 import { DynamicLine } from "../components/dynamic-line.component";
 import { EventLog } from "../components/event-log.component";
+import { GhostPoint } from "../components/ghost-point.component";
 import { MapCanvas } from "../components/map-canvas.component";
 import { MapControls } from "../components/map-controls.component";
 import { RemoveButtonComponent } from "../components/remove-button.component";
@@ -20,6 +21,7 @@ export class DrawMapPage {
   readonly canvas: MapCanvas;
   readonly removeButton: RemoveButtonComponent;
   readonly dynamicLine: DynamicLine;
+  readonly ghost: GhostPoint;
   readonly panel: DrawingPanel;
   readonly modes: DrawingModes;
   readonly controls: MapControls;
@@ -30,6 +32,7 @@ export class DrawMapPage {
     this.canvas = new MapCanvas(page);
     this.removeButton = new RemoveButtonComponent(page);
     this.dynamicLine = new DynamicLine(page);
+    this.ghost = new GhostPoint(page);
     this.panel = new DrawingPanel(page);
     this.modes = new DrawingModes(page);
     this.controls = new MapControls(page);
@@ -122,10 +125,131 @@ export class DrawMapPage {
     await this.canvas.hover(this.layout.emptySpot);
   }
 
+  async removeControlRightAfterMovingTo(at: Pixel): Promise<string[]> {
+    return this.page.evaluate(async (target) => {
+      const errors: string[] = [];
+      window.map.on("error", (event) => errors.push(event.error.message));
+
+      window.map
+        .getCanvas()
+        .dispatchEvent(new MouseEvent("mousemove", { clientX: target.x, clientY: target.y, bubbles: true }));
+      if (!window.draw) throw new Error("the draw control is not mounted");
+      window.map.removeControl(window.draw);
+      await new Promise((resolve) => setTimeout(resolve, 150));
+
+      return errors;
+    }, at);
+  }
+
   async dragPoint(from: Pixel, to: Pixel) {
     await this.canvas.press(from);
     await this.canvas.dragTo(to);
     await this.canvas.release();
+  }
+
+  async hoveredPointIds(): Promise<string[]> {
+    return this.page.evaluate(() => {
+      const source = window.map.getStyle().sources["mdl-unified-source"] as { data: GeoJSON.FeatureCollection };
+      const points = source.data.features.filter((feature) => feature.geometry.type === "Point");
+
+      return points
+        .filter((feature) => {
+          const id = feature.properties?.id as string;
+          return window.map.getFeatureState({ source: "mdl-unified-source", id }).hover === true;
+        })
+        .map((feature) => String(feature.properties?.id));
+    });
+  }
+
+  async hoveredPointPixels(): Promise<Pixel[]> {
+    return this.page.evaluate(() => {
+      const source = window.map.getStyle().sources["mdl-unified-source"] as { data: GeoJSON.FeatureCollection };
+      const box = window.map.getContainer().getBoundingClientRect();
+
+      return source.data.features
+        .filter((feature) => feature.geometry.type === "Point")
+        .filter((feature) => {
+          const id = feature.properties?.id as string;
+          return window.map.getFeatureState({ source: "mdl-unified-source", id }).hover === true;
+        })
+        .map((feature) => {
+          const [lng, lat] = (feature.geometry as GeoJSON.Point).coordinates as [number, number];
+          const point = window.map.project({ lng, lat });
+          return { x: Math.round(point.x + box.left), y: Math.round(point.y + box.top) };
+        });
+    });
+  }
+
+  async duplicateVertexCount(): Promise<number> {
+    return this.page.evaluate(() => {
+      const source = window.map.getStyle().sources["mdl-unified-source"] as { data: GeoJSON.FeatureCollection };
+      const seen = new Set<string>();
+      let duplicates = 0;
+
+      for (const feature of source.data.features) {
+        if (feature.geometry.type !== "Point") continue;
+        const key = (feature.geometry.coordinates as number[]).join();
+        if (seen.has(key)) duplicates += 1;
+        seen.add(key);
+      }
+
+      return duplicates;
+    });
+  }
+
+  async vertexPixelsOnCopy(copies: number): Promise<Pixel[]> {
+    return this.page.evaluate((shift) => {
+      const source = window.map.getStyle().sources["mdl-unified-source"] as { data: GeoJSON.FeatureCollection };
+      const box = window.map.getContainer().getBoundingClientRect();
+
+      return source.data.features
+        .filter((feature) => feature.geometry.type === "Point")
+        .map((feature) => {
+          const [lng, lat] = (feature.geometry as GeoJSON.Point).coordinates as [number, number];
+          const point = window.map.project({ lng: lng + 360 * shift, lat });
+          return { x: Math.round(point.x + box.left), y: Math.round(point.y + box.top) };
+        });
+    }, copies);
+  }
+
+  async vertexCoordinates(): Promise<[number, number][]> {
+    return this.page.evaluate(() => {
+      const source = window.map.getStyle().sources["mdl-unified-source"] as { data: GeoJSON.FeatureCollection };
+      return source.data.features
+        .filter((feature) => feature.geometry.type === "Point")
+        .map((feature) => (feature.geometry as GeoJSON.Point).coordinates as [number, number]);
+    });
+  }
+
+  async vertexCount(): Promise<number> {
+    return this.page.evaluate(() => {
+      const source = window.map.getStyle().sources["mdl-unified-source"] as { data: GeoJSON.FeatureCollection };
+      return source.data.features.filter((feature) => feature.geometry.type === "Point").length;
+    });
+  }
+
+  async pointNear(at: Pixel): Promise<Pixel | null> {
+    return this.page.evaluate((target) => {
+      const painted = window.map.queryRenderedFeatures({ layers: ["mdl-points-layer"] });
+      const box = window.map.getContainer().getBoundingClientRect();
+
+      let best: { x: number; y: number } | null = null;
+      let bestDistance = Number.POSITIVE_INFINITY;
+
+      for (const feature of painted) {
+        const [lng, lat] = (feature.geometry as GeoJSON.Point).coordinates as [number, number];
+        const point = window.map.project({ lng, lat });
+        const screen = { x: Math.round(point.x + box.left), y: Math.round(point.y + box.top) };
+        const distance = Math.hypot(screen.x - target.x, screen.y - target.y);
+
+        if (distance < bestDistance) {
+          bestDistance = distance;
+          best = screen;
+        }
+      }
+
+      return bestDistance <= 20 ? best : null;
+    }, at);
   }
 
   async expectPointAt(at: Pixel) {

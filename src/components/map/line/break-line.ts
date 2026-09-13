@@ -5,7 +5,6 @@ import { ELAYERS, ESOURCES } from "#app/utils/geo_constants";
 import { throttle } from "#app/utils/helpers";
 import { timeline } from "#app/history";
 
-import { isOnLine } from "./utils";
 import { FireEvents } from "../fire-events";
 import { BreakGeometryCommand } from "./commands/break-geometry";
 import { renderer } from "../renderer";
@@ -85,9 +84,9 @@ export class LineBreakEvents {
   };
 
   private onLineEnterBreak = (event: MapLayerMouseEvent) => {
-    const { map, store } = this.ctx;
+    const { map } = this.ctx;
 
-    const line = isOnLine(event, store);
+    const line = this.ctx.projection.hit(event.point)?.segmentStart ?? null;
     if (line?.val?.id !== this.current?.val?.id) {
       this.current = line;
     }

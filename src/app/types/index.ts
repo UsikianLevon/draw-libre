@@ -112,6 +112,10 @@ export interface DrawOptions {
 
 export type RequiredDrawOptions = DeepRequired<Omit<DrawOptions, "layersPaint">> & {
   layersPaint: LayersPaint;
+  interaction: {
+    lineHitRadius: number;
+    pointHitRadius: number;
+  };
 };
 
 export interface ControlOptions {

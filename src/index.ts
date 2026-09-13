@@ -18,6 +18,7 @@ import { Panel } from "#components/panel";
 import { Control } from "#components/side-control";
 import { DrawingMode } from "#components/map/mode";
 import { Cursor } from "#components/cursor";
+import { GeometryProjection } from "#components/map/line/projection";
 import { MouseEvents } from "#components/map/mouse-events/index";
 import { uuidv4 } from "#app/utils/helpers";
 import { DOM } from "#app/dom";
@@ -41,6 +42,7 @@ export default class DrawLibre implements IControl {
   private cursor: Cursor | undefined;
   private mouseEvents: MouseEvents | undefined;
   private timelineAdapter: MapTimelineAdapter | undefined;
+  private projection: GeometryProjection | undefined;
 
   private renderer: Renderer | null = null;
   static instance: DrawLibre | null = null;
@@ -86,6 +88,7 @@ export default class DrawLibre implements IControl {
       options: this.defaultOptions,
       mode: this.mode,
     });
+    this.projection = new GeometryProjection({ map, store: this.store, options: this.defaultOptions });
     this.mouseEvents = new MouseEvents();
     this.panel = new Panel({ map, mode: this.mode, options: this.defaultOptions, store: this.store });
     this.control = new Control({ options: this.defaultOptions, map, mode: this.mode });
@@ -97,6 +100,7 @@ export default class DrawLibre implements IControl {
       control: this.control,
       panel: this.panel,
       mouseEvents: this.mouseEvents,
+      projection: this.projection,
     });
     this.cursor = new Cursor({
       map,
@@ -128,6 +132,7 @@ export default class DrawLibre implements IControl {
    * @param map - the Map this control will be removed from
    */
   onRemove = () => {
+    this.projection?.remove();
     this.cursor?.remove();
     this.tiles?.remove();
     this.panel?.destroy();

@@ -1,5 +1,5 @@
 import type { RequiredDrawOptions } from "#app/types/index";
-import type { AddLayerObject } from "maplibre-gl";
+import type { AddLayerObject, CircleLayerSpecification, FilterSpecification } from "maplibre-gl";
 
 export const LINE_BASE = {
   type: "FeatureCollection",
@@ -25,7 +25,17 @@ export const ELAYERS = {
   SinglePointLayer: "mdl-single-point-layer",
   FirstPointLayer: "mdl-first-point-layer",
   AuxiliaryPointLayer: "mdl-auxiliary-point-layer",
+  PointsHitLayer: "mdl-points-hit-layer",
+  FirstPointHitLayer: "mdl-first-point-hit-layer",
+  AuxiliaryPointHitLayer: "mdl-auxiliary-point-hit-layer",
 } as const;
+
+export const POINTS_FILTER = {
+  points: ["all", ["==", "$type", "Point"], ["==", "isFirst", false], ["==", "isAuxiliary", false]],
+  pointsWhenClosed: ["all", ["==", "$type", "Point"], ["==", "isAuxiliary", false]],
+  firstPoint: ["==", ["get", "isFirst"], true],
+  auxiliaryPoint: ["==", ["get", "isAuxiliary"], true],
+} satisfies Record<string, FilterSpecification>;
 
 export const ESOURCES = {
   UnifiedSource: "mdl-unified-source",
@@ -94,7 +104,20 @@ export const BREAK_PAINT_BASE = {
   "line-dasharray": [3, 3],
 };
 
+const HIT_HIGHLIGHT_OPACITY = 0.18;
+
+const POINT_HIT_PAINT = {
+  "circle-color": "#666666",
+  "circle-opacity": ["case", ["boolean", ["feature-state", "hover"], false], HIT_HIGHLIGHT_OPACITY, 0],
+} satisfies CircleLayerSpecification["paint"];
+
 export const generateLayers = (options: RequiredDrawOptions) => {
+  const hitPaint = {
+    ...POINT_HIT_PAINT,
+    "circle-radius": options.interaction.pointHitRadius,
+    "circle-pitch-scale": "viewport" as const,
+  };
+
   return [
     {
       id: ELAYERS.SinglePointLayer,
@@ -139,7 +162,7 @@ export const generateLayers = (options: RequiredDrawOptions) => {
       source: ESOURCES.UnifiedSource,
       type: "line",
       paint: {
-        "line-width": 4,
+        "line-width": options.interaction.lineHitRadius * 2,
         "line-color": "transparent",
       },
       filter: ["==", "$type", "LineString"],
@@ -158,14 +181,14 @@ export const generateLayers = (options: RequiredDrawOptions) => {
       source: ESOURCES.UnifiedSource,
       type: "circle",
       paint: options.layersPaint.points,
-      filter: ["all", ["==", "$type", "Point"], ["==", "isFirst", false], ["==", "isAuxiliary", false]],
+      filter: POINTS_FILTER.points,
     },
     {
       id: ELAYERS.FirstPointLayer,
       source: ESOURCES.UnifiedSource,
       type: "circle",
       paint: options.layersPaint.firstPoint,
-      filter: ["==", ["get", "isFirst"], true],
+      filter: POINTS_FILTER.firstPoint,
       layout: {
         visibility: "none",
       },
@@ -175,7 +198,31 @@ export const generateLayers = (options: RequiredDrawOptions) => {
       source: ESOURCES.UnifiedSource,
       type: "circle",
       paint: options.layersPaint.auxiliaryPoint,
-      filter: ["==", ["get", "isAuxiliary"], true],
+      filter: POINTS_FILTER.auxiliaryPoint,
+    },
+    {
+      id: ELAYERS.PointsHitLayer,
+      source: ESOURCES.UnifiedSource,
+      type: "circle",
+      paint: { ...hitPaint },
+      filter: POINTS_FILTER.points,
+    },
+    {
+      id: ELAYERS.FirstPointHitLayer,
+      source: ESOURCES.UnifiedSource,
+      type: "circle",
+      paint: { ...hitPaint },
+      filter: POINTS_FILTER.firstPoint,
+      layout: {
+        visibility: "none",
+      },
+    },
+    {
+      id: ELAYERS.AuxiliaryPointHitLayer,
+      source: ESOURCES.UnifiedSource,
+      type: "circle",
+      paint: { ...hitPaint },
+      filter: POINTS_FILTER.auxiliaryPoint,
     },
   ] satisfies AddLayerObject[];
 };

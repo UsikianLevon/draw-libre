@@ -13,6 +13,9 @@ export class Layers {
     this.swap(ELAYERS.LineLayerTransparent, ELAYERS.FirstPointLayer);
     this.swap(ELAYERS.LineLayerTransparent, ELAYERS.PointsLayer);
     this.swap(ELAYERS.PolygonLayer, ELAYERS.LineLayer);
+    this.swap(ELAYERS.PointsHitLayer, ELAYERS.PointsLayer);
+    this.swap(ELAYERS.FirstPointHitLayer, ELAYERS.FirstPointLayer);
+    this.swap(ELAYERS.AuxiliaryPointHitLayer, ELAYERS.AuxiliaryPointLayer);
 
     this.initConsumers();
   }

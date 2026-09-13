@@ -1,7 +1,7 @@
 import type { MapLayerMouseEvent } from "maplibre-gl";
 import type { Step } from "#app/types/index";
 
-import { ELAYERS } from "#app/utils/geo_constants";
+import { ELAYERS, POINTS_FILTER } from "#app/utils/geo_constants";
 import { uuidv4 } from "#app/utils/helpers";
 
 import type { UnifiedMap } from "#app/types/map";
@@ -21,38 +21,59 @@ export const PointHelpers = {
   },
 };
 
+const FIRST_POINT_LAYERS = [ELAYERS.FirstPointLayer, ELAYERS.FirstPointHitLayer];
+const POINT_LAYERS = [ELAYERS.PointsLayer, ELAYERS.PointsHitLayer];
+
+const SINGLE_POINT_HIDE_DELAY = 33;
+
+let singlePointHideTimer: ReturnType<typeof setTimeout> | null = null;
+
+const cancelSinglePointHiding = () => {
+  if (singlePointHideTimer !== null) {
+    clearTimeout(singlePointHideTimer);
+    singlePointHideTimer = null;
+  }
+};
+
 export const PointVisibility = {
+  cancelSinglePointHiding,
+
   setFirstPointVisible(map: UnifiedMap) {
-    map.setLayoutProperty(ELAYERS.FirstPointLayer, "visibility", "visible");
+    for (const layer of FIRST_POINT_LAYERS) {
+      map.setLayoutProperty(layer, "visibility", "visible");
+    }
   },
 
   setFirstPointHidden(map: UnifiedMap) {
-    map.setLayoutProperty(ELAYERS.FirstPointLayer, "visibility", "none");
+    for (const layer of FIRST_POINT_LAYERS) {
+      map.setLayoutProperty(layer, "visibility", "none");
+    }
   },
 
   setSinglePointVisible(event: MapLayerMouseEvent) {
-    const map = event.target;
-    map.setLayoutProperty(ELAYERS.SinglePointLayer, "visibility", "visible");
+    cancelSinglePointHiding();
+    event.target.setLayoutProperty(ELAYERS.SinglePointLayer, "visibility", "visible");
   },
 
   setSinglePointHidden(event: MapLayerMouseEvent) {
     const map = event.target;
-    setTimeout(() => {
+    cancelSinglePointHiding();
+    singlePointHideTimer = setTimeout(() => {
+      singlePointHideTimer = null;
       map.setLayoutProperty(ELAYERS.SinglePointLayer, "visibility", "none");
-    }, 33);
+    }, SINGLE_POINT_HIDE_DELAY);
   },
 };
 
 export const PointsFilter = {
   default(map: UnifiedMap) {
-    map.setFilter(ELAYERS.PointsLayer, [
-      "all",
-      ["==", "$type", "Point"],
-      ["==", "isFirst", false],
-      ["==", "isAuxiliary", false],
-    ]);
+    for (const layer of POINT_LAYERS) {
+      map.setFilter(layer, POINTS_FILTER.points);
+    }
   },
   closedGeometry(map: UnifiedMap) {
-    map.setFilter(ELAYERS.PointsLayer, ["all", ["==", "$type", "Point"], ["==", "isAuxiliary", false]]);
+    for (const layer of POINT_LAYERS) {
+      map.setFilter(layer, POINTS_FILTER.pointsWhenClosed);
+    }
   },
 };

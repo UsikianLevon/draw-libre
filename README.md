@@ -104,6 +104,7 @@ const draw = DrawLibre.getInstance({
     onLinePoint: {}, // CircleLayerSpecification["paint"]
     firstPoint: {}, // CircleLayerSpecification["paint"]
     points: {}, // CircleLayerSpecification["paint"]
+    auxiliaryPoint: {}, // CircleLayerSpecification["paint"]
     line: {}, // LineLayerSpecification["paint"]
     dynamicLine: {}, // LineLayerSpecification["paint"]; defaults to `line` + a dash pattern
     polygon: {}, // FillLayerSpecification["paint"]

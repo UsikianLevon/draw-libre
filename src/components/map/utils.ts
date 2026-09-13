@@ -3,6 +3,9 @@ import type { Uuid } from "#app/types/index";
 import type { UnifiedMap } from "#app/types/map";
 import type { Store } from "#app/store/index";
 import { ELAYERS } from "#app/utils/geo_constants";
+import { nearestVertexPx } from "./line/projection";
+
+export const POINT_HIT_LAYERS = [ELAYERS.PointsHitLayer, ELAYERS.FirstPointHitLayer, ELAYERS.AuxiliaryPointHitLayer];
 
 export const isFeatureTriggered = (event: MapLayerMouseEvent, layerIds: string[]) => {
   const layers = event.target.queryRenderedFeatures(event.point, {
@@ -12,19 +15,25 @@ export const isFeatureTriggered = (event: MapLayerMouseEvent, layerIds: string[]
 };
 
 export const queryPointId = (map: UnifiedMap, point: MapMouseEvent["point"]) => {
-  const query = map.queryRenderedFeatures(point, {
-    layers: [ELAYERS.PointsLayer, ELAYERS.FirstPointLayer, ELAYERS.AuxiliaryPointLayer, ELAYERS.SinglePointLayer],
-  });
-
-  const id = query?.[0]?.properties.id;
+  const id = queryPoint(map, point)?.properties.id;
   return id;
 };
 
 export const queryPoint = (map: UnifiedMap, point: MapMouseEvent["point"]) => {
-  const query = map.queryRenderedFeatures(point, {
-    layers: [ELAYERS.PointsLayer, ELAYERS.FirstPointLayer, ELAYERS.AuxiliaryPointLayer, ELAYERS.SinglePointLayer],
+  const features = map.queryRenderedFeatures(point, {
+    layers: POINT_HIT_LAYERS,
   });
-  return query?.[0];
+  if (features.length < 2) return features[0];
+
+  // rendered features come ordered by layer, not by distance, and keep coordinates of the original world copy
+  const cursorLng = map.unproject(point).lng;
+  const pixels = features.map((feature) => {
+    const [lng, lat] = (feature.geometry as GeoJSON.Point).coordinates as [number, number];
+    return map.project({ lng: lng + 360 * Math.round((cursorLng - lng) / 360), lat });
+  });
+
+  const nearest = nearestVertexPx(pixels, point);
+  return nearest ? features[nearest.index] : undefined;
 };
 
 export const getGeometryIndex = (store: Store, id: Uuid) => {

@@ -8,6 +8,7 @@ import { MouseEvents } from "../mouse-events";
 import { Events } from "./events";
 import { Layers } from "./layers";
 import { Sources } from "./sources";
+import type { GeometryProjection } from "../line/projection";
 
 export type TilesContext = {
   map: UnifiedMap;
@@ -17,6 +18,7 @@ export type TilesContext = {
   options: RequiredDrawOptions;
   mouseEvents: MouseEvents;
   mode: DrawingMode;
+  projection: GeometryProjection;
 };
 
 export class Tiles {
@@ -38,9 +40,8 @@ export class Tiles {
   };
 
   public remove = () => {
-    // first remove the layers then all the sources
+    this.events?.remove();
     this.layers.remove();
     this.sources.remove();
-    this.events?.remove();
   };
 }

@@ -1,5 +1,6 @@
 import { LineEvents } from "../line";
 import { PointEvents } from "../points";
+import { PointVisibility } from "../points/helpers";
 import { TilesContext } from ".";
 
 export class Events {
@@ -20,5 +21,6 @@ export class Events {
   public remove = () => {
     this.pointEvents?.remove();
     this.lineEvents?.remove();
+    PointVisibility.cancelSinglePointHiding();
   };
 }

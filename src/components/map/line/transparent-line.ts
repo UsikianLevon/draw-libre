@@ -6,7 +6,6 @@ import { throttle } from "#app/utils/helpers";
 import { FireEvents } from "../fire-events";
 import { PointVisibility } from "../points/helpers";
 import { checkIfPointClicked, insertStepIfOnLine, updateUIAfterInsert } from "./utils";
-import { isFeatureTriggered } from "../utils";
 import { TilesContext } from "#components/map/tiles";
 import { DrawingModeChangeEvent } from "../mode/types";
 
@@ -14,6 +13,7 @@ export const LINE_TRANSPARENT_THROTTLE_TIME = 17;
 
 export class TransparentLineEvents {
   private eventsInited = false;
+  private pointerOnLine = false;
   private isThrottled: boolean;
   private lastEvent: MapLayerMouseEvent | null;
 
@@ -58,20 +58,35 @@ export class TransparentLineEvents {
     this.ctx.map.off("mousemove", ELAYERS.LineLayerTransparent, this.onLineMove);
     this.ctx.map.off("mouseenter", ELAYERS.LineLayerTransparent, this.onLineEnter);
     this.ctx.map.off("mouseleave", ELAYERS.LineLayerTransparent, this.onLineLeave);
+    this.pointerOnLine = false;
     this.eventsInited = false;
   }
 
   private onLineClick = (event: MapLayerMouseEvent) => {
     const { store, map, mode } = this.ctx;
     if (checkIfPointClicked(event)) return;
-    const step = insertStepIfOnLine(event, store);
+    const step = insertStepIfOnLine(event, this.ctx);
     if (step) {
       updateUIAfterInsert(event, this.ctx);
       FireEvents.addPoint({ ...step, total: store.size }, map, mode);
     }
   };
 
+  private hitClearOfVertices = (event: MapLayerMouseEvent) => {
+    const hit = this.ctx.projection.hit(event.point);
+    if (!hit || hit.vertexDistance < this.ctx.options.interaction.pointHitRadius) return null;
+
+    return hit;
+  };
+
   private processMouseMove = (event: MapLayerMouseEvent) => {
+    const hit = this.hitClearOfVertices(event);
+
+    if (!hit) {
+      PointVisibility.setSinglePointHidden(event);
+      return;
+    }
+
     PointVisibility.setSinglePointVisible(event);
     if (event.target.getLayer(ELAYERS.SinglePointLayer)) {
       const map = event.target;
@@ -81,7 +96,7 @@ export class TransparentLineEvents {
           type: "Feature",
           geometry: {
             type: "Point",
-            coordinates: [event.lngLat.lng, event.lngLat.lat],
+            coordinates: [hit.projected.lng, hit.projected.lat],
           },
           properties: {},
         });
@@ -90,7 +105,6 @@ export class TransparentLineEvents {
   };
 
   private onLineMove = throttle((event: MapLayerMouseEvent) => {
-    if (isFeatureTriggered(event, [ELAYERS.PointsLayer, ELAYERS.FirstPointLayer])) return;
     if (this.ctx.mouseEvents.pointMouseDown || this.ctx.mouseEvents.pointMouseEnter) return;
 
     this.lastEvent = event;
@@ -99,21 +113,24 @@ export class TransparentLineEvents {
 
     this.isThrottled = true;
     requestAnimationFrame(() => {
-      if (!this.lastEvent) return;
-      this.processMouseMove(this.lastEvent);
       this.isThrottled = false;
+      // a frame queued before mouseleave carries a position that is already off the line
+      if (!this.pointerOnLine || !this.lastEvent) return;
+      this.processMouseMove(this.lastEvent);
     });
   }, LINE_TRANSPARENT_THROTTLE_TIME);
 
   private onLineEnter = (event: MapLayerMouseEvent) => {
+    this.pointerOnLine = true;
     if (this.ctx.mouseEvents.pointMouseDown || this.ctx.mouseEvents.pointMouseEnter) return;
-    if (isFeatureTriggered(event, [ELAYERS.PointsLayer, ELAYERS.FirstPointLayer])) return;
+    if (!this.hitClearOfVertices(event)) return;
 
     this.ctx.mouseEvents.lineMouseEnter = true;
     PointVisibility.setSinglePointVisible(event);
   };
 
   private onLineLeave = (event: MapLayerMouseEvent) => {
+    this.pointerOnLine = false;
     if (this.ctx.mouseEvents.pointMouseDown || this.ctx.mouseEvents.pointMouseEnter) return;
 
     this.ctx.mouseEvents.lineMouseLeave = true;

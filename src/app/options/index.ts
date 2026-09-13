@@ -10,7 +10,7 @@ import {
   BREAK_PAINT_BASE,
   AUXILIARY_POINT_PAINT_BASE,
 } from "../utils/geo_constants";
-import { DEFAULT_OPTIONS } from "./constants";
+import { DEFAULT_OPTIONS, interactionDefaults } from "./constants";
 
 function allStepsHaveIds(steps: Initial["steps"]): boolean {
   return steps.every((step) => "id" in step && step.id !== undefined);
@@ -57,7 +57,7 @@ export function checkInitialStepsOptionOnErrors(options: Initial): void {
 
 export function initOptions(options?: DrawOptions): RequiredDrawOptions {
   if (!options) {
-    return DEFAULT_OPTIONS;
+    return { ...DEFAULT_OPTIONS, interaction: interactionDefaults(isCoarsePointer()) };
   }
 
   return {
@@ -65,11 +65,17 @@ export function initOptions(options?: DrawOptions): RequiredDrawOptions {
     panel: generatePanelOptions(options),
     modes: generateModeOptions(options),
     layersPaint: generateLayersOptions(options),
+    interaction: interactionDefaults(isCoarsePointer()),
     initial: options.initial || DEFAULT_OPTIONS["initial"],
     locale: generateLocaleOptions(options),
     dynamicLine: options.dynamicLine ?? DEFAULT_OPTIONS.dynamicLine,
   } as RequiredDrawOptions;
 }
+const isCoarsePointer = () =>
+  typeof window !== "undefined" && typeof window.matchMedia === "function"
+    ? window.matchMedia("(pointer: coarse)").matches
+    : false;
+
 function generatePanelOptions(options: DrawOptions): RequiredDrawOptions["panel"] {
   return {
     size: options.panel?.size || DEFAULT_OPTIONS.panel.size,

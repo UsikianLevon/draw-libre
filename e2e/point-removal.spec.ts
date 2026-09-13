@@ -216,7 +216,9 @@ test("undo brings a removed point back", async ({ drawMap }) => {
   await drawMap.removePointUnderPointer();
   await drawMap.events.expectCount("mdl:pointremove", 1);
 
+  const idles = await drawMap.canvas.idleCount();
   await drawMap.panel.clickUndo();
+  await drawMap.canvas.waitUntilRepainted(idles);
 
   await drawMap.expectPointAt(line.middle);
 });

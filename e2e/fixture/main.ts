@@ -6,6 +6,7 @@ import DrawLibre from "../../src/index";
 declare global {
   interface Window {
     map: maplibregl.Map;
+    draw: DrawLibre | null;
   }
 }
 
@@ -53,6 +54,7 @@ const draw = DrawLibre.getInstance({
   modes: { initial: "line" },
   pointGeneration: useAutoPreset ? "auto" : "manual",
 });
+window.draw = draw;
 
 function record(type: string, event: Record<string, unknown>) {
   const item = document.createElement("li");

@@ -170,4 +170,17 @@ export class GeometryProjection {
       vertexDistance: vertex ? vertex.distance : Infinity,
     };
   };
+
+  public isNearGeometry = (cursor: Point): boolean => {
+    const { nodes, pixels } = this.#pixels.read();
+    const reference = nodes[0]?.val;
+    if (!reference) return false;
+
+    const localCursor = this.#toGeometryCopy(cursor, reference);
+    const vertex = nearestVertexPx(pixels, localCursor);
+    if (vertex && vertex.distance <= this.ctx.options.interaction.pointHitRadius) return true;
+
+    const segment = nearestSegmentPx(pixels, localCursor);
+    return segment !== null && segment.distance <= this.ctx.options.interaction.lineHitRadius;
+  };
 }

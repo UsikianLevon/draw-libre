@@ -1,7 +1,7 @@
 import type { GeoJSONSource, MapLayerMouseEvent } from "maplibre-gl";
 
 import { ELAYERS, ESOURCES } from "#app/utils/geo_constants";
-import { throttle } from "#app/utils/helpers";
+import { coalesceToFrame } from "#app/utils/helpers";
 
 import { FireEvents } from "../fire-events";
 import { PointVisibility } from "../points/helpers";
@@ -9,17 +9,10 @@ import { checkIfPointClicked, insertStepIfOnLine, updateUIAfterInsert } from "./
 import { TilesContext } from "#components/map/tiles";
 import { DrawingModeChangeEvent } from "../mode/types";
 
-export const LINE_TRANSPARENT_THROTTLE_TIME = 17;
-
 export class TransparentLineEvents {
   private eventsInited = false;
-  private pointerOnLine = false;
-  private isThrottled: boolean;
-  private lastEvent: MapLayerMouseEvent | null;
 
   constructor(private readonly ctx: TilesContext) {
-    this.isThrottled = false;
-    this.lastEvent = null;
     this.initConsumers();
   }
 
@@ -58,7 +51,7 @@ export class TransparentLineEvents {
     this.ctx.map.off("mousemove", ELAYERS.LineLayerTransparent, this.onLineMove);
     this.ctx.map.off("mouseenter", ELAYERS.LineLayerTransparent, this.onLineEnter);
     this.ctx.map.off("mouseleave", ELAYERS.LineLayerTransparent, this.onLineLeave);
-    this.pointerOnLine = false;
+    this.renderGhostPoint.cancel();
     this.eventsInited = false;
   }
 
@@ -104,24 +97,16 @@ export class TransparentLineEvents {
     }
   };
 
-  private onLineMove = throttle((event: MapLayerMouseEvent) => {
+  private onLineMove = (event: MapLayerMouseEvent) => {
     if (this.ctx.mouseEvents.pointMouseDown || this.ctx.mouseEvents.pointMouseEnter) return;
+    this.renderGhostPoint(event);
+  };
 
-    this.lastEvent = event;
-
-    if (this.isThrottled) return;
-
-    this.isThrottled = true;
-    requestAnimationFrame(() => {
-      this.isThrottled = false;
-      // a frame queued before mouseleave carries a position that is already off the line
-      if (!this.pointerOnLine || !this.lastEvent) return;
-      this.processMouseMove(this.lastEvent);
-    });
-  }, LINE_TRANSPARENT_THROTTLE_TIME);
+  private renderGhostPoint = coalesceToFrame((event: MapLayerMouseEvent) => {
+    this.processMouseMove(event);
+  });
 
   private onLineEnter = (event: MapLayerMouseEvent) => {
-    this.pointerOnLine = true;
     if (this.ctx.mouseEvents.pointMouseDown || this.ctx.mouseEvents.pointMouseEnter) return;
     if (!this.hitClearOfVertices(event)) return;
 
@@ -130,7 +115,7 @@ export class TransparentLineEvents {
   };
 
   private onLineLeave = (event: MapLayerMouseEvent) => {
-    this.pointerOnLine = false;
+    this.renderGhostPoint.cancel();
     if (this.ctx.mouseEvents.pointMouseDown || this.ctx.mouseEvents.pointMouseEnter) return;
 
     this.ctx.mouseEvents.lineMouseLeave = true;

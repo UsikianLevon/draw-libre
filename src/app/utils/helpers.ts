@@ -41,28 +41,6 @@ export const uuidv4 = (): Uuid => {
   return parts.join("-") as Uuid;
 };
 
-export const throttle = (fn: AnyFunction, delay: number) => {
-  let lastArgs: any;
-  let shouldCall = true;
-
-  function execute() {
-    if (shouldCall && lastArgs) {
-      fn(...lastArgs);
-      lastArgs = null;
-      shouldCall = false;
-      setTimeout(() => {
-        shouldCall = true;
-        execute();
-      }, delay);
-    }
-  }
-
-  return function (...args: any) {
-    lastArgs = args;
-    execute();
-  };
-};
-
 export const debounce = (fn: AnyFunction, delay: number) => {
   let timeout: number;
 
@@ -72,4 +50,31 @@ export const debounce = (fn: AnyFunction, delay: number) => {
       fn(...args);
     }, delay);
   };
+};
+
+export type FrameCoalesced<T extends AnyFunction> = ((...args: Parameters<T>) => void) & { cancel: () => void };
+
+export const coalesceToFrame = <T extends AnyFunction>(fn: T): FrameCoalesced<T> => {
+  let pending: Parameters<T> | null = null;
+  let frame = 0;
+
+  const flush = () => {
+    frame = 0;
+    const args = pending;
+    pending = null;
+    if (args) fn(...args);
+  };
+
+  const call = (...args: Parameters<T>) => {
+    pending = args;
+    if (frame === 0) frame = window.requestAnimationFrame(flush);
+  };
+
+  call.cancel = () => {
+    if (frame !== 0) window.cancelAnimationFrame(frame);
+    frame = 0;
+    pending = null;
+  };
+
+  return call;
 };

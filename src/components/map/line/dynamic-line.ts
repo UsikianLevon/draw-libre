@@ -4,7 +4,7 @@ import { DOM } from "#app/dom";
 import type { LatLng } from "#app/types/index";
 import { ELAYERS, ESOURCES, LINE_BASE } from "#app/utils/geo_constants";
 import type { StoreChangeEvent } from "#app/store/types";
-import { debounce, throttle } from "#app/utils/helpers";
+import { coalesceToFrame, debounce } from "#app/utils/helpers";
 import { EVENTS } from "#app/utils/constants";
 
 import type { MouseEventsChangeEvent, MapMouseEvent } from "../mouse-events/types";
@@ -14,20 +14,19 @@ import type { TilesContext } from "../tiles";
 import { hideDynamicLine } from "./utils";
 import { DrawingModeChangeEvent } from "../mode/types";
 
-const LINE_DYNAMIC_THROTTLE_TIME = 17; // 60 FPS
-
 export class DynamicLineEvents {
   private visible: boolean;
   private firstPoint: LatLng | null = null;
   private secondPoint: LatLng | null = null;
   private pointer: LatLng | null = null;
   private lineFeature: any;
-  private onMouseMoveThrottled: (event: MapLayerMouseEvent) => void;
   private onStoreEventsDebounced: (event: StoreChangeEvent) => void;
+  private renderFreeEnd = coalesceToFrame((event: MapLayerMouseEvent) => {
+    this.renderLineOnMouseMove(event.lngLat);
+  });
 
   constructor(private readonly ctx: TilesContext) {
     this.visible = true;
-    this.onMouseMoveThrottled = throttle(this.onLineMove, LINE_DYNAMIC_THROTTLE_TIME);
     this.onStoreEventsDebounced = debounce(this.onStoreEventsConsumer, 10);
     this.initConsumers();
     this.initDynamicEvents();
@@ -115,7 +114,7 @@ export class DynamicLineEvents {
   private initDynamicEvents = () => {
     const { map } = this.ctx;
     map.on("click", this.onMapClick);
-    map.on("mousemove", this.onMouseMoveThrottled);
+    map.on("mousemove", this.renderFreeEnd);
     map.on(EVENTS.REMOVE_ALL, this.hide);
     map.on(EVENTS.UNDO, this.onUndoRedoClick);
     map.on(EVENTS.REDO, this.onUndoRedoClick);
@@ -127,7 +126,8 @@ export class DynamicLineEvents {
     const { map } = this.ctx;
 
     map.off("click", this.onMapClick);
-    map.off("mousemove", this.onMouseMoveThrottled);
+    map.off("mousemove", this.renderFreeEnd);
+    this.renderFreeEnd.cancel();
     map.off(EVENTS.REMOVE_ALL, this.hide);
     map.off(EVENTS.UNDO, this.onUndoRedoClick);
     map.off(EVENTS.REDO, this.onUndoRedoClick);
@@ -141,7 +141,8 @@ export class DynamicLineEvents {
     this.firstPoint = null;
     this.secondPoint = null;
     this.lineFeature = null;
-    map.off("mousemove", this.onMouseMoveThrottled);
+    map.off("mousemove", this.renderFreeEnd);
+    this.renderFreeEnd.cancel();
 
     hideDynamicLine(map);
   };
@@ -160,7 +161,7 @@ export class DynamicLineEvents {
         this.renderLineOnMouseMove({ lng: this.secondPoint?.lng, lat: this.secondPoint?.lat });
       }
     }
-    map.on("mousemove", this.onMouseMoveThrottled);
+    map.on("mousemove", this.renderFreeEnd);
   };
 
   private renderLineOnMouseMove = (newCoord: LatLng) => {
@@ -172,10 +173,6 @@ export class DynamicLineEvents {
     if (lineSource) {
       lineSource.setData(this.lineFeature);
     }
-  };
-
-  private onLineMove = (event: MapLayerMouseEvent) => {
-    this.renderLineOnMouseMove(event.lngLat);
   };
 
   private onPointerMove = (event: Event) => {

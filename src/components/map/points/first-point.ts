@@ -54,8 +54,6 @@ export class FirstPoint {
     map.on("mouseenter", ELAYERS.FirstPointHitLayer, this.baseEvents.onPointMouseEnter);
     map.on("mouseleave", ELAYERS.FirstPointHitLayer, this.baseEvents.onPointMouseLeave);
     map.on("mousedown", ELAYERS.FirstPointHitLayer, this.baseEvents.onPointMouseDown);
-    map.on("mouseup", ELAYERS.FirstPointHitLayer, this.baseEvents.onPointMouseUp);
-    map.on("touchend", ELAYERS.FirstPointHitLayer, this.baseEvents.onPointMouseUp);
     map.on("touchstart", ELAYERS.FirstPointHitLayer, this.baseEvents.onPointMouseDown);
   };
 
@@ -65,8 +63,8 @@ export class FirstPoint {
     map.on("click", ELAYERS.FirstPointHitLayer, this.onFirstPointClick);
     map.on("mouseenter", ELAYERS.FirstPointHitLayer, this.onFirstPointMouseEnter);
     map.on("mouseleave", ELAYERS.FirstPointHitLayer, this.onFirstPointMouseLeave);
-    map.on("mouseup", ELAYERS.FirstPointHitLayer, this.onFirstPointMouseUp);
     map.on("mousedown", ELAYERS.FirstPointHitLayer, this.onFirstPointMouseDown);
+    map.on("mouseup", this.onFirstPointMouseUp);
     this.initBaseEvents();
     this.eventsInited = true;
   };
@@ -82,8 +80,6 @@ export class FirstPoint {
     map.off("mouseenter", ELAYERS.FirstPointHitLayer, this.baseEvents.onPointMouseEnter);
     map.off("mouseleave", ELAYERS.FirstPointHitLayer, this.baseEvents.onPointMouseLeave);
     map.off("mousedown", ELAYERS.FirstPointHitLayer, this.baseEvents.onPointMouseDown);
-    map.off("mouseup", ELAYERS.FirstPointHitLayer, this.baseEvents.onPointMouseUp);
-    map.off("touchend", ELAYERS.FirstPointHitLayer, this.baseEvents.onPointMouseUp);
     map.off("touchstart", ELAYERS.FirstPointHitLayer, this.baseEvents.onPointMouseDown);
   };
 
@@ -93,7 +89,8 @@ export class FirstPoint {
     map.off("click", ELAYERS.FirstPointHitLayer, this.onFirstPointClick);
     map.off("mouseenter", ELAYERS.FirstPointHitLayer, this.onFirstPointMouseEnter);
     map.off("mouseleave", ELAYERS.FirstPointHitLayer, this.onFirstPointMouseLeave);
-    map.off("mouseup", ELAYERS.FirstPointHitLayer, this.onFirstPointMouseUp);
+    map.off("mousedown", ELAYERS.FirstPointHitLayer, this.onFirstPointMouseDown);
+    map.off("mouseup", this.onFirstPointMouseUp);
     this.removeBaseEvents();
     this.eventsInited = false;
   }

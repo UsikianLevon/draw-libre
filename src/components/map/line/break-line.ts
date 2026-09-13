@@ -2,7 +2,7 @@ import { GeoJSONSource, MapLayerMouseEvent } from "maplibre-gl";
 
 import type { ListNode } from "#app/store/index";
 import { ELAYERS, ESOURCES } from "#app/utils/geo_constants";
-import { throttle } from "#app/utils/helpers";
+import { coalesceToFrame } from "#app/utils/helpers";
 import { timeline } from "#app/history";
 
 import { FireEvents } from "../fire-events";
@@ -11,29 +11,29 @@ import { renderer } from "../renderer";
 import { getLine } from "../renderer/geojson-builder";
 import type { TilesContext } from "../tiles";
 
-const LINE_BREAK_THROTTLE_TIME = 15;
-
 export class LineBreakEvents {
   private current: ListNode | null;
-  private throttledOnLineEnter: (event: MapLayerMouseEvent) => void;
+  private renderBreakSegment = coalesceToFrame((event: MapLayerMouseEvent) => {
+    this.onLineEnterBreak(event);
+  });
 
   constructor(private readonly ctx: TilesContext) {
     this.current = null;
-    this.throttledOnLineEnter = throttle(this.onLineEnterBreak, LINE_BREAK_THROTTLE_TIME);
   }
 
   public initBreakEvents = () => {
     this.ctx.map.on("click", ELAYERS.LineLayer, this.geometryBreakOnClick);
-    this.ctx.map.on("mouseenter", ELAYERS.LineLayer, this.throttledOnLineEnter);
-    this.ctx.map.on("mousemove", ELAYERS.LineLayer, this.throttledOnLineEnter);
+    this.ctx.map.on("mouseenter", ELAYERS.LineLayer, this.renderBreakSegment);
+    this.ctx.map.on("mousemove", ELAYERS.LineLayer, this.renderBreakSegment);
     this.ctx.map.on("mouseleave", ELAYERS.LineLayer, this.onLineLeave);
   };
 
   public removeBreakEvents = () => {
     this.ctx.map.off("click", ELAYERS.LineLayer, this.geometryBreakOnClick);
-    this.ctx.map.off("mouseenter", ELAYERS.LineLayer, this.throttledOnLineEnter);
-    this.ctx.map.off("mousemove", ELAYERS.LineLayer, this.throttledOnLineEnter);
+    this.ctx.map.off("mouseenter", ELAYERS.LineLayer, this.renderBreakSegment);
+    this.ctx.map.off("mousemove", ELAYERS.LineLayer, this.renderBreakSegment);
     this.ctx.map.off("mouseleave", ELAYERS.LineLayer, this.onLineLeave);
+    this.renderBreakSegment.cancel();
   };
 
   public hideBreakLine = () => {
@@ -102,8 +102,7 @@ export class LineBreakEvents {
   };
 
   private onLineLeave = () => {
-    setTimeout(() => {
-      this.hideBreakLine();
-    }, LINE_BREAK_THROTTLE_TIME + 10);
+    this.renderBreakSegment.cancel();
+    this.hideBreakLine();
   };
 }

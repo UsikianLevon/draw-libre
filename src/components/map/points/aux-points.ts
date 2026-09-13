@@ -1,15 +1,10 @@
 import type { MapLayerMouseEvent, MapTouchEvent } from "maplibre-gl";
 
-import type { LatLng } from "#app/types/index";
 import { ELAYERS } from "#app/utils/geo_constants";
 import { timeline } from "#app/history";
 import { AuxToPrimaryCommand } from "./commands/aux-to-primary";
 
-import { showTransparentLine } from "../tiles/utils";
 import type { PrimaryPointEvents } from ".";
-import { MovePointCommand } from "./commands/move-point";
-import type { PointState } from "./point-state";
-import type { PointTopologyManager } from "./point-topology-manager";
 import { renderer } from "../renderer";
 import { isRightClick, queryPointId } from "../utils";
 import { TilesContext } from "../tiles";
@@ -20,8 +15,6 @@ export class AuxPoints {
   constructor(
     private readonly ctx: TilesContext,
     private readonly baseEvents: PrimaryPointEvents,
-    private readonly pointState: PointState,
-    private readonly topologyManager: PointTopologyManager,
   ) {
     this.initEvents();
     this.initConsumers();
@@ -33,8 +26,6 @@ export class AuxPoints {
     map.on("mouseenter", ELAYERS.AuxiliaryPointHitLayer, this.baseEvents.onPointMouseEnter);
     map.on("mouseleave", ELAYERS.AuxiliaryPointHitLayer, this.baseEvents.onPointMouseLeave);
     map.on("mousedown", ELAYERS.AuxiliaryPointHitLayer, this.baseEvents.onPointMouseDown);
-    map.on("mouseup", ELAYERS.PointsHitLayer, this.onMouseUp);
-    map.on("touchend", ELAYERS.PointsHitLayer, this.onMouseUp);
     map.on("touchstart", ELAYERS.AuxiliaryPointHitLayer, this.baseEvents.onPointMouseDown);
   };
 
@@ -44,8 +35,6 @@ export class AuxPoints {
     map.off("mouseenter", ELAYERS.AuxiliaryPointHitLayer, this.baseEvents.onPointMouseEnter);
     map.off("mouseleave", ELAYERS.AuxiliaryPointHitLayer, this.baseEvents.onPointMouseLeave);
     map.off("mousedown", ELAYERS.AuxiliaryPointHitLayer, this.baseEvents.onPointMouseDown);
-    map.off("mouseup", ELAYERS.PointsHitLayer, this.onMouseUp);
-    map.off("touchend", ELAYERS.PointsHitLayer, this.onMouseUp);
     map.off("touchstart", ELAYERS.AuxiliaryPointHitLayer, this.baseEvents.onPointMouseDown);
   };
 
@@ -76,7 +65,6 @@ export class AuxPoints {
 
     map.on("mousedown", ELAYERS.AuxiliaryPointHitLayer, this.onMouseDown);
     map.on("touchstart", ELAYERS.AuxiliaryPointHitLayer, this.onMouseDown);
-    // PointsLayer becasue aux is already false
     this.initBaseEvents();
     this.eventsInited = true;
   }
@@ -103,35 +91,5 @@ export class AuxPoints {
       timeline.commit(new AuxToPrimaryCommand(store, node));
       renderer.execute();
     }
-  };
-
-  private onMouseUp = () => {
-    const { mouseEvents, store, panel, map, options } = this.ctx;
-
-    mouseEvents.pointMouseUp = true;
-
-    const selectedNode = this.pointState.getSelectedNode();
-    const lastEvent = this.pointState.getLastEvent();
-    const startCoordinates = this.pointState.getStartCoordinates();
-
-    if (selectedNode && selectedNode.val) {
-      if (lastEvent) {
-        this.topologyManager.updateStore();
-        this.pointState.clearLastEvent();
-      }
-
-      panel?.show();
-      if (this.pointState.isMoved()) {
-        timeline.commit(new MovePointCommand(store, selectedNode, startCoordinates as LatLng, map));
-        timeline.commitTransaction();
-      }
-      this.pointState.partialReset();
-    }
-
-    if (mouseEvents) {
-      mouseEvents.pointMouseDown = false;
-    }
-
-    showTransparentLine(map);
   };
 }

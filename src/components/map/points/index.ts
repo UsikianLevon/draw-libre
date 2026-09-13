@@ -1,7 +1,7 @@
 import type { LatLng, Step, StepId } from "#app/types/index";
 import type { MapLayerMouseEvent, MapTouchEvent } from "maplibre-gl";
 
-import { throttle } from "#app/utils/helpers";
+import { coalesceToFrame } from "#app/utils/helpers";
 import { EVENTS } from "#app/utils/constants";
 import { ELAYERS, ESOURCES } from "#app/utils/geo_constants";
 import { timeline } from "#app/history";
@@ -10,21 +10,14 @@ import type { StoreChangeEvent } from "#app/store/types";
 import { FireEvents } from "../fire-events";
 import { PointVisibility } from "./helpers";
 import { FirstPoint } from "./first-point";
-import { hideTransparentLine, showTransparentLine } from "../tiles/utils";
+import { DragLayers } from "../tiles/drag-layers";
 import { AuxPoints } from "./aux-points";
 import type { DrawingModeChangeEvent } from "../mode/types";
 import { PointState } from "./point-state";
 import { PointTopologyManager } from "./point-topology-manager";
 import { MovePointCommand } from "./commands/move-point";
 import { renderer } from "../renderer";
-import {
-  queryPointId,
-  isFeatureTriggered,
-  queryPoint,
-  getGeometryIndex,
-  isRightClick,
-  POINT_HIT_LAYERS,
-} from "../utils";
+import { queryPointId, isFeatureTriggered, getGeometryIndex, isRightClick, POINT_HIT_LAYERS } from "../utils";
 import type { TilesContext } from "../tiles";
 import { DOM } from "#app/dom";
 import { RemoveButton } from "#components/remove-button";
@@ -33,7 +26,6 @@ export interface PrimaryPointEvents {
   onPointMouseEnter: (event: MapLayerMouseEvent) => void;
   onPointMouseLeave: (event: MapLayerMouseEvent) => void;
   onPointMouseDown: (event: MapLayerMouseEvent | MapTouchEvent) => void;
-  onPointMouseUp: () => void;
   onMapMouseMove: (event: MapLayerMouseEvent) => void;
 }
 // TODO messy: clean this up
@@ -45,6 +37,7 @@ export class PointEvents {
   private pointState: PointState;
   private topologyManager: PointTopologyManager;
   private removeButton: RemoveButton;
+  private dragLayers: DragLayers;
   private pressedStep: Step | null = null;
   private pressActive = false;
   private suppressedStepId: StepId | null = null;
@@ -53,16 +46,16 @@ export class PointEvents {
   constructor(private readonly ctx: TilesContext) {
     this.pointState = new PointState();
     this.topologyManager = new PointTopologyManager(ctx, this.pointState);
+    this.dragLayers = new DragLayers(this.ctx.map);
 
     this.events = {
       onPointMouseEnter: this.onPointMouseEnter,
       onPointMouseLeave: this.onPointMouseLeave,
       onPointMouseDown: this.onPointMouseDown,
-      onPointMouseUp: this.onPointMouseUp,
       onMapMouseMove: this.onMapMouseMove,
     };
     this.firstPoint = new FirstPoint(this.ctx, this.events);
-    this.auxPoints = new AuxPoints(this.ctx, this.events, this.pointState, this.topologyManager);
+    this.auxPoints = new AuxPoints(this.ctx, this.events);
     this.removeButton = new RemoveButton({
       map: this.ctx.map,
       options: this.ctx.options,
@@ -93,8 +86,6 @@ export class PointEvents {
     map.on("mouseleave", ELAYERS.PointsHitLayer, this.onPointMouseLeave);
     map.on("mousedown", ELAYERS.PointsHitLayer, this.onPointMouseDown);
     map.on("click", ELAYERS.PointsHitLayer, this.onPointClick);
-    map.on("mouseup", ELAYERS.PointsHitLayer, this.onPointMouseUp);
-    map.on("touchend", ELAYERS.PointsHitLayer, this.onPointMouseUp);
     map.on("touchstart", ELAYERS.PointsHitLayer, this.onPointMouseDown);
     this.eventsInited = true;
   };
@@ -112,14 +103,15 @@ export class PointEvents {
     map.off("mousemove", this.onPointerHover);
     DOM.removeEventListener(map.getContainer(), "mouseleave", this.onPointerLeaveMap);
     map.off("mousemove", this.onMapMouseMove);
+    this.renderDraggedPoint.cancel();
+    this.onPointerHover.cancel();
+    this.dragLayers.release();
     map.off(EVENTS.ADD, this.onPointAdded);
 
     map.off("mouseenter", ELAYERS.PointsHitLayer, this.onPointMouseEnter);
     map.off("mouseleave", ELAYERS.PointsHitLayer, this.onPointMouseLeave);
     map.off("mousedown", ELAYERS.PointsHitLayer, this.onPointMouseDown);
     map.off("click", ELAYERS.PointsHitLayer, this.onPointClick);
-    map.off("mouseup", ELAYERS.PointsHitLayer, this.onPointMouseUp);
-    map.off("touchend", ELAYERS.PointsHitLayer, this.onPointMouseUp);
     map.off("touchstart", ELAYERS.PointsHitLayer, this.onPointMouseDown);
     this.eventsInited = false;
   };
@@ -155,15 +147,19 @@ export class PointEvents {
     renderer.execute();
   };
 
-  private onOwnGeometryLayersClick = (event: MapLayerMouseEvent) => {
-    return isFeatureTriggered(event, [...POINT_HIT_LAYERS, ELAYERS.LineLayerTransparent, ELAYERS.LineLayerBreak]);
+  private onOwnGeometryClick = (event: MapLayerMouseEvent) => {
+    if (isFeatureTriggered(event, [...POINT_HIT_LAYERS, ELAYERS.LineLayerTransparent, ELAYERS.LineLayerBreak])) {
+      return true;
+    }
+    // hit layers hidden during a drag stay unqueryable until the tiles reparse, the click after a short out and back drag lands in that window
+    return this.ctx.projection.isNearGeometry(event.point);
   };
 
   private onMapClick = (event: MapLayerMouseEvent) => {
     const { mode, mouseEvents, map, store } = this.ctx;
 
     if (mode.getClosedGeometry()) return;
-    if (this.onOwnGeometryLayersClick(event)) return;
+    if (this.onOwnGeometryClick(event)) return;
 
     if (mouseEvents.lastPointMouseClick) {
       mouseEvents.lastPointMouseClick = false;
@@ -176,6 +172,8 @@ export class PointEvents {
   };
 
   private onPointAdded = (event: { id: StepId }) => {
+    // a hover queued before this click would query tiles without the new point and lift the suppression
+    this.onPointerHover.cancel();
     this.suppressedStepId = event.id;
   };
 
@@ -186,20 +184,28 @@ export class PointEvents {
     }
   };
 
-  private onMapMouseMove = throttle((event: MapLayerMouseEvent) => {
-    const { mouseEvents } = this.ctx;
+  private onMapMouseMove = (event: MapLayerMouseEvent | MapTouchEvent) => {
+    if (!this.ctx.mouseEvents.pointMouseDown) return;
 
-    if (mouseEvents.pointMouseDown) {
-      this.pointState.setLastEvent(event);
+    const moveEvent = event as MapLayerMouseEvent;
+    this.pointState.setLastEvent(moveEvent);
+    if (!this.pointState.getSelectedNode()) return;
 
-      if (!this.pointState.getSelectedNode()) return;
+    this.onMoveLeftClickUp(moveEvent);
+    if (!this.pressActive) return;
 
-      this.onMoveLeftClickUp(this.pointState.getLastEvent() as MapLayerMouseEvent);
-      const auxPoints = this.topologyManager.getAuxPointsLatLng(this.pointState.getLastEvent() as MapLayerMouseEvent);
-      renderer.executeOnMouseMove(this.pointState.getSelectedIdx() as number, event.lngLat, auxPoints);
-      this.pointState.setMoved(true);
-    }
-  }, 17);
+    this.pointState.setMoved(true);
+    this.dragLayers.move(moveEvent.point);
+    this.renderDraggedPoint();
+  };
+
+  private renderDraggedPoint = coalesceToFrame(() => {
+    const event = this.pointState.getLastEvent();
+    const idx = this.pointState.getSelectedIdx();
+    if (!event || idx === null || !this.pointState.getSelectedNode()) return;
+
+    renderer.executeOnMouseMove(idx, event.lngLat, this.topologyManager.getAuxPointsLatLng(event));
+  });
 
   private highlight = (id: StepId | null) => {
     const { map } = this.ctx;
@@ -217,10 +223,11 @@ export class PointEvents {
   };
 
   private onPointerLeaveMap = () => {
+    this.onPointerHover.cancel();
     this.highlight(null);
   };
 
-  private onPointerHover = throttle((event: MapLayerMouseEvent) => {
+  private onPointerHover = coalesceToFrame((event: MapLayerMouseEvent) => {
     const { mouseEvents, map, store } = this.ctx;
 
     if (!this.eventsInited) return;
@@ -243,7 +250,7 @@ export class PointEvents {
     } else {
       this.removeButton.hide();
     }
-  }, 17);
+  });
 
   private onPointMouseEnter = (event: MapLayerMouseEvent) => {
     const { mouseEvents, map, store, options } = this.ctx;
@@ -259,8 +266,12 @@ export class PointEvents {
     }
     const step = store.findStepById(id);
     if (step) {
+      // hidden hit layers make maplibre report a second enter for a dragged point that was never left
+      const reentered = this.pointState.getEnteredStep()?.id === step.id;
       this.pointState.setEnteredStep(step);
-      FireEvents.enterPoint(Object.assign({}, step, { total: store.size }), map);
+      if (!reentered) {
+        FireEvents.enterPoint(Object.assign({}, step, { total: store.size }), map);
+      }
     }
   };
 
@@ -285,6 +296,7 @@ export class PointEvents {
       }),
       map,
     );
+    this.pointState.setEnteredStep(null);
   };
 
   private dismissButton = () => {
@@ -334,17 +346,6 @@ export class PointEvents {
     }
   };
 
-  private setSelectedNode = (event: MapLayerMouseEvent | MapTouchEvent) => {
-    const { store, map } = this.ctx;
-
-    const id = queryPointId(map, event.point);
-    const node = store.findNodeById(id);
-
-    if (node) {
-      this.pointState.setSelectedNode(node);
-    }
-  };
-
   private onPointMouseDown = (event: MapLayerMouseEvent | MapTouchEvent) => {
     event.preventDefault();
 
@@ -355,16 +356,18 @@ export class PointEvents {
     if (isRightClick(event)) return;
 
     this.suppressedStepId = null;
-    this.setSelectedNode(event);
-    this.pressedStep = this.pointState.getSelectedNode()?.val ?? null;
+    const id = queryPointId(map, event.point);
+    const node = store.findNodeById(id);
+    if (node) {
+      this.pointState.setSelectedNode(node);
+    }
+    this.pressedStep = node?.val ?? null;
     this.pressActive = true;
 
-    hideTransparentLine(map);
+    this.dragLayers.press(event.point);
     this.hideLastPointPanel();
 
-    const point = queryPoint(map, event.point);
-    const geometryIndex = getGeometryIndex(store, point?.properties.id);
-    this.pointState.setSelectedIdx(geometryIndex);
+    this.pointState.setSelectedIdx(getGeometryIndex(store, id));
 
     if (mouseEvents) {
       mouseEvents.pointMouseDown = true;
@@ -381,7 +384,7 @@ export class PointEvents {
   };
 
   private onPointMouseUp = () => {
-    const { mouseEvents, store, panel, map, options } = this.ctx;
+    const { mouseEvents, store, panel, map } = this.ctx;
 
     if (!this.pressActive) return;
     this.pressActive = false;
@@ -390,6 +393,7 @@ export class PointEvents {
     map.off("touchmove", this.onMapMouseMove);
     map.off("mouseup", this.onPointMouseUp);
     map.off("touchend", this.onPointMouseUp);
+    this.renderDraggedPoint.cancel();
 
     mouseEvents.pointMouseUp = true;
 
@@ -397,7 +401,7 @@ export class PointEvents {
     const lastEvent = this.pointState.getLastEvent();
     const startCoordinates = this.pointState.getStartCoordinates();
 
-    if (selectedNode && !selectedNode.val?.isAuxiliary) {
+    if (selectedNode?.val) {
       if (lastEvent) {
         this.topologyManager.updateStore();
         this.pointState.clearLastEvent();
@@ -407,17 +411,19 @@ export class PointEvents {
 
       if (this.pointState.isMoved()) {
         timeline.commit(new MovePointCommand(store, selectedNode, startCoordinates as LatLng, map));
-        this.pointState.setMoved(false);
       }
 
       this.pointState.partialReset();
     }
 
+    // an aux press opens a PointCompound transaction in AuxPoints, it has to close on every release, moved or not
+    timeline.commitTransaction();
+
     if (mouseEvents) {
       mouseEvents.pointMouseDown = false;
     }
 
-    showTransparentLine(map);
+    this.dragLayers.release();
     renderer.execute();
     this.showButtonForPressedStep();
   };

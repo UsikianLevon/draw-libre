@@ -68,6 +68,7 @@ export class PointState {
     this.startCoordinates = null;
     this.enteredStep = null;
     this.lastEvent = null;
+    this.moved = false;
   }
 
   public partialReset(): void {

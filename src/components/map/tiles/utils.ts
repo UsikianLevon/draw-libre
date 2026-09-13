@@ -19,15 +19,3 @@ export const togglePointCircleRadius = (map: UnifiedMap, type: keyof typeof FIRS
     defaultPointCircleRadius(map);
   }
 };
-
-export const hideTransparentLine = (map: UnifiedMap) => {
-  if (map.getLayer(ELAYERS.LineLayerTransparent)) {
-    map.setLayoutProperty(ELAYERS.LineLayerTransparent, "visibility", "none");
-  }
-};
-
-export const showTransparentLine = (map: UnifiedMap) => {
-  if (map.getLayer(ELAYERS.LineLayerTransparent)) {
-    map.setLayoutProperty(ELAYERS.LineLayerTransparent, "visibility", "visible");
-  }
-};

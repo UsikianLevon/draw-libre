@@ -1,9 +1,11 @@
 import { expect, test } from "vitest";
 
 import { ListNode } from "#app/store/index";
-import type { Step } from "#app/types/index";
+import type { Store } from "#app/store/index";
+import type { RequiredDrawOptions, Step } from "#app/types/index";
+import type { UnifiedMap } from "#app/types/map";
 
-import { GeometryPixels, nearestSegmentPx, nearestVertexPx, orderedNodes } from "./projection";
+import { GeometryPixels, GeometryProjection, nearestSegmentPx, nearestVertexPx, orderedNodes } from "./projection";
 
 const chain = (...ids: string[]) => {
   const nodes = ids.map((id) => new ListNode({ id, lat: 0, lng: 0, isAuxiliary: false } as Step));
@@ -12,6 +14,35 @@ const chain = (...ids: string[]) => {
     node.prev = nodes[index - 1] ?? null;
   });
   return nodes;
+};
+
+const chainAt = (...points: [number, number][]) => {
+  const nodes = points.map(
+    ([x, y], index) => new ListNode({ id: String(index), lat: y, lng: x, isAuxiliary: false } as Step),
+  );
+  nodes.forEach((node, index) => {
+    node.next = nodes[index + 1] ?? null;
+    node.prev = nodes[index - 1] ?? null;
+  });
+  return nodes;
+};
+
+const projectionOver = (nodes: ListNode[]) => {
+  const map = {
+    project: (coords: { lng: number; lat: number }) => ({ x: coords.lng, y: coords.lat }),
+    unproject: ([x, y]: [number, number]) => ({ lng: x, lat: y }),
+    on: () => {},
+    off: () => {},
+  } as unknown as UnifiedMap;
+  const store = {
+    head: nodes[0] ?? null,
+    circular: { isCircular: () => false },
+    addObserver: () => {},
+    removeObserver: () => {},
+  } as unknown as Store;
+  const options = { interaction: { lineHitRadius: 7, pointHitRadius: 14 } } as unknown as RequiredDrawOptions;
+
+  return new GeometryProjection({ map, store, options });
 };
 
 const idsOf = (nodes: ListNode[]) => nodes.map((node) => node.val?.id);
@@ -155,4 +186,34 @@ test("skips nodes that carry no step", () => {
   nodes[1]!.val = null;
 
   expect(idsOf(orderedNodes(nodes[0]!, false))).toEqual(["a", "c"]);
+});
+
+test("a cursor within the point hit radius of a vertex is near the geometry", () => {
+  const projection = projectionOver(chainAt([0, 0], [100, 0]));
+
+  expect(projection.isNearGeometry({ x: 108, y: 9 })).toBe(true);
+});
+
+test("a cursor within the line hit radius of a segment is near the geometry", () => {
+  const projection = projectionOver(chainAt([0, 0], [100, 0]));
+
+  expect(projection.isNearGeometry({ x: 50, y: 6 })).toBe(true);
+});
+
+test("a cursor beside the line but outside both radii is off the geometry", () => {
+  const projection = projectionOver(chainAt([0, 0], [100, 0]));
+
+  expect(projection.isNearGeometry({ x: 50, y: 12 })).toBe(false);
+});
+
+test("a single vertex counts even though it has no segment", () => {
+  const projection = projectionOver(chainAt([40, 40]));
+
+  expect(projection.isNearGeometry({ x: 45, y: 45 })).toBe(true);
+});
+
+test("an empty geometry is never near the cursor", () => {
+  const projection = projectionOver([]);
+
+  expect(projection.isNearGeometry({ x: 0, y: 0 })).toBe(false);
 });

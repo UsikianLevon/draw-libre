@@ -228,6 +228,64 @@ export class DrawMapPage {
     });
   }
 
+  async vertexCountBy(kind: "primary" | "auxiliary"): Promise<number> {
+    return this.page.evaluate((wanted) => {
+      const source = window.map.getStyle().sources["mdl-unified-source"] as { data: GeoJSON.FeatureCollection };
+      return source.data.features.filter((feature) => {
+        if (feature.geometry.type !== "Point") return false;
+        const auxiliary = feature.properties?.isAuxiliary === true;
+        return wanted === "auxiliary" ? auxiliary : !auxiliary;
+      }).length;
+    }, kind);
+  }
+
+  async layerVisibility(layerId: string): Promise<string> {
+    return this.page.evaluate(
+      (id) => (window.map.getLayoutProperty(id, "visibility") as string | undefined) ?? "visible",
+      layerId,
+    );
+  }
+
+  async lineIsClosed(): Promise<boolean> {
+    return this.page.evaluate(() => {
+      const source = window.map.getStyle().sources["mdl-unified-source"] as { data: GeoJSON.FeatureCollection };
+      const line = source.data.features.find((feature) => feature.geometry.type === "LineString");
+      if (!line) return false;
+
+      const coordinates = (line.geometry as GeoJSON.LineString).coordinates;
+      const first = coordinates[0];
+      const last = coordinates[coordinates.length - 1];
+      if (!first || !last || coordinates.length < 4) return false;
+
+      return first[0] === last[0] && first[1] === last[1];
+    });
+  }
+
+  async recordVisibilityChanges() {
+    await this.page.evaluate(() => {
+      const map = window.map as typeof window.map & { __visibility?: string[] };
+      map.__visibility = [];
+      const original = map.setLayoutProperty.bind(map);
+      map.setLayoutProperty = ((layerId: string, name: string, value: unknown) => {
+        if (name === "visibility") map.__visibility?.push(`${layerId}=${String(value)}`);
+        return original(layerId, name, value);
+      }) as unknown as typeof map.setLayoutProperty;
+    });
+  }
+
+  async dragLayerChanges(): Promise<string[]> {
+    return this.page.evaluate(() => {
+      const map = window.map as typeof window.map & { __visibility?: string[] };
+      const watched = [
+        "mdl-points-hit-layer",
+        "mdl-first-point-hit-layer",
+        "mdl-auxiliary-point-hit-layer",
+        "mdl-line-layer-transparent",
+      ];
+      return (map.__visibility ?? []).filter((entry) => watched.some((id) => entry.startsWith(`${id}=`)));
+    });
+  }
+
   async pointNear(at: Pixel): Promise<Pixel | null> {
     return this.page.evaluate((target) => {
       const painted = window.map.queryRenderedFeatures({ layers: ["mdl-points-layer"] });

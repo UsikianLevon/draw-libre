@@ -18,10 +18,10 @@ export const DEFAULT_OPTIONS: RequiredDrawOptions = {
   panel: {
     size: "medium",
     buttons: {
-      undo: { visible: true },
-      redo: { visible: true },
-      delete: { visible: true },
-      save: { visible: true, clearOnSave: true },
+      undo: { visible: false },
+      redo: { visible: false },
+      delete: { visible: false },
+      save: { visible: false, clearOnSave: true },
     },
   },
   modes: {

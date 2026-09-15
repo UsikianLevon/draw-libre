@@ -1,4 +1,5 @@
-import { test } from "./fixtures";
+import { expect, test } from "./fixtures";
+import { ALL_PANEL_BUTTONS } from "./support/options";
 
 test("with no options the side control shows three idle buttons with stock labels and a click draws nothing", async ({
   drawMap,
@@ -22,7 +23,7 @@ test("with no options the side control shows three idle buttons with stock label
   await drawMap.panel.expectHidden();
 });
 
-test("with no options choosing line draws with a medium panel of four buttons and stock labels", async ({
+test("with no options choosing line draws without a panel and undo through the API takes the point back", async ({
   drawMap,
 }) => {
   await drawMap.open({ bare: true });
@@ -31,6 +32,27 @@ test("with no options choosing line draws with a medium panel of four buttons an
   await drawMap.modes.chooseLine();
   await drawMap.modes.expectLineActive();
   await drawMap.drawing.expectCursor("crosshair");
+  await drawMap.drawPoint(first);
+
+  await drawMap.events.expectLastTotal("mdl:add", 1);
+  await expect(drawMap.panel.root).toHaveCount(0);
+
+  await drawMap.api.undo();
+
+  await drawMap.drawing.expectEmpty();
+  await drawMap.events.expectCount("mdl:undo", 1);
+  await expect(drawMap.panel.root).toHaveCount(0);
+});
+
+test("with only the panel buttons turned on choosing line draws with a medium panel of four buttons and stock labels", async ({
+  drawMap,
+}) => {
+  await drawMap.open({ mount: false });
+  await drawMap.modes.line.waitFor({ state: "detached" });
+  await drawMap.api.mount({ panel: { buttons: ALL_PANEL_BUTTONS } });
+  const first = drawMap.layout.line.first;
+
+  await drawMap.modes.chooseLine();
   await drawMap.drawPoint(first);
 
   await drawMap.panel.expectVisible();

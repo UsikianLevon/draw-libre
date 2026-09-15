@@ -13,7 +13,7 @@ export class View {
     this.buttonContainer = DOM.create("div", "mdl-dashboard", this.root);
 
     this.renderButtons();
-    ctx.map.getContainer().appendChild(this.root);
+    if (this.hasButtons()) ctx.map.getContainer().appendChild(this.root);
   }
 
   private createButton(type: ButtonType, title: string, size: PanelImpl["size"], container: HTMLElement) {
@@ -41,11 +41,11 @@ export class View {
   }
 
   public getButton = (type: ButtonType): HTMLButtonElement | null => {
-    const button = this?.buttons?.[type];
-    if (!button) {
-      console.warn(`[PanelView] Button "${type}" not initialized`);
-    }
-    return button ?? null;
+    return this.buttons[type] ?? null;
+  };
+
+  public hasButtons = (): boolean => {
+    return Object.keys(this.buttons).length > 0;
   };
 
   public getRoot = (): HTMLDivElement => {

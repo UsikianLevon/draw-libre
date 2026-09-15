@@ -78,6 +78,7 @@ export class Panel {
   }
 
   public setPanelLocation = (coordinates: LatLng) => {
+    if (!this.view.hasButtons()) return;
     this.state.pendingCoord = coordinates;
     this.enableListeners();
     this.schedulePositionUpdate();

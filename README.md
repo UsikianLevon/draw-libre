@@ -74,6 +74,7 @@ const draw = DrawLibre.getInstance({
 
   panel: {
     size: "medium", // "small" | "medium" | "large"
+    // Every button is hidden by default and the panel appears only when at least one is visible: true
     buttons: {
       delete: { visible: true },
       redo: { visible: true },
@@ -177,7 +178,7 @@ draw.setSteps(steps: { lat: number; lng: number; id?: string }[])
 draw.removeAllSteps()
 ```
 
-If you hide the built-in panel, you can drive the drawing programmatically:
+The built-in panel is off by default. Without it you can drive the drawing programmatically:
 
 ```javascript
 draw.clear(); // remove all steps

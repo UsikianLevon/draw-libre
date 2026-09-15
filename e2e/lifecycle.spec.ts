@@ -1,6 +1,7 @@
 import { expect, test } from "./fixtures";
 import type { DrawMapPage } from "./pages/draw-map.page";
 import type { Pixel } from "./support/layout";
+import { ALL_PANEL_BUTTONS } from "./support/options";
 import { OPEN_STEPS } from "./support/steps";
 
 async function expectFreshHistory(drawMap: DrawMapPage, at: Pixel) {
@@ -80,7 +81,7 @@ test("adding the control puts the mode buttons in the top-left corner, adds its 
   await drawMap.modes.line.waitFor({ state: "detached" });
   const before = await drawMap.drawing.mapStyleFootprint();
 
-  await drawMap.api.mount({ modes: { initial: "line" } });
+  await drawMap.api.mount({ modes: { initial: "line" }, panel: { buttons: ALL_PANEL_BUTTONS } });
 
   await drawMap.modes.expectLineActive();
   await drawMap.modes.expectInTopLeftCorner();
@@ -98,7 +99,11 @@ test("removing the control takes away its buttons, panel, labels and layers, and
   await drawMap.open({ mount: false });
   await drawMap.modes.line.waitFor({ state: "detached" });
   const before = await drawMap.drawing.mapStyleFootprint();
-  await drawMap.api.mount({ modes: { initial: "line" }, locale: { line: "Draw line" } });
+  await drawMap.api.mount({
+    modes: { initial: "line" },
+    panel: { buttons: ALL_PANEL_BUTTONS },
+    locale: { line: "Draw line" },
+  });
   const line = drawMap.layout.line;
   await drawMap.drawPoint(line.first);
   await drawMap.drawPoint(line.middle);
@@ -205,7 +210,11 @@ test("a disposed control is replaced by a new one that takes new options and has
 
   await drawMap.api.dispose();
   await drawMap.modes.line.waitFor({ state: "detached" });
-  await drawMap.api.mount({ modes: { initial: "line" }, locale: { removePoint: "New label" } });
+  await drawMap.api.mount({
+    modes: { initial: "line" },
+    panel: { buttons: ALL_PANEL_BUTTONS },
+    locale: { removePoint: "New label" },
+  });
 
   await drawMap.drawing.expectEmpty();
   const line = drawMap.layout.line;

@@ -40,6 +40,34 @@ test("a device with hover keeps the dynamic line unless the option turns it off"
   expect(initOptions({ dynamicLine: false }).dynamicLine).toBe(false);
 });
 
+test("the panel buttons stay hidden unless each one is turned on", () => {
+  const visibility = (options: ReturnType<typeof initOptions>) =>
+    Object.values(options.panel.buttons).map((button) => button.visible);
+
+  expect(visibility(initOptions())).toEqual([false, false, false, false]);
+  expect(visibility(initOptions({}))).toEqual([false, false, false, false]);
+  expect(visibility(initOptions({ panel: { size: "large" } }))).toEqual([false, false, false, false]);
+  expect(visibility(initOptions({ panel: { buttons: { save: { visible: true } } } }))).toEqual([
+    false,
+    false,
+    false,
+    true,
+  ]);
+
+  const shown = initOptions({
+    panel: {
+      buttons: {
+        delete: { visible: true },
+        redo: { visible: true },
+        undo: { visible: true },
+        save: { clearOnSave: true, visible: true },
+      },
+    },
+  });
+  expect(visibility(shown)).toEqual([true, true, true, true]);
+  expect(shown.panel.buttons.save.clearOnSave).toBe(true);
+});
+
 test("dynamic line layer is dashed by default", () => {
   const paint = paintOf(DEFAULT_OPTIONS, ELAYERS.LineDynamicLayer);
 

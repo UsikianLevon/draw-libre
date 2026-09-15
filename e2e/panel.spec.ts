@@ -1,6 +1,6 @@
 import type { DrawOptions } from "../src/index";
 import type { PanelButton } from "./components/drawing-panel.component";
-import { test } from "./fixtures";
+import { expect, test } from "./fixtures";
 
 type PanelButtonsOption = NonNullable<NonNullable<DrawOptions["panel"]>["buttons"]>;
 
@@ -91,6 +91,27 @@ for (const hidden of BUTTONS) {
     await drawMap.openWithLine({ options: { panel: { buttons } } });
 
     await drawMap.panel.expectButtons(BUTTONS.filter((type) => type !== hidden));
+  });
+}
+
+test("hiding all four buttons leaves no panel on the map while drawing works", async ({ drawMap }) => {
+  const buttons = Object.fromEntries(BUTTONS.map((type) => [type, { visible: false }])) as PanelButtonsOption;
+  await drawMap.openWithLine({ options: { panel: { buttons } } });
+
+  await drawMap.events.expectLastTotal("mdl:add", 3);
+  await expect(drawMap.panel.root).toHaveCount(0);
+});
+
+for (const shown of BUTTONS) {
+  test(`turning on only the ${shown} button shows a panel with just that button`, async ({ drawMap }) => {
+    await drawMap.open({ mount: false });
+    await drawMap.modes.line.waitFor({ state: "detached" });
+    await drawMap.api.mount({ modes: { initial: "line" }, panel: { buttons: { [shown]: { visible: true } } } });
+
+    await drawMap.drawPoint(drawMap.layout.line.first);
+
+    await drawMap.panel.expectVisible();
+    await drawMap.panel.expectButtons([shown]);
   });
 }
 

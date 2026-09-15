@@ -29,13 +29,12 @@ export class Circular {
     return storeSize && !this.isCircular();
   };
 
-  //  when we have 1 primary <--- 1 aux <--- 1 primary current will be an aux when 1 prim <--- 1 aux and a primary 1 aux <--- 1 prim
-  //                         [aux]     [primary]
+  // breaking works differently depending on whether current is the auxiliary node or the primary node before it
   public break = (current: ListNode) => {
     if (!this.store.head) return;
 
     if (this.options?.pointGeneration === "auto") {
-      // if the current node is an aux, then we need to make one step back for the tail and the head is the next node from the aux point
+      // when current is auxiliary, tail steps back one node and head is the node after the aux point
       if (current.val?.isAuxiliary) {
         const auxId = current.val?.id as string;
         this.store.head = current.next as ListNode;
@@ -45,7 +44,7 @@ export class Circular {
         this.store.tail.next = null;
       } else {
         const auxId = current.next?.val?.id as string;
-        // else the tail is the current node and for the head we need to jump over the aux point so the next.next
+        // otherwise tail is current and head skips the aux point using next.next
         this.store.head = current.next?.next as ListNode;
         this.store.tail = current;
         this.store.removeNodeById(auxId);
@@ -53,7 +52,7 @@ export class Circular {
         this.store.tail.next = null;
       }
     } else {
-      // no aux here, so the tail is the current node and the head is the next node
+      // without an aux node, tail is current and head is the next node
       this.store.head = current.next as ListNode;
       this.store.head.prev = null;
       this.store.tail = current;

@@ -25,8 +25,9 @@ function checkIfMissingIds(steps: Initial["steps"], generateId: Initial["generat
 }
 
 function checkIfEnoughPointsToClose(steps: Initial["steps"], closeGeometry: Initial["closeGeometry"]) {
-  const minLengthToCloseGeometry = 3;
-  if (closeGeometry && steps.length < minLengthToCloseGeometry) {
+  const minPointsToCloseGeometry = 3;
+  const differentPoints = new Set(steps.map((step) => `${step.lng},${step.lat}`)).size;
+  if (closeGeometry && differentPoints < minPointsToCloseGeometry) {
     throw new Error(ERRORS["NOT_ENOUGH_POINTS_TO_CLOSE"]);
   }
 }
@@ -47,11 +48,11 @@ function checkIfPolygonIsClosed(options: Initial) {
 
 export function checkInitialStepsOptionOnErrors(options: Initial): void {
   const { closeGeometry, generateId, steps } = options;
-  // if we have ids for all steps and id generation is off
+  // checks ids exist when id generation is off
   checkIfMissingIds(steps, generateId);
-  // If we want to close the geometry, we need at least 3 points
+  // closing the geometry needs at least three points
   checkIfEnoughPointsToClose(steps, closeGeometry);
-  // If the geometry is a polygon, closeGeometry must be true.
+  // a polygon must have closeGeometry set to true
   checkIfPolygonIsClosed(options);
 }
 

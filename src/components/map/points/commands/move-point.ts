@@ -21,7 +21,7 @@ export class MovePointCommand implements Command {
   private updateNeighbors = (node: ListNode) => {
     const prevAux = node.prev;
     const nextAux = node.next;
-    // pretty much a check for the pointGeneration === "auto"
+    // true only when pointGeneration is auto
     if (!prevAux?.val?.isAuxiliary && !nextAux?.val?.isAuxiliary) return;
 
     const prevPrimary = node.prev?.prev;

@@ -21,7 +21,7 @@ interface RemovedPointSnapshot {
 
 export class RemovePointAutoCommand implements Command {
   type: StoreChangeEventKeys = "STORE_INBETWEEN_POINT_REMOVED";
-  // when we execute(remove) we need to create a new aux point in the place of the removed primary point and its aux points
+  // removing a primary point replaces it and its aux points with a new aux point
   snapshot: RemovedPointSnapshot | null = null;
 
   constructor(private readonly ctx: RemoveCommanContext) {}
@@ -87,17 +87,14 @@ export class RemovePointAutoCommand implements Command {
       store.removeNodeById(auxAfter.val.id);
     }
 
-    // 5(in a circular and only 3 in a linear) is the minimum number of points needed to add an aux point after removal
-    // head -> aux -> primary -> aux -> tail;
-    //                   ^
-    //                removed
-    // head -> aux -> tail;
-    //          ^ this needs to be added
+    // an aux point is inserted between the two remaining aux points only once size reaches five in a circular list or three in a linear one
     const meetsAuxInsertionThreshold = store.circular.isCircular() ? store.size >= 5 : store.size >= 3;
     if (primaryBefore?.val && primaryAfter?.val && meetsAuxInsertionThreshold) {
-      // if we have already undo/redoed then we just insert the new aux point already created
+      // reuses the aux point created earlier when this is an undo or redo
       if (this.snapshot.newAux) {
+        const closesOnTail = store.tail === primaryBefore && store.head === primaryBefore.next;
         this.restoreNodeAfter(primaryBefore, this.snapshot.newAux);
+        if (closesOnTail) store.tail = this.snapshot.newAux;
       } else {
         const auxPoint = PointHelpers.createAuxiliaryPoint(primaryBefore.val, primaryAfter.val);
         this.snapshot.newAux = store.insertAfter(primaryBefore, auxPoint);
@@ -115,8 +112,12 @@ export class RemovePointAutoCommand implements Command {
         const oldAuxPoint = store.tail;
         store.removeNodeById(store.tail.val.id);
         store.tail = oldAuxPoint?.prev as ListNode;
-        const auxPoint = PointHelpers.createAuxiliaryPoint(store.tail?.val as Step, store.head?.val as Step);
-        if (this.snapshot) this.snapshot.newAux = store.insertAfter(store.head as ListNode, auxPoint);
+        if (this.snapshot?.newAux) {
+          this.restoreNodeAfter(store.head as ListNode, this.snapshot.newAux);
+        } else {
+          const auxPoint = PointHelpers.createAuxiliaryPoint(store.tail?.val as Step, store.head?.val as Step);
+          if (this.snapshot) this.snapshot.newAux = store.insertAfter(store.head as ListNode, auxPoint);
+        }
       }
 
       if (store.head) {
@@ -136,7 +137,9 @@ export class RemovePointAutoCommand implements Command {
     const isAuxiliary = clickedNode?.val?.isAuxiliary;
     if (!clickedNode || isAuxiliary) return;
 
-    this.snapshot = this.makeSnapshot(clickedNode);
+    if (!this.snapshot) {
+      this.snapshot = this.makeSnapshot(clickedNode);
+    }
     this.recalculateInBetweenRemoved(clickedNode);
     // remove the primary node
     this.ctx.store.removeNodeById(this.ctx.nodeId);
@@ -185,6 +188,8 @@ export class RemovePointAutoCommand implements Command {
     if (currentHead) {
       removedNode.next = currentHead;
       currentHead.prev = removedNode;
+    } else {
+      store.tail = removedNode;
     }
     store.head = removedNode;
 

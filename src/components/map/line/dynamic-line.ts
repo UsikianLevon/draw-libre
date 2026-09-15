@@ -4,7 +4,7 @@ import { DOM } from "#app/dom";
 import type { LatLng } from "#app/types/index";
 import { ELAYERS, ESOURCES, LINE_BASE } from "#app/utils/geo_constants";
 import type { StoreChangeEvent } from "#app/store/types";
-import { coalesceToFrame, debounce } from "#app/utils/helpers";
+import { coalesceToFrame, debounce, type Debounced } from "#app/utils/helpers";
 import { EVENTS } from "#app/utils/constants";
 
 import type { MouseEventsChangeEvent, MapMouseEvent } from "../mouse-events/types";
@@ -20,7 +20,7 @@ export class DynamicLineEvents {
   private secondPoint: LatLng | null = null;
   private pointer: LatLng | null = null;
   private lineFeature: any;
-  private onStoreEventsDebounced: (event: StoreChangeEvent) => void;
+  private onStoreEventsDebounced: Debounced<(event: StoreChangeEvent) => void>;
   private renderFreeEnd = coalesceToFrame((event: MapLayerMouseEvent) => {
     this.renderLineOnMouseMove(event.lngLat);
   });
@@ -40,6 +40,7 @@ export class DynamicLineEvents {
 
   public removeConsumers = () => {
     this.ctx.store.removeObserver(this.onStoreEventsDebounced);
+    this.onStoreEventsDebounced.cancel();
     this.ctx.mouseEvents.removeObserver(this.onMouseEventsConsumer);
     this.ctx.mode.removeObserver(this.mapModeConsumer);
   };
@@ -58,22 +59,22 @@ export class DynamicLineEvents {
       return;
     }
 
-    // this one is needed to turn off the dynamic line when the last point is clicked
+    // the last point click always hides the dynamic line
     if (event.type === "lastPointMouseClick" && event.data) {
       this.hide();
       this.visible = false;
     }
-    // this is needed to not trigger "show" function if the last point was clicked and we just hover a point or a line
-    // doesn't matter, will rewrite this part
+    // avoids calling show right after the last point click while just hovering a point or line
+    // TODO rewrite this condition
     if (!this.visible) return;
 
-    // not sure about this, but looks like a good idea to hide the dynamic line on these events
+    // hides the dynamic line on these events, reason unclear
     const HIDE_EVENTS = ["pointMouseEnter", "lineMouseEnter", "pointMouseDown"] as MapMouseEvent[];
     if (HIDE_EVENTS.includes(event.type) && event.data) {
       this.hide();
     }
 
-    // if we hid the dynamic line there ^, then we obviously need to show it again
+    // shows the dynamic line back when it was hidden by the block above
     if (event.type === "pointMouseLeave" || event.type === "lineMouseLeave") {
       const { store } = this.ctx;
       if (store.circular.isCircular()) return;
@@ -108,6 +109,14 @@ export class DynamicLineEvents {
         this.show();
         this.visible = true;
       }
+    } else if (event.type === "STORE_MUTATED") {
+      if (this.ctx.mouseEvents.pointMouseDown) return;
+      if (store.size === 0) return;
+      this.firstPoint = store.tail?.val as LatLng;
+      if (this.ctx.mouseEvents.pointMouseEnter) return;
+      this.secondPoint = this.freeEnd();
+      this.show();
+      this.visible = true;
     }
   };
 

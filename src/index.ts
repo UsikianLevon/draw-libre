@@ -2,6 +2,7 @@ import type { IControl, UnifiedMap } from "#app/types/map";
 import type { DrawOptions, LatLng, RequiredDrawOptions, Step, StepId } from "#app/types/index";
 import type {
   UndoEvent,
+  RedoEvent,
   PointAddEvent,
   PointRemoveEvent,
   PointEnterEvent,
@@ -12,6 +13,7 @@ import type {
   ModeChangeEvent,
   UndoStackChangeEvent,
   RedoStackChangeEvent,
+  BreakEvent,
 } from "#components/map/types";
 
 import { Panel } from "#components/panel";
@@ -20,15 +22,15 @@ import { DrawingMode } from "#components/map/mode";
 import { Cursor } from "#components/cursor";
 import { GeometryProjection } from "#components/map/line/projection";
 import { MouseEvents } from "#components/map/mouse-events/index";
-import { uuidv4 } from "#app/utils/helpers";
 import { DOM } from "#app/dom";
 import { Store } from "#app/store/index";
 import { renderer, Renderer } from "#components/map/renderer";
-import { linkedListToArray } from "#app/store/init";
+import { appendOpenSteps, linkedListToArray } from "#app/store/init";
 import { checkInitialStepsOptionOnErrors, initOptions } from "#app/options";
 
 import "./draw.css";
 import { Tiles } from "#components/map/tiles";
+import { timeline } from "#app/history";
 import { MapTimelineAdapter } from "#app/history/map-adapter";
 
 export default class DrawLibre implements IControl {
@@ -102,6 +104,8 @@ export default class DrawLibre implements IControl {
       mouseEvents: this.mouseEvents,
       projection: this.projection,
     });
+    // map sources exist only from here, rendering earlier inside initialize had nowhere to draw
+    this.renderer?.execute();
     this.cursor = new Cursor({
       map,
       mode: this.mode,
@@ -140,6 +144,7 @@ export default class DrawLibre implements IControl {
     this.mode?.unsubscribe();
     this.control?.destroy();
     this.timelineAdapter?.destroy();
+    timeline.resetStacks();
 
     if (this.container) {
       DOM.remove(this.container);
@@ -147,19 +152,22 @@ export default class DrawLibre implements IControl {
   };
 
   /**
-   * Adds a series of steps to the store. If a step ID is not provided, it will be automatically generated.
+   * Replaces all steps in the store. If a step ID is not provided, it will be automatically generated.
    *
    * @param step - The step to add to the store, which can be of type Step or LatLng.
    */
   public setSteps = (value: Step[] | LatLng[]) => {
-    if (Array.isArray(value)) {
-      for (const step of value) {
-        const newStep = { ...step, id: (step as Step).id || uuidv4() };
-        this.store?.push(newStep);
-      }
-    } else {
+    if (!Array.isArray(value)) {
       throw new Error("Invalid argument. Expected an array of steps.");
     }
+    if (!this.store || !this.mode) return;
+
+    this.store.reset();
+    this.panel?.hide();
+    this.mode.reset();
+    timeline.resetStacks();
+    this.renderer?.resetGeometries();
+    appendOpenSteps(this.store, value, this.defaultOptions.pointGeneration);
     this.renderer?.execute();
   };
 
@@ -219,16 +227,17 @@ export default class DrawLibre implements IControl {
     this.panel?.api()?.save();
   };
 
-  public removeAllSteps = () => {
-    this.store?.reset();
-    this.panel?.destroy();
-    this.renderer?.execute();
+  public removeAllSteps = (): void => {
+    this.clear();
   };
 }
 
 export type {
   DrawOptions,
   RequiredDrawOptions,
+  Step,
+  LatLng,
+  StepId,
   PointAddEvent,
   PointRemoveEvent,
   PointEnterEvent,
@@ -237,8 +246,10 @@ export type {
   RemoveAllEvent,
   SaveEvent,
   UndoEvent,
+  RedoEvent,
   ModeChangeEvent,
   UndoStackChangeEvent,
   RedoStackChangeEvent,
+  BreakEvent,
   UnifiedMap,
 };

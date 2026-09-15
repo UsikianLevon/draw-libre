@@ -8,7 +8,7 @@ test("the ghost point snaps onto the line when the cursor is beside it", async (
 
   await drawMap.hoverPoint(beside);
 
-  await drawMap.ghost.expectAtProjectionOf(beside, line.first, line.middle);
+  await drawMap.drawing.expectGhostOnSegment(beside, line.first, line.middle);
 });
 
 test("the ghost point gives way to a vertex", async ({ drawMap }) => {
@@ -16,11 +16,11 @@ test("the ghost point gives way to a vertex", async ({ drawMap }) => {
   await drawMap.parkPointer();
 
   await drawMap.hoverPoint({ x: line.middle.x - 40, y: line.middle.y });
-  await drawMap.ghost.expectVisible();
+  await drawMap.drawing.expectGhostVisible();
 
   await drawMap.hoverPoint({ x: line.middle.x - 9, y: line.middle.y });
 
-  await drawMap.ghost.expectHidden();
+  await drawMap.drawing.expectGhostHidden();
 });
 
 test("a fast flick off the line still hides the ghost point", async ({ drawMap }) => {
@@ -28,18 +28,18 @@ test("a fast flick off the line still hides the ghost point", async ({ drawMap }
   await drawMap.parkPointer();
   const onLine = { x: Math.round((line.first.x + line.middle.x) / 2), y: line.first.y };
   await drawMap.hoverPoint(onLine);
-  await drawMap.ghost.expectStillVisible();
+  await drawMap.drawing.expectGhostStillVisible();
 
   await drawMap.canvas.moveWithinOneTask([{ x: onLine.x + 3, y: onLine.y }, drawMap.layout.emptySpot]);
 
-  await drawMap.ghost.expectHidden();
+  await drawMap.drawing.expectGhostHidden();
 });
 
 test("removing the control while the ghost point is hiding reports no map errors", async ({ drawMap }) => {
   const line = await drawMap.openWithLine();
   await drawMap.parkPointer();
   await drawMap.hoverPoint({ x: Math.round((line.first.x + line.middle.x) / 2), y: line.first.y });
-  await drawMap.ghost.expectStillVisible();
+  await drawMap.drawing.expectGhostStillVisible();
 
   const errors = await drawMap.removeControlRightAfterMovingTo(drawMap.layout.emptySpot);
 
@@ -56,7 +56,7 @@ test("a click beside the line inserts the point onto the line", async ({ drawMap
 
   await expect
     .poll(async () => {
-      const inserted = await drawMap.pointNear(beside);
+      const inserted = await drawMap.drawing.pointNear(beside);
       return inserted ? Math.abs(inserted.y - line.first.y) : Number.POSITIVE_INFINITY;
     })
     .toBeLessThanOrEqual(1);
@@ -101,7 +101,7 @@ test("a click beside the closing segment inserts between the ends", async ({ dra
 
   await expect
     .poll(async () => {
-      const inserted = await drawMap.pointNear(beside);
+      const inserted = await drawMap.drawing.pointNear(beside);
       if (!inserted) return Number.POSITIVE_INFINITY;
 
       const t = ((inserted.x - line.last.x) * along.x + (inserted.y - line.last.y) * along.y) / (length * length);
@@ -120,7 +120,7 @@ test("undo after grabbing by the edge of the grab area restores the exact vertex
 
   await expect
     .poll(async () => {
-      const restored = await drawMap.pointNear(line.middle);
+      const restored = await drawMap.drawing.pointNear(line.middle);
       return restored
         ? Math.round(Math.hypot(restored.x - line.middle.x, restored.y - line.middle.y))
         : Number.POSITIVE_INFINITY;
@@ -132,14 +132,14 @@ test("the magnet works on a repeated world copy instead of corrupting the geomet
   const line = await drawMap.openWithLine();
   await drawMap.canvas.shiftWorldCopies(1);
 
-  const before = await drawMap.vertexCoordinates();
+  const before = await drawMap.drawing.stepCoordinates();
   const beside = { x: Math.round((line.first.x + line.middle.x) / 2), y: line.first.y + OFFSET_PX };
   await drawMap.canvas.click(beside);
 
-  await expect.poll(() => drawMap.vertexCount()).toBe(before.length + 1);
-  expect(await drawMap.duplicateVertexCount()).toBe(0);
+  await drawMap.drawing.expectPointCount(before.length + 1);
+  expect(await drawMap.drawing.duplicateStepCount()).toBe(0);
 
-  const after = await drawMap.vertexCoordinates();
+  const after = await drawMap.drawing.stepCoordinates();
   const inserted = after.find((point) => !before.some(([lng, lat]) => lng === point[0] && lat === point[1]));
   expect(inserted).toBeDefined();
 
@@ -154,11 +154,11 @@ test("the magnet keeps working on a rotated world copy", async ({ drawMap }) => 
   await drawMap.openWithLine();
   await drawMap.canvas.jumpTo({ center: [360, 0], bearing: 30 });
 
-  const [first, middle] = await drawMap.vertexPixelsOnCopy(1);
+  const [first, middle] = await drawMap.drawing.stepPixelsOnCopy(1);
   const onSegment = { x: Math.round((first!.x + middle!.x) / 2), y: Math.round((first!.y + middle!.y) / 2) };
 
   await drawMap.parkPointer();
   await drawMap.hoverPoint(onSegment);
 
-  await drawMap.ghost.expectRenderedAt(onSegment);
+  await drawMap.drawing.expectGhostRenderedAt(onSegment);
 });

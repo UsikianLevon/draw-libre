@@ -2,7 +2,7 @@ import type { Point } from "#app/types/index";
 import type { UnifiedMap } from "#app/types/map";
 import { ELAYERS } from "#app/utils/geo_constants";
 
-// maplibre keeps the click when the release lands within 3px of the press, a wobble that short must not cost two tile reparses
+// maplibre still fires a click when release lands within 3px of press, a wobble that small should not cost two tile reparses
 const CLICK_TOLERANCE_PX = 3;
 
 const LAYERS = [

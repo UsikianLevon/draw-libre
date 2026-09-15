@@ -49,7 +49,7 @@ export class Observer {
       } else {
         let current = Object.assign({}, data);
 
-        // TODO why the hell do we need a loop here? We don't like loops
+        // TODO this loop looks avoidable, find a way to remove it
         while (current.tail) {
           if (current.tail?.val?.isAuxiliary) {
             current.tail = current.tail?.prev;

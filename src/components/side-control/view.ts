@@ -23,9 +23,7 @@ export class View {
     button.setAttribute("aria-label", title);
     button.setAttribute("data-type", type);
 
-    if (active) {
-      button.classList.add("control-button-active");
-    }
+    DOM.setPressed(button, active);
     if (disabled) {
       DOM.disableButton(button);
     }

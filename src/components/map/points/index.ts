@@ -28,7 +28,7 @@ export interface PrimaryPointEvents {
   onPointMouseDown: (event: MapLayerMouseEvent | MapTouchEvent) => void;
   onMapMouseMove: (event: MapLayerMouseEvent) => void;
 }
-// TODO messy: clean this up
+// TODO clean up this class, it got messy
 export class PointEvents {
   private eventsInited = false;
   private events: PrimaryPointEvents;
@@ -116,7 +116,23 @@ export class PointEvents {
     this.eventsInited = false;
   };
 
+  private unbindPress = () => {
+    const { map } = this.ctx;
+    map.off("mousemove", this.onMapMouseMove);
+    map.off("touchmove", this.onMapMouseMove);
+    map.off("mouseup", this.onPointMouseUp);
+    map.off("touchend", this.onPointMouseUp);
+  };
+
+  private cancelPress = () => {
+    this.unbindPress();
+    this.pressActive = false;
+    this.pressedStep = null;
+    this.pointState.reset();
+  };
+
   public remove = () => {
+    this.cancelPress();
     this.removeEvents();
     this.firstPoint?.remove();
     this.auxPoints?.removeEvents();
@@ -151,7 +167,7 @@ export class PointEvents {
     if (isFeatureTriggered(event, [...POINT_HIT_LAYERS, ELAYERS.LineLayerTransparent, ELAYERS.LineLayerBreak])) {
       return true;
     }
-    // hit layers hidden during a drag stay unqueryable until the tiles reparse, the click after a short out and back drag lands in that window
+    // hit layers stay unqueryable during a drag until tiles reparse, a short out and back drag can land a click in that gap
     return this.ctx.projection.isNearGeometry(event.point);
   };
 
@@ -172,7 +188,7 @@ export class PointEvents {
   };
 
   private onPointAdded = (event: { id: StepId }) => {
-    // a hover queued before this click would query tiles without the new point and lift the suppression
+    // a queued hover before this click would query tiles missing the new point and lift the suppression
     this.onPointerHover.cancel();
     this.suppressedStepId = event.id;
   };
@@ -266,7 +282,7 @@ export class PointEvents {
     }
     const step = store.findStepById(id);
     if (step) {
-      // hidden hit layers make maplibre report a second enter for a dragged point that was never left
+      // hidden hit layers make maplibre report a second enter for a point dragged without ever leaving
       const reentered = this.pointState.getEnteredStep()?.id === step.id;
       this.pointState.setEnteredStep(step);
       if (!reentered) {
@@ -389,10 +405,7 @@ export class PointEvents {
     if (!this.pressActive) return;
     this.pressActive = false;
 
-    map.off("mousemove", this.onMapMouseMove);
-    map.off("touchmove", this.onMapMouseMove);
-    map.off("mouseup", this.onPointMouseUp);
-    map.off("touchend", this.onPointMouseUp);
+    this.unbindPress();
     this.renderDraggedPoint.cancel();
 
     mouseEvents.pointMouseUp = true;
@@ -416,7 +429,7 @@ export class PointEvents {
       this.pointState.partialReset();
     }
 
-    // an aux press opens a PointCompound transaction in AuxPoints, it has to close on every release, moved or not
+    // an aux press opens a PointCompound transaction in AuxPoints, it must close on every release, moved or not
     timeline.commitTransaction();
 
     if (mouseEvents) {

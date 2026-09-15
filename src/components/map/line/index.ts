@@ -92,7 +92,9 @@ export class LineEvents {
     if (type === "MODE_CHANGED") {
       if (this.type === "break") {
         this.break.removeBreakEvents();
-        this.transparent?.initEvents();
+        if (data) {
+          this.transparent?.initEvents();
+        }
         this.type = "default";
       }
     }

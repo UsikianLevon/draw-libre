@@ -4,7 +4,11 @@ import { DrawingModeChangeEvent, Mode } from "#components/map/mode/types";
 import { Context } from ".";
 import { View } from "./view";
 
+type AnnouncedMode = Mode | "break";
+
 export class Observer {
+  private announced: AnnouncedMode | undefined = undefined;
+
   constructor(private readonly ctx: Context & { view: View }) {
     this.initConsumers();
   }
@@ -20,14 +24,20 @@ export class Observer {
   private resetAllState = () => {
     const { lineButton, breakButton, polygonButton } = this.ctx.view;
 
-    lineButton?.classList.remove("control-button-active");
-    polygonButton?.classList.remove("control-button-active");
-    breakButton?.classList.remove("control-button-active");
+    DOM.setPressed(lineButton, false);
+    DOM.setPressed(polygonButton, false);
+    DOM.setPressed(breakButton, false);
+  };
+
+  private announce = (mode: AnnouncedMode) => {
+    if (mode === this.announced) return;
+    this.announced = mode;
+    FireEvents.modeChanged(this.ctx.map, mode);
   };
 
   private checkActive = (button: HTMLElement) => {
     this.resetAllState();
-    button.classList.add("control-button-active");
+    DOM.setPressed(button, true);
   };
 
   private observeModeChange = (event: DrawingModeChangeEvent) => {
@@ -35,20 +45,14 @@ export class Observer {
     const { lineButton, breakButton, polygonButton } = this.ctx.view;
 
     const { mode } = this.ctx;
-    FireEvents.modeChanged(this.ctx.map, data as Mode);
+    this.announce(data as Mode);
 
-    if (!lineButton || !polygonButton || !breakButton) return;
-
-    switch (data) {
-      case "line":
-        this.checkActive(lineButton);
-        break;
-      case "polygon":
-        this.checkActive(polygonButton);
-        break;
-      default:
-        break;
+    if (data === "line" || data === "polygon") {
+      this.resetAllState();
+      DOM.setPressed(data === "line" ? lineButton : polygonButton, true);
     }
+
+    if (!breakButton) return;
 
     if (!data) {
       DOM.disableButton(breakButton);
@@ -90,7 +94,7 @@ export class Observer {
       const { breakButton } = this.ctx.view;
 
       this.checkActive(breakButton as HTMLElement);
-      FireEvents.modeChanged(this.ctx.map, "break");
+      this.announce("break");
     }
   };
 }

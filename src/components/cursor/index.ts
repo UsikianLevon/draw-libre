@@ -8,6 +8,7 @@ import type { MouseEvents } from "../map/mouse-events";
 import type { MouseEventsChangeEvent } from "../map/mouse-events/types";
 import { CURSORS, type TCursor } from "./constants";
 import type { RequiredDrawOptions } from "#app/types/index";
+import type { DrawingModeChangeEvent } from "#components/map/mode/types";
 
 interface Context {
   map: UnifiedMap;
@@ -55,16 +56,28 @@ export class Cursor {
   }, 10);
 
   #initConsumers() {
-    const { mouseEvents } = this.ctx;
+    const { mouseEvents, mode } = this.ctx;
 
     mouseEvents.addObserver(this.#mouseEventsObserver);
+    mode.addObserver(this.#modeObserver);
   }
 
   remove() {
-    const { mouseEvents } = this.ctx;
+    const { mouseEvents, mode } = this.ctx;
 
     mouseEvents.removeObserver(this.#mouseEventsObserver);
+    mode.removeObserver(this.#modeObserver);
+    this.handleMouseLeave.cancel();
+    this.handleFirstPointMouseEnter.cancel();
   }
+
+  #modeObserver = (event: DrawingModeChangeEvent) => {
+    const { mode } = this.ctx;
+    if (mode.getBreak()) return;
+    if (event.type === "CLOSED_GEOMETRY_CHANGED" && event.data) return;
+
+    this.set(mode.getMode() && !mode.getClosedGeometry() ? CURSORS.CROSSHAIR : CURSORS.AUTO);
+  };
 
   #mouseEventsObserver = (event: MouseEventsChangeEvent) => {
     const { mode, mouseEvents, store, options } = this.ctx;

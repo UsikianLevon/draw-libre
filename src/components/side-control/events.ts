@@ -85,48 +85,51 @@ export class Events {
   removeActiveClass = () => {
     const { lineButton, breakButton, polygonButton } = this.ctx.view;
 
-    lineButton?.classList.remove("control-button-active");
-    polygonButton?.classList.remove("control-button-active");
-    breakButton?.classList.remove("control-button-active");
+    DOM.setPressed(lineButton, false);
+    DOM.setPressed(polygonButton, false);
+    DOM.setPressed(breakButton, false);
   };
 
   onLineClick = () => {
+    this.tooltip.remove();
     const { mode } = this.ctx;
     const { lineButton } = this.ctx.view;
 
-    if (mode.getMode() === "line") {
+    if (mode.getMode() === "line" && !mode.getBreak()) {
       mode.setMode(null);
       this.removeActiveClass();
       return;
     }
 
     this.removeActiveClass();
-    lineButton?.classList.add("control-button-active");
+    DOM.setPressed(lineButton, true);
     mode.setMode("line");
     console.log(mode.getMode());
   };
 
   onPolygonClick = () => {
+    this.tooltip.remove();
     const { mode } = this.ctx;
     const { polygonButton } = this.ctx.view;
 
-    if (mode.getMode() === "polygon") {
+    if (mode.getMode() === "polygon" && !mode.getBreak()) {
       mode.setMode(null);
       this.removeActiveClass();
       return;
     }
 
     this.removeActiveClass();
-    polygonButton?.classList.add("control-button-active");
+    DOM.setPressed(polygonButton, true);
     mode.setMode("polygon");
   };
 
   onBreakClick = () => {
+    this.tooltip.remove();
     const { map, mode } = this.ctx;
     const { breakButton } = this.ctx.view;
 
     this.removeActiveClass();
-    breakButton?.classList.add("control-button-active");
+    DOM.setPressed(breakButton, true);
     mode.setBreak(true);
     map.getCanvasContainer().style.cursor = CURSORS.POINTER;
   };

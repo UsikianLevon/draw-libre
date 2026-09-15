@@ -137,10 +137,11 @@ export class FirstPoint {
       "STORE_CLEARED",
     ] as StoreChangeEventKeys[];
     if (events.includes(type)) {
+      const paint = this.ctx.options.layersPaint.firstPoint;
       if (store.circular.canClose()) {
-        togglePointCircleRadius(map, "large");
+        togglePointCircleRadius(map, "large", paint);
       } else {
-        togglePointCircleRadius(map, "default");
+        togglePointCircleRadius(map, "default", paint);
       }
     }
   };

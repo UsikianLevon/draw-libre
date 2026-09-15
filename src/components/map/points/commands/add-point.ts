@@ -77,7 +77,7 @@ export class AddPointCommand implements Command {
       this.snapshot.addedNode = this.store.push(this.step);
     }
 
-    // if pointGeneration is "auto" then we add an auxPoint
+    // adds an aux point when pointGeneration is auto
     if (this.options.pointGeneration === "auto" && this.store.tail?.prev?.val) {
       if (this.snapshot?.auxNode?.val) {
         this.restoreAuxNode(this.snapshot.auxNode);

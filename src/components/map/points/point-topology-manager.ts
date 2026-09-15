@@ -45,7 +45,7 @@ export class PointTopologyManager {
     }
   }
 
-  // we've got the reference to the selected node from the store and just updating the lat/lng when mouse up event happens
+  // updates the selected node lat and lng from the store on mouse up
   public updateStore = () => {
     const lastEvent = this.state.getLastEvent();
     const selectedNode = this.state.getSelectedNode();

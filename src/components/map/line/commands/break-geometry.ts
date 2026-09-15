@@ -44,11 +44,11 @@ export class BreakGeometryCommand implements Command {
     this.store.circular.break(this.current);
     this.mode.setClosedGeometry(false);
 
-    // save the new head and tail after breaking the geometry
+    // save head and tail after the break
     this.snapshot.newHead = this.store.head;
     this.snapshot.newTail = this.store.tail;
 
-    // notify the panel to update the UI
+    // notifies the panel
     this.store.notify({ type: "STORE_BREAK_GEOMETRY", data: { coords: this.clickCoords } });
   };
 
@@ -85,7 +85,7 @@ export class BreakGeometryCommand implements Command {
     this.store.notify({ type: "STORE_CLOSE_GEOMETRY" });
 
     const { newHead, newTail } = this.snapshot;
-    // restore old node connections. These are the nodes that were "removed" when breaking the geometry previously
+    // restores the node connections that were undone when the geometry broke
     if (newHead && newTail) {
       if (this.options.pointGeneration === "auto") {
         this.restoreAuxBetweenNewHeadTail();
@@ -95,7 +95,7 @@ export class BreakGeometryCommand implements Command {
       }
     }
     this.mode.setClosedGeometry(true);
-    // notify the panel to update the UI
+    // notifies the panel
     this.store.pingConsumers();
   };
 }

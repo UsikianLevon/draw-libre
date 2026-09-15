@@ -25,7 +25,7 @@ export const queryPoint = (map: UnifiedMap, point: MapMouseEvent["point"]) => {
   });
   if (features.length < 2) return features[0];
 
-  // rendered features come ordered by layer, not by distance, and keep coordinates of the original world copy
+  // features are ordered by layer, not by distance, and keep coordinates from the original world copy
   const cursorLng = map.unproject(point).lng;
   const pixels = features.map((feature) => {
     const [lng, lat] = (feature.geometry as GeoJSON.Point).coordinates as [number, number];

@@ -13,5 +13,3 @@ export const EVENTS = {
   UNDO_STACK_CHANGED: "mdl:undostackchanged",
   REDO_STACK_CHANGED: "mdl:redostackchanged",
 } as const;
-
-export const MOBILE_WIDTH = 768; // TODO move this into options so users can change it

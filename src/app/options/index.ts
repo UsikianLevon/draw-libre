@@ -57,8 +57,11 @@ export function checkInitialStepsOptionOnErrors(options: Initial): void {
 }
 
 export function initOptions(options?: DrawOptions): RequiredDrawOptions {
+  const interaction = interactionDefaults(matchesMedia("(pointer: coarse)"));
+  const canHover = !matchesMedia("(hover: none)");
+
   if (!options) {
-    return { ...DEFAULT_OPTIONS, interaction: interactionDefaults(isCoarsePointer()) };
+    return { ...DEFAULT_OPTIONS, interaction, dynamicLine: DEFAULT_OPTIONS.dynamicLine && canHover };
   }
 
   return {
@@ -66,16 +69,14 @@ export function initOptions(options?: DrawOptions): RequiredDrawOptions {
     panel: generatePanelOptions(options),
     modes: generateModeOptions(options),
     layersPaint: generateLayersOptions(options),
-    interaction: interactionDefaults(isCoarsePointer()),
+    interaction,
     initial: options.initial || DEFAULT_OPTIONS["initial"],
     locale: generateLocaleOptions(options),
-    dynamicLine: options.dynamicLine ?? DEFAULT_OPTIONS.dynamicLine,
+    dynamicLine: (options.dynamicLine ?? DEFAULT_OPTIONS.dynamicLine) && canHover,
   } as RequiredDrawOptions;
 }
-const isCoarsePointer = () =>
-  typeof window !== "undefined" && typeof window.matchMedia === "function"
-    ? window.matchMedia("(pointer: coarse)").matches
-    : false;
+const matchesMedia = (query: string) =>
+  typeof window !== "undefined" && typeof window.matchMedia === "function" ? window.matchMedia(query).matches : false;
 
 function generatePanelOptions(options: DrawOptions): RequiredDrawOptions["panel"] {
   return {

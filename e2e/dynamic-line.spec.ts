@@ -13,6 +13,22 @@ test("after the first point the dynamic line runs from it to the cursor", async 
   await drawMap.drawing.expectDynamicLineEndAt(cursor);
 });
 
+test.describe("narrow window", () => {
+  test.use({ viewport: { width: 700, height: 720 } });
+
+  test("in a narrow desktop window the dynamic line still follows the cursor", async ({ drawMap }) => {
+    await drawMap.open();
+    const { first, middle } = drawMap.layout.line;
+
+    await drawMap.drawPoint(first);
+    await drawMap.drawPoint(middle);
+    const cursor = await drawMap.sweepPointer();
+
+    await drawMap.drawing.expectDynamicLineFrom(middle);
+    await drawMap.drawing.expectDynamicLineEndAt(cursor);
+  });
+});
+
 test("after the second point the dynamic line starts at the second point", async ({ drawMap }) => {
   await drawMap.open();
   const { first, middle } = drawMap.layout.line;

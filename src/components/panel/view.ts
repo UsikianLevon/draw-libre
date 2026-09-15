@@ -9,6 +9,7 @@ export class View {
 
   constructor(private readonly ctx: Pick<Context, "map" | "options">) {
     this.root = DOM.create("div", "mdl-dashboard-container");
+    this.root.setAttribute("data-type", "panel");
     this.buttonContainer = DOM.create("div", "mdl-dashboard", this.root);
 
     this.renderButtons();
@@ -53,10 +54,12 @@ export class View {
 
   public show = () => {
     this.root.classList.remove("hidden");
+    this.root.removeAttribute("aria-hidden");
   };
 
   public hide = () => {
     this.root.classList.add("hidden");
+    this.root.setAttribute("aria-hidden", "true");
   };
 
   public setTransform = (x: number, y: number) => {

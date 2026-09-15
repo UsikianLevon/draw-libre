@@ -10,12 +10,16 @@
     "dev": "tsc -w",
     "debug": "vite --port 5174 --strictPort",
     "lint": "tsc && tsc -p tsconfig.e2e.json",
+    "types:consumer": "tsc -p tsconfig.consumer.json",
+    "coverage:check": "node scripts/check-coverage.mjs",
     "prettier": "prettier --write .",
-    "exports": "attw --pack .",
+    "exports": "attw --pack . --entrypoints . --ignore-rules cjs-resolves-to-esm",
     "test": "npm run test:unit && npm run test:e2e",
     "test:unit": "vitest run",
+    "pretest:e2e": "tsup",
     "test:e2e": "playwright test",
-    "ci": "npm run lint && npm run prettier && npm run build && npm run test",
+    "test:e2e:ui": "playwright test --ui",
+    "ci": "npm run lint && npm run prettier && npm run build && npm run exports && npm run types:consumer && npm run coverage:check && npm run test",
     "release": "npm run ci",
     "prepublishOnly": "npm run ci"
   },
@@ -50,6 +54,7 @@
     }
   },
   "devDependencies": {
+    "@arethetypeswrong/cli": "0.18.5",
     "@playwright/test": "^1.63.0",
     "@types/mapbox-gl": "3.1.0",
     "@types/node": "^22.20.2",

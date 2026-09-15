@@ -99,6 +99,8 @@ export class RemovePointManualCommand implements Command {
     if (currentHead) {
       removedNode.next = currentHead;
       currentHead.prev = removedNode;
+    } else {
+      this.ctx.store.tail = removedNode;
     }
     this.ctx.store.head = removedNode;
   };

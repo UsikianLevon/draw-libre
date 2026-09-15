@@ -86,10 +86,10 @@ const draw = DrawLibre.getInstance({
   },
 
   locale: {
-    break: "Break",
-    closeLine: "Close",
-    createPolygon: "Create",
-    delete: "Delete",
+    break: "Split",
+    closeLine: "Close the line",
+    createPolygon: "Create a polygon",
+    delete: "Delete all",
     line: "Line",
     polygon: "Polygon",
     removePoint: "Remove point",
@@ -112,20 +112,21 @@ const draw = DrawLibre.getInstance({
   },
 
   // Show a dynamic line following the cursor after placing the first point.
-  // Always false on viewports < 768px.
+  // Always false on viewports up to 768px wide.
   dynamicLine: true,
 
   // Initialize with existing geometry
   initial: {
     geometry: "line", // "line" | "polygon"
-    closeGeometry: false, // must be true for polygons
-    generateId: true, // auto-generate IDs if not present in steps
+    // true draws a closed shape: the first and last steps must match, with at least three different points.
+    // A polygon with false starts as an open line in polygon mode; a click on its first point closes and fills it.
+    closeGeometry: false,
+    generateId: true, // generate IDs for steps without one; with false every step needs an id
     steps: [
-      // { id?: string | number, lat: number, lng: number }
-      // For closed geometries, first and last point must match.
+      // { id?: string, lat: number, lng: number }
       { lat: 40, lng: 30 },
       { lat: 31, lng: 21 },
-      { lat: 31, lng: 21 },
+      { lat: 35, lng: 25 },
     ],
   },
 });
@@ -141,26 +142,28 @@ map.on("mdl:add", (event: PointAddEvent) => {
 });
 ```
 
-| Event                  | Type                   | Description            |
-| ---------------------- | ---------------------- | ---------------------- |
-| `mdl:add`              | `PointAddEvent`        | Point added            |
-| `mdl:pointremove`      | `PointRemoveEvent`     | Point removed          |
-| `mdl:pointenter`       | `PointEnterEvent`      | Cursor entered a point |
-| `mdl:pointleave`       | `PointLeaveEvent`      | Cursor left a point    |
-| `mdl:moveend`          | `PointMoveEvent`       | Point drag finished    |
-| `mdl:undo`             | `UndoEvent`            | Undo triggered         |
-| `mdl:removeall`        | `RemoveAllEvent`       | All points deleted     |
-| `mdl:save`             | `SaveEvent`            | Save triggered         |
-| `mdl:modechanged`      | `ModeChangeEvent`      | Drawing mode changed   |
-| `mdl:undostackchanged` | `UndoStackChangeEvent` | Undo stack updated     |
-| `mdl:redostackchanged` | `RedoStackChangeEvent` | Redo stack updated     |
+| Event                  | Type                   | Description              |
+| ---------------------- | ---------------------- | ------------------------ |
+| `mdl:add`              | `PointAddEvent`        | Point added              |
+| `mdl:pointremove`      | `PointRemoveEvent`     | Point removed            |
+| `mdl:pointenter`       | `PointEnterEvent`      | Cursor entered a point   |
+| `mdl:pointleave`       | `PointLeaveEvent`      | Cursor left a point      |
+| `mdl:moveend`          | `PointMoveEvent`       | Point drag finished      |
+| `mdl:undo`             | `UndoEvent`            | Undo triggered           |
+| `mdl:redo`             | `RedoEvent`            | Redo triggered           |
+| `mdl:removeall`        | `RemoveAllEvent`       | All points deleted       |
+| `mdl:save`             | `SaveEvent`            | Save triggered           |
+| `mdl:break`            | `BreakEvent`           | Line split in break mode |
+| `mdl:modechanged`      | `ModeChangeEvent`      | Drawing mode changed     |
+| `mdl:undostackchanged` | `UndoStackChangeEvent` | Undo stack updated       |
+| `mdl:redostackchanged` | `RedoStackChangeEvent` | Redo stack updated       |
 
 ## Methods
 
 ```javascript
-const draw = DrawLibre.getInstance();
+const draw = DrawLibre.getInstance(); // one shared instance, options of later calls are ignored
 
-// Find a step or node by ID
+// Find a step or node by ID, null for an unknown ID
 draw.findStepById(id: string)
 draw.findNodeById(id: string)
 
@@ -170,7 +173,7 @@ draw.getAllSteps(type?: "array" | "linkedlist")
 // Replace all steps. IDs are generated if not provided.
 draw.setSteps(steps: { lat: number; lng: number; id?: string }[])
 
-// Remove all steps
+// Remove all steps, the same as clear()
 draw.removeAllSteps()
 ```
 

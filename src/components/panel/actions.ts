@@ -16,23 +16,14 @@ export class Actions {
     mode.reset();
     timeline.resetStacks();
     renderer.resetGeometries();
-    if (event) {
-      FireEvents.removeAllPoints(map, event);
-    }
+    FireEvents.removeAllPoints(map, event);
     renderer.execute();
   };
 
   public undo = (event?: Event) => {
-    const { store, map, view } = this.ctx;
-    const hasSomethingToRedo = timeline.getRedoStackLength();
+    const { store, map } = this.ctx;
 
-    // hasSomethingToRedo prevents from resetting the store when we still have something to redo and are trying to remove the last point by undoing
-    if (store.size === 1 && hasSomethingToRedo) {
-      store.reset();
-      view.hide();
-    } else {
-      timeline.undo();
-    }
+    timeline.undo();
     if (event) {
       FireEvents.undo({ ...(store.tail?.val as Step), total: store.size }, map, event);
     }
@@ -52,9 +43,7 @@ export class Actions {
   public save = (event?: Event) => {
     const { store, options } = this.ctx;
 
-    if (event) {
-      FireEvents.onSaveClick(this.ctx, linkedListToArray(store.head), event);
-    }
+    FireEvents.onSaveClick(this.ctx, linkedListToArray(store.head), event);
     if (options.panel.buttons.save.clearOnSave) {
       this.clear(event);
     }

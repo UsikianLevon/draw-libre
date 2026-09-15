@@ -32,7 +32,7 @@ export class CloseGeometryCommand implements Command {
   };
 
   public execute = () => {
-    // adding aux point as the tail before closing the geometry
+    // aux point becomes the new tail before closing
     if (this.options.pointGeneration === "auto" && this.store.tail?.val) {
       if (this.auxPointSnapshot) {
         this.restoreAuxPoint();

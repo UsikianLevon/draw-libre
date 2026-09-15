@@ -34,7 +34,7 @@ export class Tiles {
   }
 
   private init = () => {
-    // first add the sources then all the layers
+    // sources first, then layers
     this.sources.init();
     this.layers.init();
   };

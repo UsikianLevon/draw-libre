@@ -102,7 +102,7 @@ function getPoints(store: Store) {
   };
 }
 
-// CAUTION: render is dependent on this function
+// rendering depends on this function
 export function getUnifiedFeatures(
   store: Store,
 ): GeoJSON.FeatureCollection<GeoJSON.LineString | GeoJSON.Polygon | GeoJSON.Point> {

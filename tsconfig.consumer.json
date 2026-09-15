@@ -1,0 +1,11 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "noEmit": true,
+    "rootDir": ".",
+    "paths": {
+      "draw-libre": ["dist/index.d.ts"]
+    }
+  },
+  "include": ["e2e/consumer"]
+}

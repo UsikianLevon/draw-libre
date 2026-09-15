@@ -100,10 +100,10 @@ export class FireEvents {
       mode,
     });
   }
-  static removeAllPoints(map: UnifiedMap, originalEvent: Event) {
+  static removeAllPoints(map: UnifiedMap, originalEvent?: Event) {
     map.fire(EVENTS.REMOVE_ALL, { originalEvent });
   }
-  static onSaveClick(context: Pick<TilesContext, "map" | "mode">, steps: Step[], originalEvent: Event) {
+  static onSaveClick(context: Pick<TilesContext, "map" | "mode">, steps: Step[], originalEvent?: Event) {
     const { map, mode } = context;
 
     map.fire(EVENTS.SAVE, {

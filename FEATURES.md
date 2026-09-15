@@ -8,3 +8,4 @@
 - [x] Give the user a way to use the panel functionality through the API, so he can disable the one I created if he doesn't like it.
 - [x] Toggle draw state
 - [x] Remove a point with a button instead of a right click
+- [ ] MOBILE_WIDTH = 768; // TODO put this inside options for the user to change

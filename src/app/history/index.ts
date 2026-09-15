@@ -67,9 +67,10 @@ export class Timeline extends Observable<TimelineChangeEvent> {
   };
 
   public resetStacks = () => {
+    this.transaction = null;
     this.undoStack = [];
     this.redoStack = [];
-    this.notify({ type: "REDO_STACK_CHANGED", data: 0 });
+    this.pingConsumers();
   };
 
   pingConsumers = () => {

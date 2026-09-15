@@ -39,6 +39,7 @@ export class TransparentLineEvents {
   };
 
   initEvents() {
+    if (this.eventsInited) return;
     this.ctx.map.on("click", ELAYERS.LineLayerTransparent, this.onLineClick);
     this.ctx.map.on("mousemove", ELAYERS.LineLayerTransparent, this.onLineMove);
     this.ctx.map.on("mouseenter", ELAYERS.LineLayerTransparent, this.onLineEnter);

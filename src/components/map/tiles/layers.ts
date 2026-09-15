@@ -78,6 +78,7 @@ export class Layers {
 
   public remove = () => {
     this.removeConsumers();
+    this.onStoreChange.cancel();
     this.removeLayers();
   };
 }

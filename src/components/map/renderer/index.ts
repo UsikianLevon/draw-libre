@@ -51,7 +51,7 @@ export class Renderer {
   private updateLine(featureIdx: number, newCoord: LatLng) {
     const { mode } = this.getContext();
 
-    // -2 because line is always the second to last feature. Check getUnifiedFeatures
+    // line is always second to last, matching the order from getUnifiedFeatures
     const line = this.unifiedGeoJSON.features.at(-2)?.geometry.coordinates;
     if (!line) return;
     line[featureIdx] = [newCoord.lng, newCoord.lat];
@@ -64,7 +64,7 @@ export class Renderer {
   private updatePolygon(featureIdx: number, newCoord: LatLng) {
     const { mode } = this.getContext();
 
-    // -1 because polygon is always the last feature. Check getUnifiedFeatures
+    // polygon is always last, matching the order from getUnifiedFeatures
     const polygon = this.unifiedGeoJSON.features.at(-1)?.geometry.coordinates[0] as number[][];
 
     if (!polygon) return;
@@ -76,7 +76,7 @@ export class Renderer {
   }
 
   private updatePoint(featureIdx: number, newCoord: LatLng) {
-    // points are always the first feature. Check getUnifiedFeatures
+    // points are always first, matching the order from getUnifiedFeatures
     const feature = this.unifiedGeoJSON?.features?.[featureIdx];
     if (feature?.geometry?.coordinates) {
       feature.geometry.coordinates = [newCoord.lng, newCoord.lat];

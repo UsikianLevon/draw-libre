@@ -1,4 +1,4 @@
-import { test } from "./fixtures";
+import { test, expect } from "./fixtures";
 
 test("hovering a point reveals the remove button beside it", async ({ drawMap }) => {
   const line = await drawMap.openWithLine();
@@ -128,26 +128,40 @@ test("the dynamic line hangs off the cursor after a point is removed", async ({ 
   const cursor = await drawMap.removeButton.centre();
   await drawMap.removePointUnderPointer();
 
-  await drawMap.dynamicLine.expectFreeEndAt(cursor);
+  await drawMap.drawing.expectDynamicLineEndAt(cursor);
 });
 
 test("the dynamic line hangs off the cursor after undo on an offset map", async ({ drawMap }) => {
-  await drawMap.openWithLine({ offset: true });
+  const line = await drawMap.openWithLine({ offset: true });
 
   const cursor = await drawMap.panel.centreOfUndo();
   await drawMap.panel.clickUndo();
 
-  await drawMap.dynamicLine.expectFreeEndAt(cursor);
+  await drawMap.drawing.expectDynamicLineEndAt(cursor);
+  await drawMap.drawing.expectDynamicLineFrom(line.middle);
 });
 
 test("the dynamic line hangs off the cursor after redo", async ({ drawMap }) => {
-  await drawMap.openWithLine();
+  const line = await drawMap.openWithLine();
   await drawMap.panel.clickUndo();
 
   const cursor = await drawMap.panel.centreOfRedo();
   await drawMap.panel.clickRedo();
 
-  await drawMap.dynamicLine.expectFreeEndAt(cursor);
+  await drawMap.drawing.expectDynamicLineEndAt(cursor);
+  await drawMap.drawing.expectDynamicLineFrom(line.last);
+});
+
+test("after the last point is removed the dynamic line starts at the point before it", async ({ drawMap }) => {
+  const line = await drawMap.openWithLine();
+  await drawMap.parkPointer();
+  await drawMap.hoverPoint(line.last);
+  const cursor = await drawMap.removeButton.centre();
+
+  await drawMap.removePointUnderPointer();
+
+  await drawMap.drawing.expectDynamicLineFrom(line.middle);
+  await drawMap.drawing.expectDynamicLineEndAt(cursor);
 });
 
 test("right-clicking a point no longer removes it", async ({ drawMap }) => {
@@ -205,7 +219,7 @@ test("removing the only point empties the drawing", async ({ drawMap }) => {
 
   await drawMap.events.expectCount("mdl:pointremove", 1);
   await drawMap.events.expectLastTotal("mdl:pointremove", 0);
-  await drawMap.panel.expectOutOfReach();
+  await drawMap.panel.expectHidden();
   await drawMap.expectBareMapAt(only);
 });
 
@@ -245,7 +259,7 @@ test("changing the drawing mode dismisses the button", async ({ drawMap }) => {
 });
 
 test("generated midpoints carry no remove button", async ({ drawMap }) => {
-  await drawMap.open({ pointGeneration: "auto" });
+  await drawMap.open({ options: { pointGeneration: "auto" } });
   const pair = drawMap.layout.rowPair;
   await drawMap.drawPoint(pair.left);
   await drawMap.drawPoint(pair.right);
@@ -257,7 +271,7 @@ test("generated midpoints carry no remove button", async ({ drawMap }) => {
 });
 
 test("a point can be removed while midpoints are generated", async ({ drawMap }) => {
-  await drawMap.open({ pointGeneration: "auto" });
+  await drawMap.open({ options: { pointGeneration: "auto" } });
   const line = drawMap.layout.line;
   await drawMap.drawPoint(line.first);
   await drawMap.drawPoint(line.middle);
@@ -272,4 +286,86 @@ test("a point can be removed while midpoints are generated", async ({ drawMap })
   await drawMap.events.expectLastId("mdl:pointremove", middleId);
   await drawMap.expectPointAt(line.first);
   await drawMap.expectPointAt(line.last);
+});
+
+test("removing points down to two opens the shape and gives polygon mode back without a mode change", async ({
+  drawMap,
+}) => {
+  await drawMap.open();
+  const triangle = await drawMap.drawClosedTriangle();
+  await drawMap.modes.expectPolygonDisabled();
+
+  await drawMap.parkPointer();
+  await drawMap.hoverPoint(triangle.b);
+  await drawMap.removePointUnderPointer();
+
+  await drawMap.events.expectCount("mdl:pointremove", 1);
+  await drawMap.drawing.expectOpen();
+  await drawMap.drawing.expectPointCount(2);
+  await drawMap.modes.expectBreakDisabled();
+  await drawMap.modes.expectPolygonEnabled();
+  await drawMap.modes.expectLineActive();
+  await drawMap.events.expectUnchanged("mdl:modechanged", 1);
+
+  await drawMap.drawPoint(drawMap.layout.emptySpot);
+  expect((await drawMap.events.lastPayload("mdl:add")).mode).toEqual({ geometry: "line", closedGeometry: false });
+});
+
+test("removing the first point of a closed square leaves a closed triangle starting at the second point", async ({
+  drawMap,
+}) => {
+  await drawMap.open();
+  const square = await drawMap.drawClosedSquare();
+  const ids = (await drawMap.drawing.steps()).map((step) => step.id);
+
+  await drawMap.parkPointer();
+  await drawMap.hoverPoint(square.topLeft);
+  await drawMap.removePointUnderPointer();
+
+  await drawMap.events.expectCount("mdl:pointremove", 1);
+  await drawMap.drawing.expectStepOrder(ids.slice(1));
+  await drawMap.drawing.expectClosed();
+  await drawMap.drawing.expectPointCount(3);
+});
+
+test("removing the last point of a closed shape keeps it closed", async ({ drawMap }) => {
+  await drawMap.open();
+  const square = await drawMap.drawClosedSquare();
+  const ids = (await drawMap.drawing.steps()).map((step) => step.id);
+
+  await drawMap.parkPointer();
+  await drawMap.hoverPoint(square.bottomLeft);
+  await drawMap.removePointUnderPointer();
+
+  await drawMap.events.expectCount("mdl:pointremove", 1);
+  await drawMap.drawing.expectStepOrder(ids.slice(0, 3));
+  await drawMap.drawing.expectClosed();
+});
+
+test("undo after a removal opened a shape closes it again with the same points", async ({ drawMap }) => {
+  await drawMap.open();
+  const triangle = await drawMap.drawClosedTriangle();
+  const ids = (await drawMap.drawing.steps()).map((step) => step.id);
+
+  await drawMap.parkPointer();
+  await drawMap.hoverPoint(triangle.b);
+  await drawMap.removePointUnderPointer();
+  await drawMap.drawing.expectOpen();
+
+  await drawMap.undo();
+
+  await drawMap.drawing.expectClosed();
+  await drawMap.drawing.expectStepOrder(ids);
+});
+
+test("the removal event carries the removed point and the count left behind", async ({ drawMap }) => {
+  const line = await drawMap.openWithLine();
+  const middle = (await drawMap.drawing.steps())[1]!;
+
+  await drawMap.hoverPoint(line.middle);
+  await drawMap.removePointUnderPointer();
+
+  await drawMap.events.expectCount("mdl:pointremove", 1);
+  const removed = await drawMap.events.payloadOf("mdl:pointremove", 0);
+  expect(removed).toMatchObject({ id: middle.id, coordinates: { lat: middle.lat, lng: middle.lng }, total: 2 });
 });

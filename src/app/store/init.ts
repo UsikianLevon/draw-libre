@@ -16,19 +16,17 @@ export const ERRORS = {
 };
 
 function buildStepSequence(
+  store: Store,
   initialSteps: Step[],
   closeGeometry: Initial["closeGeometry"],
   pointGeneration: RequiredDrawOptions["pointGeneration"],
 ): Store {
-  const store = new Store();
   const steps = closeGeometry ? initialSteps.slice(0, -1) : initialSteps;
 
   steps.forEach((step, idx) => {
     store.push(step);
 
-    // if we are at the end of the array and there's no next point
-    // we need to create an auxiliary point with the first point
-    // to close the geometry
+    // the last step without a next point gets an auxiliary point back to the first step, closing the geometry
     if (pointGeneration === "auto") {
       const isNextPointAvailable = steps[idx + 1];
       if (isNextPointAvailable) {
@@ -44,22 +42,31 @@ function buildStepSequence(
   return store;
 }
 
-function generateIdForSteps(stepsWithoutIds: LatLng[]): Step[] {
-  return stepsWithoutIds.map((step, idx) => {
-    return { ...step, isAuxiliary: false, isFirst: idx === 0, id: uuidv4() };
+function prepareSteps(steps: (Step | LatLng)[]): Step[] {
+  return steps.map((step, idx) => {
+    const id = "id" in step && step.id !== undefined ? step.id : uuidv4();
+    return { ...step, isAuxiliary: false, isFirst: idx === 0, id };
   });
 }
 
 function fromArray(initialOptions: Initial, pointGeneration: RequiredDrawOptions["pointGeneration"]): Store | null {
-  const { steps: initialSteps, closeGeometry, generateId } = initialOptions;
-  const steps = generateId ? generateIdForSteps(initialSteps) : initialSteps;
-  const list = buildStepSequence(steps as Step[], closeGeometry, pointGeneration);
+  const { steps: initialSteps, closeGeometry } = initialOptions;
+  const steps = prepareSteps(initialSteps);
+  const list = buildStepSequence(new Store(), steps, closeGeometry, pointGeneration);
 
   if (closeGeometry && list.tail && list.head) {
     list.tail.next = list.head;
     list.head.prev = list.tail;
   }
   return list;
+}
+
+export function appendOpenSteps(
+  store: Store,
+  steps: (Step | LatLng)[],
+  pointGeneration: RequiredDrawOptions["pointGeneration"],
+) {
+  buildStepSequence(store, prepareSteps(steps), false, pointGeneration);
 }
 
 export function initStore(options?: RequiredDrawOptions): Store | null {

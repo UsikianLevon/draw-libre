@@ -11,6 +11,7 @@ export class RemoveButtonView {
   constructor(container: HTMLElement, label: string) {
     this.button = DOM.create("button", `${BUTTON_CLASS} ${HIDDEN_CLASS}`, container);
     this.button.type = "button";
+    this.button.setAttribute("data-type", "remove-point");
     this.button.setAttribute("aria-label", label);
   }
 

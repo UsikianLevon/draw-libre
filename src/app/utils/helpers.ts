@@ -41,15 +41,25 @@ export const uuidv4 = (): Uuid => {
   return parts.join("-") as Uuid;
 };
 
-export const debounce = (fn: AnyFunction, delay: number) => {
-  let timeout: number;
+export type Debounced<T extends AnyFunction> = ((...args: Parameters<T>) => void) & { cancel: () => void };
 
-  return function (...args: any) {
-    clearTimeout(timeout);
+export const debounce = <T extends AnyFunction>(fn: T, delay: number): Debounced<T> => {
+  let timeout = 0;
+
+  const call = (...args: Parameters<T>) => {
+    window.clearTimeout(timeout);
     timeout = window.setTimeout(() => {
+      timeout = 0;
       fn(...args);
     }, delay);
   };
+
+  call.cancel = () => {
+    window.clearTimeout(timeout);
+    timeout = 0;
+  };
+
+  return call;
 };
 
 export type FrameCoalesced<T extends AnyFunction> = ((...args: Parameters<T>) => void) & { cancel: () => void };

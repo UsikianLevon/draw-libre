@@ -1,13 +1,7 @@
 import { expect, type Locator, type Page } from "@playwright/test";
 
 import type { Pixel } from "../support/layout";
-
-export interface Box {
-  x: number;
-  y: number;
-  width: number;
-  height: number;
-}
+import { type Box, stableBox } from "../support/stable-box";
 
 const CENTRING_TOLERANCE_PX = 3;
 
@@ -18,7 +12,7 @@ export class RemoveButtonComponent {
   readonly root: Locator;
 
   constructor(page: Page) {
-    this.root = page.locator(".mdl-point-remove");
+    this.root = page.locator('button[data-type="remove-point"]');
   }
 
   async expectVisible() {
@@ -49,10 +43,7 @@ export class RemoveButtonComponent {
   }
 
   async box(): Promise<Box> {
-    await this.expectVisible();
-    const box = await this.root.boundingBox();
-    expect(box, "the remove button has no box, so it is not on screen").not.toBeNull();
-    return box!;
+    return stableBox(this.root, "remove button");
   }
 
   async centre(): Promise<Pixel> {

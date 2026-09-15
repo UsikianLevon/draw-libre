@@ -17,6 +17,19 @@ export interface RowLayout {
   midpoint: Pixel;
 }
 
+export interface TriangleLayout {
+  a: Pixel;
+  b: Pixel;
+  c: Pixel;
+}
+
+export interface SquareLayout {
+  topLeft: Pixel;
+  topRight: Pixel;
+  bottomRight: Pixel;
+  bottomLeft: Pixel;
+}
+
 const FALLBACK_VIEWPORT = { width: 1280, height: 720 };
 
 export class Layout {
@@ -40,6 +53,28 @@ export class Layout {
     return { left, right, midpoint: { x: Math.round((left.x + right.x) / 2), y: left.y } };
   }
 
+  get triangle(): TriangleLayout {
+    return {
+      a: this.at(0.25, 0.3),
+      b: this.at(0.55, 0.3),
+      c: this.at(0.4, 0.55),
+    };
+  }
+
+  get square(): SquareLayout {
+    return {
+      topLeft: this.at(0.3, 0.3),
+      topRight: this.at(0.6, 0.3),
+      bottomRight: this.at(0.6, 0.55),
+      bottomLeft: this.at(0.3, 0.55),
+    };
+  }
+
+  centroid(points: Pixel[]): Pixel {
+    const sum = points.reduce((total, point) => ({ x: total.x + point.x, y: total.y + point.y }), { x: 0, y: 0 });
+    return { x: Math.round(sum.x / points.length), y: Math.round(sum.y / points.length) };
+  }
+
   get nearRightEdge(): Pixel {
     return { x: this.viewport.width - 18, y: Math.round(this.viewport.height * 0.5) };
   }
@@ -50,6 +85,14 @@ export class Layout {
 
   offsetFrom(at: Pixel, dx: number, dy: number): Pixel {
     return { x: at.x + dx, y: at.y + dy };
+  }
+
+  alongSegment(a: Pixel, b: Pixel, fraction: number): Pixel {
+    return { x: Math.round(a.x + (b.x - a.x) * fraction), y: Math.round(a.y + (b.y - a.y) * fraction) };
+  }
+
+  segmentMidpoint(a: Pixel, b: Pixel): Pixel {
+    return this.alongSegment(a, b, 0.5);
   }
 
   private at(fractionX: number, fractionY: number): Pixel {

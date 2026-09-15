@@ -58,6 +58,12 @@ export class DOM {
     }
   }
 
+  static setPressed(button: HTMLElement | null | undefined, pressed: boolean) {
+    if (!button) return;
+    button.classList.toggle("control-button-active", pressed);
+    button.setAttribute("aria-pressed", String(pressed));
+  }
+
   static disableButton = (button: HTMLButtonElement | null) => {
     if (!button) return;
     button.setAttribute("disabled", "true");

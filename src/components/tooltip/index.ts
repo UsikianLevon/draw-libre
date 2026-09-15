@@ -49,13 +49,16 @@ export class Tooltip {
   };
 
   private getLeftPosition = (event: HTMLEvent<HTMLElement>): Position => {
-    const { bottom, left } = event.target.getBoundingClientRect();
+    const { bottom, left, right } = event.target.getBoundingClientRect();
     const { width: labelWidth, height: labelHeight } = this.getLabelDimensions();
+    const x = left - BASE_X_OFFSET_FROM_ELEMENT - labelWidth;
+    const y = bottom - labelHeight - 2;
 
-    return {
-      x: left - BASE_X_OFFSET_FROM_ELEMENT - labelWidth,
-      y: bottom - labelHeight - 2,
-    };
+    if (x < 0) {
+      return { x: right + BASE_X_OFFSET_FROM_ELEMENT, y };
+    }
+
+    return { x, y };
   };
 
   private getBottomPosition = (event: HTMLEvent<HTMLElement>): Position => {

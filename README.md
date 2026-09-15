@@ -112,7 +112,7 @@ const draw = DrawLibre.getInstance({
   },
 
   // Show a dynamic line following the cursor after placing the first point.
-  // Always false on viewports up to 768px wide.
+  // Always false on devices without hover, such as touch screens.
   dynamicLine: true,
 
   // Initialize with existing geometry

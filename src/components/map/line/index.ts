@@ -1,5 +1,3 @@
-import { MOBILE_WIDTH } from "#app/utils/constants";
-
 import type { DrawingModeChangeEvent } from "../mode/types";
 import type { MouseEventsChangeEvent } from "../mouse-events/types";
 import { LineBreakEvents } from "./break-line";
@@ -27,7 +25,6 @@ export class LineEvents {
   }
 
   private initDynamicLine = () => {
-    if (window.innerWidth <= MOBILE_WIDTH) return;
     if (this.ctx.options.dynamicLine) {
       this.dynamic = new DynamicLineEvents(this.ctx);
     }

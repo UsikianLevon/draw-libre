@@ -1,4 +1,4 @@
-import { expect, test } from "vitest";
+import { afterEach, expect, test, vi } from "vitest";
 import { latest, normalizePropertyExpression } from "@maplibre/maplibre-gl-style-spec";
 
 import { ELAYERS, generateLayers } from "#app/utils/geo_constants";
@@ -15,6 +15,30 @@ const haloOpacity = (options: Parameters<typeof generateLayers>[0], hovered: boo
 
   return expression.evaluate({ zoom: 0 } as never, { type: 1, properties: {} } as never, { hover: hovered });
 };
+
+const stubHover = (canHover: boolean) =>
+  vi
+    .spyOn(window, "matchMedia")
+    .mockImplementation((query) => ({ matches: !canHover && query === "(hover: none)" }) as MediaQueryList);
+
+afterEach(() => {
+  vi.restoreAllMocks();
+});
+
+test("a device without hover gets no dynamic line even when the option asks for it", () => {
+  stubHover(false);
+
+  expect(initOptions().dynamicLine).toBe(false);
+  expect(initOptions({ dynamicLine: true }).dynamicLine).toBe(false);
+});
+
+test("a device with hover keeps the dynamic line unless the option turns it off", () => {
+  stubHover(true);
+
+  expect(initOptions().dynamicLine).toBe(true);
+  expect(initOptions({}).dynamicLine).toBe(true);
+  expect(initOptions({ dynamicLine: false }).dynamicLine).toBe(false);
+});
 
 test("dynamic line layer is dashed by default", () => {
   const paint = paintOf(DEFAULT_OPTIONS, ELAYERS.LineDynamicLayer);

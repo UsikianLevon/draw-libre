@@ -3,8 +3,9 @@ import { latest, normalizePropertyExpression } from "@maplibre/maplibre-gl-style
 
 import { ELAYERS, POINTS_FILTER, generateLayers } from "#app/utils/geo_constants";
 
-import { initOptions } from "./index";
+import { initOptions, checkInitialStepsOptionOnErrors } from "./index";
 import { DEFAULT_OPTIONS, interactionDefaults } from "./constants";
+import { ERRORS } from "#app/store/init";
 
 const paintOf = (options: Parameters<typeof generateLayers>[0], id: string) =>
   generateLayers(options).find((layer) => layer.id === id)?.paint as Record<string, unknown>;
@@ -149,4 +150,21 @@ test("layer filters are written in expression syntax only", () => {
   ];
 
   expect(JSON.stringify(filters)).not.toMatch(/\["==","(\$type|isFirst|isAuxiliary)"/);
+});
+
+test("initial options with an empty step list are refused by the options check", () => {
+  expect(() =>
+    checkInitialStepsOptionOnErrors({ geometry: "line", closeGeometry: false, generateId: true, steps: [] }),
+  ).toThrow(ERRORS.EMPTY_INITIAL_STATE);
+});
+
+test("initial options with steps pass the empty check", () => {
+  expect(() =>
+    checkInitialStepsOptionOnErrors({
+      geometry: "line",
+      closeGeometry: false,
+      generateId: true,
+      steps: [{ lat: 1, lng: 2 }],
+    }),
+  ).not.toThrow();
 });

@@ -45,7 +45,7 @@ const map = new maplibregl.Map({
   style: "https://demotiles.maplibre.org/style.json",
 });
 
-const draw = DrawLibre.getInstance();
+const draw = new DrawLibre();
 
 map.on("load", (e) => {
   e.target.addControl(draw, "top-left");
@@ -57,7 +57,7 @@ map.on("load", (e) => {
 All options are optional.
 
 ```javascript
-const draw = DrawLibre.getInstance({
+const draw = new DrawLibre({
   // "manual" (default) — click on a segment to add a point
   // "auto" — midpoints are generated automatically
   pointGeneration: "manual",
@@ -136,7 +136,7 @@ const draw = DrawLibre.getInstance({
 ## Events
 
 ```javascript
-const draw = DrawLibre.getInstance();
+const draw = new DrawLibre();
 
 const subscription = draw.on("mdl:add", (event) => {
   console.log(event.id, event.coordinates);
@@ -179,7 +179,7 @@ The same events are also fired on the map, so `map.on("mdl:add", …)` keeps wor
 ## Methods
 
 ```javascript
-const draw = DrawLibre.getInstance(); // one shared instance, options of later calls are ignored
+const draw = new DrawLibre();
 
 // Find a step or node by ID, null for an unknown ID
 draw.findStepById(id: string)
@@ -191,20 +191,45 @@ draw.getAllSteps(type?: "array" | "linkedlist")
 // Replace all steps. IDs are generated if not provided.
 draw.setSteps(steps: { lat: number; lng: number; id?: string }[])
 
-// Remove all steps, the same as clear()
+// Remove all steps, an alias of clear()
 draw.removeAllSteps()
 ```
 
 The built-in panel is off by default. Without it you can drive the drawing programmatically:
 
 ```javascript
+draw.undo(); // undo last action, pass a DOM event to forward it as originalEvent
+draw.redo(); // redo last undone action, same for the event
 draw.clear(); // remove all steps
 draw.save(); // trigger save
-draw.undo(e); // undo last action (the DOM event is what makes mdl:undo fire)
-draw.redo(e); // redo last undone action (same for mdl:redo)
 ```
 
 Check `mdl:undostackchanged` / `mdl:redostackchanged` to know when undo/redo are available.
+
+## One control at a time
+
+Only one `DrawLibre` control can be mounted per loaded copy of the library, including across different maps.
+Remove the current control before adding another.
+
+Adding or removing a control from a listener running during `addControl` or `removeControl` throws.
+Removing it from a later event, such as `mdl:save`, is supported.
+
+Every state method — `setSteps`, `getAllSteps`, `findStepById`, `findNodeById`, `undo`, `redo`, `clear`,
+`save`, `removeAllSteps` — throws before the control is added to a map and after it is removed. `on`, `once`
+and `off` work before `addControl` and keep working across a remove and add cycle.
+
+### Recovery after a failed mount
+
+Add the control after the map style has loaded. `addSource` throws while the style is still loading, and that
+is a normal reason for a mount to fail.
+
+When a mount fails, the control removes what it created, releases the guard and rethrows the error, so a new
+`addControl` is allowed. If a part of the control did not finish setting itself up, some of its map handlers or
+DOM nodes may survive. Reload the page when you need to be sure nothing is left over.
+
+Once a control is mounted, the guard is released only by `removeControl`. `map.remove()` calls `onRemove` on
+every control, so destroying a map frees it, but dropping a map reference without calling `map.remove()` leaves
+the guard held and no new `DrawLibre` can be mounted on that page.
 
 ## TypeScript
 

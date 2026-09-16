@@ -19,7 +19,7 @@ test("a finger drag released after the control is removed and before it is added
 
   await drawMap.api.unmount();
   await drawMap.canvas.releaseTouch();
-  await drawMap.api.mount();
+  await drawMap.api.remount();
 
   await expectFreshHistoryByTap(drawMap, line.first);
   await drawMap.canvas.settle();
@@ -30,7 +30,7 @@ test("a finger drag released after the same control is added again leaves no his
   const line = await drawMap.openWithLineByTap();
   await drawMap.startDragByTouch(line.middle, drawMap.layout.offsetFrom(line.middle, 40, 60));
   await drawMap.api.unmount();
-  await drawMap.api.mount();
+  await drawMap.api.remount();
 
   await drawMap.canvas.releaseTouch();
 

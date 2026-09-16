@@ -57,23 +57,6 @@ test("the built package draws a point the same way the sources do", async ({ dra
   await drawMap.removeButton.expectHidden();
 });
 
-test("a second getInstance call returns the same control and keeps the options of the first", async ({ drawMap }) => {
-  await drawMap.open({ options: { locale: { removePoint: "Label A" } } });
-  expect(await drawMap.api.getInstanceReturnsTheMountedControl()).toBe(true);
-  await drawMap.api.unmount();
-  await drawMap.modes.line.waitFor({ state: "detached" });
-
-  await drawMap.api.mount({ modes: { initial: "line" }, locale: { removePoint: "Label B" } });
-  expect(await drawMap.api.getInstanceReturnsTheMountedControl()).toBe(true);
-
-  const line = drawMap.layout.line;
-  await drawMap.drawPoint(line.first);
-  await drawMap.drawPoint(line.middle);
-  await drawMap.parkPointer();
-  await drawMap.hoverPoint(line.first);
-  await drawMap.removeButton.expectLabelled("Label A");
-});
-
 test("adding the control puts the mode buttons in the top-left corner, adds its layers and keeps the panel hidden", async ({
   drawMap,
 }) => {
@@ -132,15 +115,21 @@ test("three rounds of adding and removing the same control leave the map style a
   await drawMap.modes.line.waitFor({ state: "detached" });
   const before = await drawMap.drawing.mapStyleFootprint();
 
-  for (let round = 0; round < 3; round += 1) {
-    await drawMap.api.mount({ modes: { initial: "line" } });
+  await drawMap.api.mount({ modes: { initial: "line" } });
+  await drawMap.modes.expectLineActive();
+  await drawMap.api.unmount();
+  await drawMap.modes.line.waitFor({ state: "detached" });
+  expect(await drawMap.drawing.mapStyleFootprint()).toEqual(before);
+
+  for (let round = 0; round < 2; round += 1) {
+    await drawMap.api.remount();
     await drawMap.modes.expectLineActive();
     await drawMap.api.unmount();
     await drawMap.modes.line.waitFor({ state: "detached" });
     expect(await drawMap.drawing.mapStyleFootprint()).toEqual(before);
   }
 
-  await drawMap.api.mount({ modes: { initial: "line" } });
+  await drawMap.api.remount();
   await drawMap.modes.expectLineActive();
   await drawMap.drawPoint(drawMap.layout.line.first);
   await drawMap.events.expectUnchanged("mdl:add", 1);
@@ -179,7 +168,7 @@ test("the same control added again starts empty with no history, and drawing, dr
   await drawMap.api.unmount();
   await drawMap.events.expectUnchanged("mdl:undostackchanged", stackEvents);
   await drawMap.events.expectUnchanged("mdl:redostackchanged", redoEvents);
-  await drawMap.api.mount();
+  await drawMap.api.remount();
 
   await drawMap.modes.expectLineActive();
   await drawMap.drawing.expectEmpty();
@@ -252,7 +241,7 @@ test("a drag released after the control is removed and before it is added again 
 
   await drawMap.api.unmount();
   await drawMap.canvas.release();
-  await drawMap.api.mount();
+  await drawMap.api.remount();
 
   await expectFreshHistory(drawMap, line.first);
   await drawMap.canvas.settle();
@@ -263,7 +252,7 @@ test("a drag release that comes after the same control is added again leaves no 
   const line = await drawMap.openWithLine();
   await drawMap.startDrag(line.middle, drawMap.layout.offsetFrom(line.middle, 40, 60));
   await drawMap.api.unmount();
-  await drawMap.api.mount();
+  await drawMap.api.remount();
 
   await drawMap.canvas.release();
 
@@ -285,7 +274,7 @@ test("in auto mode a midpoint drag released before the same control is added aga
 
   await drawMap.api.unmount();
   await drawMap.canvas.release();
-  await drawMap.api.mount();
+  await drawMap.api.remount();
 
   await expectFreshHistory(drawMap, pair.left);
 });
@@ -301,7 +290,7 @@ test("in auto mode a midpoint drag released after the same control is added agai
   await drawMap.startDrag(pair.midpoint, drawMap.layout.offsetFrom(pair.midpoint, 0, 60));
 
   await drawMap.api.unmount();
-  await drawMap.api.mount();
+  await drawMap.api.remount();
   await drawMap.canvas.release();
 
   await drawMap.canvas.settle();

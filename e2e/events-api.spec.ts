@@ -47,13 +47,13 @@ test("a listener added before the control is mounted keeps hearing after the con
   const line = drawMap.layout.line;
   const listener = await drawMap.api.probe.on("mdl:add");
 
-  await drawMap.api.mount();
+  await drawMap.api.remount();
   await drawMap.modes.expectLineActive();
   await drawMap.drawPoint(line.first);
   expect(await drawMap.api.probe.count(listener)).toBe(1);
 
   await drawMap.api.unmount();
-  await drawMap.api.mount();
+  await drawMap.api.remount();
   await drawMap.modes.expectLineActive();
   await drawMap.drawPoint(line.middle);
 

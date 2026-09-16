@@ -76,7 +76,7 @@ const options = {
 declare const required: RequiredDrawOptions;
 void required;
 
-export const draw: DrawLibre = DrawLibre.getInstance(options);
+export const draw: DrawLibre = new DrawLibre(options);
 
 const control: DrawLibreControl = draw;
 const legacyMap: UnifiedMap = map;
@@ -89,7 +89,7 @@ if (Array.isArray(all)) {
   void first;
 }
 
-const found: Step | null | undefined = draw.findStepById("some-id" as StepId);
+const found: Step | null = draw.findStepById("some-id" as StepId);
 void found;
 
 draw.setSteps([{ lat: 1, lng: 2 }] satisfies LatLng[]);
@@ -189,4 +189,4 @@ interface MapboxOnlyCirclePaint {
   "circle-emissive-strength": number;
 }
 declare const mapboxOnlyCirclePaint: MapboxOnlyCirclePaint;
-DrawLibre.getInstance({ layersPaint: { points: mapboxOnlyCirclePaint } });
+new DrawLibre({ layersPaint: { points: mapboxOnlyCirclePaint } });

@@ -50,8 +50,8 @@ export class DrawMapPage {
         options === undefined ? undefined : JSON.stringify(options),
       ),
     unmount: () => this.page.evaluate(() => window.unmountDraw()),
+    remount: () => this.page.evaluate(() => window.remountDraw()),
     dispose: () => this.page.evaluate(() => window.disposeDraw()),
-    getInstanceReturnsTheMountedControl: () => this.page.evaluate(() => window.getInstanceReturnsTheMountedControl()),
     undo: () =>
       this.page.evaluate(() => {
         if (!window.draw) throw new Error("the draw control is not mounted");
@@ -61,6 +61,16 @@ export class DrawMapPage {
       this.page.evaluate(() => {
         if (!window.draw) throw new Error("the draw control is not mounted");
         window.draw.redo(new MouseEvent("click"));
+      }),
+    undoWithoutEvent: () =>
+      this.page.evaluate(() => {
+        if (!window.draw) throw new Error("the draw control is not mounted");
+        window.draw.undo();
+      }),
+    redoWithoutEvent: () =>
+      this.page.evaluate(() => {
+        if (!window.draw) throw new Error("the draw control is not mounted");
+        window.draw.redo();
       }),
     clear: () =>
       this.page.evaluate(() => {
@@ -137,6 +147,17 @@ export class DrawMapPage {
     reentrancy: {
       removeControlOnSave: () => this.page.evaluate(() => window.reentrancy.removeControlOnSave()),
       clearOnSave: () => this.page.evaluate(() => window.reentrancy.clearOnSave()),
+    },
+    lifecycle: {
+      secondControlOnSameMap: () => this.page.evaluate(() => window.lifecycleProbe.secondControlOnSameMap()),
+      secondControlOnOtherMap: () => this.page.evaluate(() => window.lifecycleProbe.secondControlOnOtherMap()),
+      sameControlTwice: () => this.page.evaluate(() => window.lifecycleProbe.sameControlTwice()),
+      addFromModeChanged: () => this.page.evaluate(() => window.lifecycleProbe.addFromModeChanged()),
+      removeFromModeChanged: () => this.page.evaluate(() => window.lifecycleProbe.removeFromModeChanged()),
+      throwFromModeChanged: () => this.page.evaluate(() => window.lifecycleProbe.throwFromModeChanged()),
+      removeForeignControl: () => this.page.evaluate(() => window.lifecycleProbe.removeForeignControl()),
+      callBeforeMount: (method: string) =>
+        this.page.evaluate((name) => window.lifecycleProbe.callBeforeMount(name), method),
     },
   };
 

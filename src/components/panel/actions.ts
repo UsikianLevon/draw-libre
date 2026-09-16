@@ -24,9 +24,7 @@ export class Actions {
     const { store, map } = this.ctx;
 
     timeline.undo();
-    if (event) {
-      FireEvents.undo({ ...(store.tail?.val as Step), total: store.size }, map, event);
-    }
+    FireEvents.undo({ ...(store.tail?.val as Step), total: store.size }, map, event);
     renderer.execute();
   };
 
@@ -34,9 +32,7 @@ export class Actions {
     const { store, map } = this.ctx;
 
     timeline.redo();
-    if (event) {
-      FireEvents.redo({ ...(store.tail?.val as Step), total: store.size }, map, event);
-    }
+    FireEvents.redo({ ...(store.tail?.val as Step), total: store.size }, map, event);
     renderer.execute();
   };
 

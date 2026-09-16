@@ -1,6 +1,6 @@
 import type { RequiredDrawOptions } from "#app/types/index";
-import { UnifiedMap } from "#app/types/map";
-import { DrawingMode } from "#components/map/mode";
+import type { EngineMap } from "#app/types/engine";
+import type { DrawingMode } from "#components/map/mode";
 import { Events } from "./events";
 import { Observer } from "./observer";
 import { View } from "./view";
@@ -9,7 +9,7 @@ import "./control.css";
 export interface Context {
   options: RequiredDrawOptions;
   mode: DrawingMode;
-  map: UnifiedMap;
+  map: EngineMap;
 }
 
 export class Control {

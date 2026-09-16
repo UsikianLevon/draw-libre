@@ -1,6 +1,6 @@
 import type { MapLayerMouseEvent, MapMouseEvent, MapTouchEvent } from "maplibre-gl";
 import type { Uuid } from "#app/types/index";
-import type { UnifiedMap } from "#app/types/map";
+import type { EngineMap } from "#app/types/engine";
 import type { Store } from "#app/store/index";
 import { ELAYERS } from "#app/utils/geo_constants";
 import { nearestVertexPx } from "./line/projection";
@@ -14,12 +14,12 @@ export const isFeatureTriggered = (event: MapLayerMouseEvent, layerIds: string[]
   return layers.some((layer) => layerIds.includes(layer.layer.id));
 };
 
-export const queryPointId = (map: UnifiedMap, point: MapMouseEvent["point"]) => {
+export const queryPointId = (map: EngineMap, point: MapMouseEvent["point"]) => {
   const id = queryPoint(map, point)?.properties.id;
   return id;
 };
 
-export const queryPoint = (map: UnifiedMap, point: MapMouseEvent["point"]) => {
+export const queryPoint = (map: EngineMap, point: MapMouseEvent["point"]) => {
   const features = map.queryRenderedFeatures(point, {
     layers: POINT_HIT_LAYERS,
   });

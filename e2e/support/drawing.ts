@@ -613,7 +613,7 @@ export class Drawing {
       const original = map.setLayoutProperty.bind(map);
       map.setLayoutProperty = ((layerId: string, name: string, value: unknown) => {
         if (name === "visibility") map.__visibility?.push(`${layerId}=${String(value)}`);
-        return original(layerId, name, value);
+        return original(layerId, name as Parameters<typeof original>[1], value as Parameters<typeof original>[2]);
       }) as unknown as typeof map.setLayoutProperty;
     });
   }

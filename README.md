@@ -2,7 +2,7 @@
 
 A drawing tool for [MapLibre GL](https://maplibre.org/) and [Mapbox GL](https://docs.mapbox.com/mapbox-gl-js/) maps. Draw linestrings (open and closed) and polygons with undo/redo, geometry breaking, and full style customization.
 
-Works with maplibre-gl v2–v5, mapbox-gl v1–v3, and all projections.
+Works with maplibre-gl v2–v6, mapbox-gl v1–v3, and all projections.
 
 **React users:** check out [draw-libre-react](https://github.com/UsikianLevon/draw-libre-react).
 
@@ -36,7 +36,7 @@ npm install draw-libre
 ## Quick start
 
 ```javascript
-import maplibregl from "maplibre-gl";
+import * as maplibregl from "maplibre-gl";
 import DrawLibre from "draw-libre";
 import "draw-libre/dist/index.css";
 
@@ -100,7 +100,7 @@ const draw = DrawLibre.getInstance({
   },
 
   // Override layer paint properties.
-  // See MapLibre style spec for available options.
+  // See MapLibre style spec for available options. Mapbox-only paint properties are accepted too.
   layersPaint: {
     onLinePoint: {}, // CircleLayerSpecification["paint"]
     firstPoint: {}, // CircleLayerSpecification["paint"]
@@ -136,12 +136,29 @@ const draw = DrawLibre.getInstance({
 ## Events
 
 ```javascript
-import DrawLibre, { type PointAddEvent } from "draw-libre";
+const draw = DrawLibre.getInstance();
 
-map.on("mdl:add", (event: PointAddEvent) => {
-  console.log(event);
+const subscription = draw.on("mdl:add", (event) => {
+  console.log(event.id, event.coordinates);
 });
+
+// later
+subscription.unsubscribe();
+
+draw.once("mdl:save", (event) => {
+  console.log(event.steps);
+});
+
+const onModeChange = (event) => console.log(event.mode);
+draw.on("mdl:modechanged", onModeChange);
+draw.off("mdl:modechanged", onModeChange);
 ```
+
+Listeners can be added before `map.addControl(draw)` and keep working after `map.removeControl(draw)` when the same instance is added again. In TypeScript every event name and payload is typed, `DrawLibreEventType` maps each name to its payload type.
+
+If a listener throws, delivery of that event stops there: later listeners do not run, the instance channel does not receive it when the throw came from a map listener, and an event fired from inside a listener is dropped. The error reaches the call that triggered the event.
+
+The same events are also fired on the map, so `map.on("mdl:add", …)` keeps working with every supported version. With maplibre-gl v6 the map typings accept only built-in event names, so in TypeScript use `draw.on`.
 
 | Event                  | Type                   | Description              |
 | ---------------------- | ---------------------- | ------------------------ |
@@ -188,6 +205,12 @@ draw.redo(e); // redo last undone action (same for mdl:redo)
 ```
 
 Check `mdl:undostackchanged` / `mdl:redostackchanged` to know when undo/redo are available.
+
+## TypeScript
+
+The type declarations do not import maplibre-gl or mapbox-gl, `map.addControl(draw)` type-checks with both. With mapbox-gl v3 and `skipLibCheck: false`, install `@types/geojson`, the mapbox-gl typings need it.
+
+`event.target` and `UnifiedMap` are typed as `MapLike`. Cast them to the `Map` type of your engine to call its methods, for example `event.target as maplibregl.Map`.
 
 ## License
 

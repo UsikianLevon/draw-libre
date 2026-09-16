@@ -1,6 +1,8 @@
-import type { IControl, UnifiedMap } from "#app/types/map";
+import type { DrawLibreControl, MapLike, UnifiedMap } from "#app/types/map";
+import type { EngineMap } from "#app/types/engine";
 import type { DrawOptions, LatLng, RequiredDrawOptions, Step, StepId } from "#app/types/index";
 import type {
+  DrawLibreEventType,
   UndoEvent,
   RedoEvent,
   PointAddEvent,
@@ -32,8 +34,10 @@ import "./draw.css";
 import { Tiles } from "#components/map/tiles";
 import { timeline } from "#app/history";
 import { MapTimelineAdapter } from "#app/history/map-adapter";
+import { Emitter, type DrawLibreSubscription } from "#app/events/emitter";
+import { FireEvents } from "#components/map/fire-events";
 
-export default class DrawLibre implements IControl {
+export default class DrawLibre implements DrawLibreControl {
   private container: HTMLElement | undefined;
   private store: Store | undefined;
   private mode: DrawingMode | undefined;
@@ -45,6 +49,7 @@ export default class DrawLibre implements IControl {
   private mouseEvents: MouseEvents | undefined;
   private timelineAdapter: MapTimelineAdapter | undefined;
   private projection: GeometryProjection | undefined;
+  private readonly events = new Emitter<DrawLibreEventType>();
 
   private renderer: Renderer | null = null;
   static instance: DrawLibre | null = null;
@@ -81,21 +86,24 @@ export default class DrawLibre implements IControl {
    * to the DOM: the map will insert the control's element into the DOM
    * as necessary.
    */
-  onAdd = (map: UnifiedMap) => {
+  onAdd = (map: MapLike) => {
+    // maplibre and mapbox maps both provide every method the drawing calls
+    const engine = map as EngineMap;
+    FireEvents.bind(this.events);
     this.store = new Store(this.defaultOptions);
     this.mode = new DrawingMode(this.defaultOptions);
     this.renderer = renderer.initialize({
-      map,
+      map: engine,
       store: this.store,
       options: this.defaultOptions,
       mode: this.mode,
     });
-    this.projection = new GeometryProjection({ map, store: this.store, options: this.defaultOptions });
+    this.projection = new GeometryProjection({ map: engine, store: this.store, options: this.defaultOptions });
     this.mouseEvents = new MouseEvents();
-    this.panel = new Panel({ map, mode: this.mode, options: this.defaultOptions, store: this.store });
-    this.control = new Control({ options: this.defaultOptions, map, mode: this.mode });
+    this.panel = new Panel({ map: engine, mode: this.mode, options: this.defaultOptions, store: this.store });
+    this.control = new Control({ options: this.defaultOptions, map: engine, mode: this.mode });
     this.tiles = new Tiles({
-      map,
+      map: engine,
       store: this.store,
       mode: this.mode,
       options: this.defaultOptions,
@@ -103,18 +111,19 @@ export default class DrawLibre implements IControl {
       panel: this.panel,
       mouseEvents: this.mouseEvents,
       projection: this.projection,
+      events: this.events,
     });
     // map sources exist only from here, rendering earlier inside initialize had nowhere to draw
     this.renderer?.execute();
     this.cursor = new Cursor({
-      map,
+      map: engine,
       mode: this.mode,
       mouseEvents: this.mouseEvents,
       store: this.store,
       options: this.defaultOptions,
     });
 
-    this.timelineAdapter = new MapTimelineAdapter(map);
+    this.timelineAdapter = new MapTimelineAdapter(engine);
     this.mode.pingConsumers();
     this.store.pingConsumers();
     this.container = this.control.getContainer();
@@ -149,6 +158,7 @@ export default class DrawLibre implements IControl {
     if (this.container) {
       DOM.remove(this.container);
     }
+    FireEvents.unbind(this.events);
   };
 
   /**
@@ -230,6 +240,23 @@ export default class DrawLibre implements IControl {
   public removeAllSteps = (): void => {
     this.clear();
   };
+
+  public on = <T extends keyof DrawLibreEventType>(
+    type: T,
+    listener: (event: DrawLibreEventType[T]) => void,
+  ): DrawLibreSubscription => this.events.on(type, listener);
+
+  public once = <T extends keyof DrawLibreEventType>(
+    type: T,
+    listener: (event: DrawLibreEventType[T]) => void,
+  ): DrawLibreSubscription => this.events.once(type, listener);
+
+  public off = <T extends keyof DrawLibreEventType>(
+    type: T,
+    listener: (event: DrawLibreEventType[T]) => void,
+  ): void => {
+    this.events.off(type, listener);
+  };
 }
 
 export type {
@@ -251,5 +278,9 @@ export type {
   UndoStackChangeEvent,
   RedoStackChangeEvent,
   BreakEvent,
+  DrawLibreEventType,
+  DrawLibreSubscription,
+  MapLike,
+  DrawLibreControl,
   UnifiedMap,
 };

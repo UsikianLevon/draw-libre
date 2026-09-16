@@ -1,7 +1,7 @@
 import { afterEach, expect, test, vi } from "vitest";
 import { latest, normalizePropertyExpression } from "@maplibre/maplibre-gl-style-spec";
 
-import { ELAYERS, generateLayers } from "#app/utils/geo_constants";
+import { ELAYERS, POINTS_FILTER, generateLayers } from "#app/utils/geo_constants";
 
 import { initOptions } from "./index";
 import { DEFAULT_OPTIONS, interactionDefaults } from "./constants";
@@ -11,7 +11,11 @@ const paintOf = (options: Parameters<typeof generateLayers>[0], id: string) =>
 
 const haloOpacity = (options: Parameters<typeof generateLayers>[0], hovered: boolean) => {
   const opacity = paintOf(options, ELAYERS.PointsHitLayer)["circle-opacity"];
-  const expression = normalizePropertyExpression(opacity as never, latest.paint_circle["circle-opacity"] as never);
+  const expression = normalizePropertyExpression(
+    opacity as never,
+    "circle-opacity",
+    latest.paint_circle["circle-opacity"] as never,
+  );
 
   return expression.evaluate({ zoom: 0 } as never, { type: 1, properties: {} } as never, { hover: hovered });
 };
@@ -136,4 +140,13 @@ test("coarse pointers get larger hit areas than mice", () => {
 test("the halo lights up only while its point is hovered", () => {
   expect(haloOpacity(DEFAULT_OPTIONS, false)).toBe(0);
   expect(haloOpacity(DEFAULT_OPTIONS, true)).toBeGreaterThan(0);
+});
+
+test("layer filters are written in expression syntax only", () => {
+  const filters = [
+    ...generateLayers(DEFAULT_OPTIONS).map((layer) => ("filter" in layer ? layer.filter : null)),
+    ...Object.values(POINTS_FILTER),
+  ];
+
+  expect(JSON.stringify(filters)).not.toMatch(/\["==","(\$type|isFirst|isAuxiliary)"/);
 });

@@ -2,14 +2,14 @@ import type { Command } from "#app/history/command";
 import type { Store } from "#app/store";
 import type { StoreChangeEventKeys } from "#app/store/types";
 import type { RequiredDrawOptions } from "#app/types";
-import type { UnifiedMap } from "#app/types/map";
+import type { EngineMap } from "#app/types/engine";
 import type { DrawingMode } from "#components/map/mode";
 import { RemovePointAutoCommand } from "./auto";
 import { RemovePointManualCommand } from "./manual";
 
 export interface RemoveCommanContext {
   readonly store: Store;
-  readonly map: UnifiedMap;
+  readonly map: EngineMap;
   readonly options: RequiredDrawOptions;
   readonly mode: DrawingMode;
   readonly nodeId: string;

@@ -1,12 +1,12 @@
 import type { CircleLayerSpecification } from "maplibre-gl";
 
-import type { UnifiedMap } from "#app/types/map";
+import type { EngineMap } from "#app/types/engine";
 
 import { ELAYERS, FIRST_POINT_COLOR, FIRST_POINT_RADIUS } from "#app/utils/geo_constants";
 
 type FirstPointPaint = CircleLayerSpecification["paint"];
 
-const firstPointCircleRadius = (map: UnifiedMap, paint: FirstPointPaint) => {
+const firstPointCircleRadius = (map: EngineMap, paint: FirstPointPaint) => {
   const radius = paint?.["circle-radius"];
   map.setPaintProperty(
     ELAYERS.FirstPointLayer,
@@ -16,7 +16,7 @@ const firstPointCircleRadius = (map: UnifiedMap, paint: FirstPointPaint) => {
   map.setPaintProperty(ELAYERS.FirstPointLayer, "circle-stroke-color", FIRST_POINT_COLOR.large);
 };
 
-const defaultPointCircleRadius = (map: UnifiedMap, paint: FirstPointPaint) => {
+const defaultPointCircleRadius = (map: EngineMap, paint: FirstPointPaint) => {
   map.setPaintProperty(
     ELAYERS.FirstPointLayer,
     "circle-radius",
@@ -30,7 +30,7 @@ const defaultPointCircleRadius = (map: UnifiedMap, paint: FirstPointPaint) => {
 };
 
 export const togglePointCircleRadius = (
-  map: UnifiedMap,
+  map: EngineMap,
   type: keyof typeof FIRST_POINT_RADIUS,
   paint: FirstPointPaint,
 ) => {

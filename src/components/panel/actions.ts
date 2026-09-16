@@ -1,9 +1,9 @@
 import { timeline } from "#app/history";
 import { linkedListToArray } from "#app/store/init";
-import { Step } from "#app/types";
+import type { Step } from "#app/types";
 import { FireEvents } from "#components/map/fire-events";
 import { renderer } from "#components/map/renderer";
-import { Context } from ".";
+import type { Context } from ".";
 import { View } from "./view";
 
 export class Actions {

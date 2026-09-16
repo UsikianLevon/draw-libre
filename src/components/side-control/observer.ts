@@ -1,7 +1,7 @@
 import { DOM } from "#app/dom";
 import { FireEvents } from "#components/map/fire-events";
-import { DrawingModeChangeEvent, Mode } from "#components/map/mode/types";
-import { Context } from ".";
+import type { DrawingModeChangeEvent, Mode } from "#components/map/mode/types";
+import type { Context } from ".";
 import { View } from "./view";
 
 type AnnouncedMode = Mode | "break";

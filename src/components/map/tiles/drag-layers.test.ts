@@ -1,6 +1,6 @@
 import { expect, test } from "vitest";
 
-import type { UnifiedMap } from "#app/types/map";
+import type { EngineMap } from "#app/types/engine";
 import { ELAYERS } from "#app/utils/geo_constants";
 
 import { DragLayers } from "./drag-layers";
@@ -25,7 +25,7 @@ function createMapStub(initial: Partial<Record<string, Visibility>>) {
       visibility[id] = value;
       writes.push(`${id}=${value}`);
     },
-  } as unknown as UnifiedMap;
+  } as unknown as EngineMap;
 
   return { map, visibility, writes };
 }

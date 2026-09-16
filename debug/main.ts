@@ -1,13 +1,15 @@
-import maplibregl from "maplibre-gl";
+import type * as MaplibreTypes from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
 
 import DrawLibre from "../src/index";
+import type { DrawLibreEventType } from "../src/index";
 import type { DrawOptions, Initial, Step } from "../src/app/types/index";
 import type { Mode } from "../src/components/map/mode/types";
+import { loadMaplibreWorker, maplibregl } from "../e2e/support/maplibre";
 
 declare global {
   interface Window {
-    map: maplibregl.Map;
+    map: MaplibreTypes.Map;
     draw: DrawLibre | null;
   }
 }
@@ -15,7 +17,7 @@ declare global {
 const STORAGE_KEY = "draw-libre-debug";
 const LOG_LIMIT = 200;
 
-const RECORDED_EVENTS = [
+const RECORDED_EVENTS: (keyof DrawLibreEventType)[] = [
   "mdl:add",
   "mdl:pointremove",
   "mdl:moveend",
@@ -176,6 +178,8 @@ function record(name: string, event: Record<string, unknown>) {
   }
 }
 
+await loadMaplibreWorker();
+
 const map = new maplibregl.Map({
   container: "map",
   style: {
@@ -194,20 +198,19 @@ let draw: DrawLibre | null = null;
 
 function mount() {
   if (draw) {
-    map.removeControl(draw as unknown as maplibregl.IControl);
+    map.removeControl(draw);
     DrawLibre.instance = null;
   }
   draw = DrawLibre.getInstance(readOptions());
-  map.addControl(draw as unknown as maplibregl.IControl, "top-left");
+  for (const name of RECORDED_EVENTS) {
+    draw.on(name, (event) => record(name, { ...event }));
+  }
+  map.addControl(draw, "top-left");
   window.draw = draw;
 }
 
 map.on("load", () => {
   map.addControl(new maplibregl.NavigationControl({ showCompass: false }), "top-right");
-
-  for (const name of RECORDED_EVENTS) {
-    map.on(name as never, (event: Record<string, unknown>) => record(name, event));
-  }
 
   restoreState();
   mount();

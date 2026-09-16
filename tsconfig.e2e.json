@@ -3,7 +3,7 @@
   "compilerOptions": {
     "noEmit": true,
     "rootDir": ".",
-    "types": ["node"]
+    "types": ["node", "vite/client", "geojson"]
   },
   "include": ["debug", "e2e", "playwright.config.ts", "vite.config.ts"],
   "exclude": ["e2e/consumer"]

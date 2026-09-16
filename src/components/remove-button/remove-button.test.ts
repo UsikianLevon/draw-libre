@@ -3,7 +3,7 @@ import { afterEach, beforeEach, expect, test, vi } from "vitest";
 import { page, userEvent } from "vitest/browser";
 
 import type { RequiredDrawOptions, Step, StepId } from "#app/types/index";
-import type { UnifiedMap } from "#app/types/map";
+import type { EngineMap } from "#app/types/engine";
 
 import { RemoveButton } from "./index";
 
@@ -17,7 +17,7 @@ type Projection = (lngLat: { lng: number; lat: number }) => { x: number; y: numb
 const identityProjection: Projection = (lngLat) => ({ x: lngLat.lng, y: lngLat.lat });
 
 interface MapStub {
-  map: UnifiedMap;
+  map: EngineMap;
   container: HTMLElement;
   canvas: HTMLElement;
   handlers: Map<string, Set<Handler>>;
@@ -48,7 +48,7 @@ function createMapStub(): MapStub {
     off: (type: string, handler: Handler) => {
       handlers.get(type)?.delete(handler);
     },
-  } as unknown as UnifiedMap;
+  } as unknown as EngineMap;
 
   return {
     map,

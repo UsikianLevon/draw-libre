@@ -1,7 +1,11 @@
 import DrawLibre, {
   type BreakEvent,
+  type DrawLibreControl,
+  type DrawLibreEventType,
+  type DrawLibreSubscription,
   type DrawOptions,
   type LatLng,
+  type MapLike,
   type ModeChangeEvent,
   type PointAddEvent,
   type PointEnterEvent,
@@ -20,7 +24,7 @@ import DrawLibre, {
   type UnifiedMap,
 } from "draw-libre";
 
-declare const map: UnifiedMap;
+declare const map: MapLike;
 declare const click: MouseEvent;
 
 const options = {
@@ -55,6 +59,7 @@ const options = {
   layersPaint: {
     line: { "line-color": "#ff0000" },
     polygon: { "fill-color": "#00ff00" },
+    points: { "circle-radius": ["case", ["boolean", ["feature-state", "hover"], false], 7, 5] },
   },
   dynamicLine: false,
   initial: {
@@ -71,8 +76,12 @@ const options = {
 declare const required: RequiredDrawOptions;
 void required;
 
-const draw: DrawLibre = DrawLibre.getInstance(options);
-map.addControl(draw);
+export const draw: DrawLibre = DrawLibre.getInstance(options);
+
+const control: DrawLibreControl = draw;
+const legacyMap: UnifiedMap = map;
+void control;
+void legacyMap;
 
 const all = draw.getAllSteps("array");
 if (Array.isArray(all)) {
@@ -90,7 +99,6 @@ draw.redo(click);
 draw.clear();
 draw.save();
 draw.removeAllSteps();
-map.removeControl(draw);
 
 const coordinates: LatLng = { lat: 0, lng: 0 };
 const mode = { geometry: "line", closedGeometry: false } as const;
@@ -130,3 +138,55 @@ const steps: Step[] = [{ id: "a", lat: 0, lng: 0, isAuxiliary: false }];
 ({ type: "mdl:undostackchanged", length: 2, target: map }) satisfies UndoStackChangeEvent;
 ({ type: "mdl:redostackchanged", length: 0, target: map }) satisfies RedoStackChangeEvent;
 ({ type: "mdl:break", target: map }) satisfies BreakEvent;
+
+const names: Record<keyof DrawLibreEventType, true> = {
+  "mdl:add": true,
+  "mdl:pointremove": true,
+  "mdl:pointenter": true,
+  "mdl:pointleave": true,
+  "mdl:moveend": true,
+  "mdl:undo": true,
+  "mdl:redo": true,
+  "mdl:removeall": true,
+  "mdl:save": true,
+  "mdl:break": true,
+  "mdl:modechanged": true,
+  "mdl:undostackchanged": true,
+  "mdl:redostackchanged": true,
+};
+void names;
+
+const added: DrawLibreSubscription = draw.on("mdl:add", (event) => {
+  const id: StepId = event.id;
+  const total: number = event.total;
+  const geometry: "line" | "polygon" | null = event.mode.geometry;
+  const target: MapLike = event.target;
+  void [id, total, geometry, target];
+  // @ts-expect-error
+  void event.steps;
+});
+added.unsubscribe();
+
+const saved: DrawLibreSubscription = draw.once("mdl:save", (event) => {
+  const savedSteps: Step[] = event.steps;
+  void savedSteps;
+});
+saved.unsubscribe();
+
+const onModeChange = (event: ModeChangeEvent) => {
+  void event.mode;
+};
+draw.on("mdl:modechanged", onModeChange);
+draw.off("mdl:modechanged", onModeChange);
+
+// @ts-expect-error
+draw.on("mdl:unknown", () => {});
+
+// @ts-expect-error
+draw.on("mdl:modechanged", (event: PointAddEvent) => void event);
+
+interface MapboxOnlyCirclePaint {
+  "circle-emissive-strength": number;
+}
+declare const mapboxOnlyCirclePaint: MapboxOnlyCirclePaint;
+DrawLibre.getInstance({ layersPaint: { points: mapboxOnlyCirclePaint } });

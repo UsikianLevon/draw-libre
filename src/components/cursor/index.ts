@@ -1,4 +1,4 @@
-import type { UnifiedMap } from "#app/types/map";
+import type { EngineMap } from "#app/types/engine";
 
 import { debounce } from "#app/utils/helpers";
 import type { DrawingMode } from "#components/map/mode";
@@ -11,7 +11,7 @@ import type { RequiredDrawOptions } from "#app/types/index";
 import type { DrawingModeChangeEvent } from "#components/map/mode/types";
 
 interface Context {
-  map: UnifiedMap;
+  map: EngineMap;
   mode: DrawingMode;
   mouseEvents: MouseEvents;
   store: Store;

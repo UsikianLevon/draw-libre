@@ -16,6 +16,8 @@ export const DRAW_EVENTS = [
 
 export type DrawEventName = (typeof DRAW_EVENTS)[number];
 
+export type EventChannel = "map" | "draw";
+
 export type RecordedPayload = { type: DrawEventName; hasOriginalEvent: boolean } & Record<string, unknown>;
 
 export function serializePayload(event: Record<string, unknown>): string {

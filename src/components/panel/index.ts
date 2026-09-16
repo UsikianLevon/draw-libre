@@ -1,4 +1,4 @@
-import type { UnifiedMap } from "#app/types/map";
+import type { EngineMap } from "#app/types/engine";
 import type { LatLng, RequiredDrawOptions } from "#app/types/index";
 import type { Store } from "#app/store/index";
 import type { DrawingMode } from "#components/map/mode";
@@ -9,7 +9,7 @@ import "./panel.css";
 import { Observer } from "./observer";
 
 export interface Context {
-  map: UnifiedMap;
+  map: EngineMap;
   mode: DrawingMode;
   options: RequiredDrawOptions;
   store: Store;

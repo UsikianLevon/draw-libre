@@ -1,5 +1,5 @@
 import { ERRORS } from "#app/store/init";
-import { Initial, DrawOptions, RequiredDrawOptions } from "#app/types/index";
+import type { Initial, DrawOptions, RequiredDrawOptions, StrictLayersPaint } from "#app/types/index";
 import {
   ON_LINE_POINT_PAINT_BASE,
   FIRST_POINT_PAINT_BASE,
@@ -122,70 +122,65 @@ function generateModeOptions(options: DrawOptions): RequiredDrawOptions["modes"]
 }
 
 function generateLayersOptions(options: DrawOptions): RequiredDrawOptions["layersPaint"] {
+  const paint = options.layersPaint as StrictLayersPaint | undefined;
   const line = {
-    "line-width": options.layersPaint?.line?.["line-width"] || LINE_PAINT_BASE["line-width"],
-    "line-color": options.layersPaint?.line?.["line-color"] || LINE_PAINT_BASE["line-color"],
-    "line-opacity": options.layersPaint?.line?.["line-opacity"] || LINE_PAINT_BASE["line-opacity"],
-    ...options.layersPaint?.line,
+    "line-width": paint?.line?.["line-width"] || LINE_PAINT_BASE["line-width"],
+    "line-color": paint?.line?.["line-color"] || LINE_PAINT_BASE["line-color"],
+    "line-opacity": paint?.line?.["line-opacity"] || LINE_PAINT_BASE["line-opacity"],
+    ...paint?.line,
   };
 
   return {
     onLinePoint: {
-      "circle-radius": options.layersPaint?.onLinePoint?.["circle-radius"] || ON_LINE_POINT_PAINT_BASE["circle-radius"],
-      "circle-color": options.layersPaint?.onLinePoint?.["circle-color"] || ON_LINE_POINT_PAINT_BASE["circle-color"],
+      "circle-radius": paint?.onLinePoint?.["circle-radius"] || ON_LINE_POINT_PAINT_BASE["circle-radius"],
+      "circle-color": paint?.onLinePoint?.["circle-color"] || ON_LINE_POINT_PAINT_BASE["circle-color"],
       "circle-stroke-color":
-        options.layersPaint?.onLinePoint?.["circle-stroke-color"] || ON_LINE_POINT_PAINT_BASE["circle-stroke-color"],
+        paint?.onLinePoint?.["circle-stroke-color"] || ON_LINE_POINT_PAINT_BASE["circle-stroke-color"],
       "circle-stroke-width":
-        options.layersPaint?.onLinePoint?.["circle-stroke-width"] || ON_LINE_POINT_PAINT_BASE["circle-stroke-width"],
-      ...options.layersPaint?.onLinePoint,
+        paint?.onLinePoint?.["circle-stroke-width"] || ON_LINE_POINT_PAINT_BASE["circle-stroke-width"],
+      ...paint?.onLinePoint,
     },
     firstPoint: {
-      "circle-radius": options.layersPaint?.firstPoint?.["circle-radius"] || FIRST_POINT_PAINT_BASE["circle-radius"],
-      "circle-color": options.layersPaint?.firstPoint?.["circle-color"] || FIRST_POINT_PAINT_BASE["circle-color"],
+      "circle-radius": paint?.firstPoint?.["circle-radius"] || FIRST_POINT_PAINT_BASE["circle-radius"],
+      "circle-color": paint?.firstPoint?.["circle-color"] || FIRST_POINT_PAINT_BASE["circle-color"],
       "circle-stroke-color":
-        options.layersPaint?.firstPoint?.["circle-stroke-color"] || FIRST_POINT_PAINT_BASE["circle-stroke-color"],
+        paint?.firstPoint?.["circle-stroke-color"] || FIRST_POINT_PAINT_BASE["circle-stroke-color"],
       "circle-stroke-width":
-        options.layersPaint?.firstPoint?.["circle-stroke-width"] || FIRST_POINT_PAINT_BASE["circle-stroke-width"],
-      ...options.layersPaint?.firstPoint,
+        paint?.firstPoint?.["circle-stroke-width"] || FIRST_POINT_PAINT_BASE["circle-stroke-width"],
+      ...paint?.firstPoint,
     },
     points: {
-      "circle-radius": options.layersPaint?.points?.["circle-radius"] || POINTS_PAINT_BASE["circle-radius"],
-      "circle-color": options.layersPaint?.points?.["circle-color"] || POINTS_PAINT_BASE["circle-color"],
-      "circle-stroke-color":
-        options.layersPaint?.points?.["circle-stroke-color"] || POINTS_PAINT_BASE["circle-stroke-color"],
-      "circle-stroke-width":
-        options.layersPaint?.points?.["circle-stroke-width"] || POINTS_PAINT_BASE["circle-stroke-width"],
-      ...options.layersPaint?.points,
+      "circle-radius": paint?.points?.["circle-radius"] || POINTS_PAINT_BASE["circle-radius"],
+      "circle-color": paint?.points?.["circle-color"] || POINTS_PAINT_BASE["circle-color"],
+      "circle-stroke-color": paint?.points?.["circle-stroke-color"] || POINTS_PAINT_BASE["circle-stroke-color"],
+      "circle-stroke-width": paint?.points?.["circle-stroke-width"] || POINTS_PAINT_BASE["circle-stroke-width"],
+      ...paint?.points,
     },
     auxiliaryPoint: {
-      "circle-radius":
-        options.layersPaint?.auxiliaryPoint?.["circle-radius"] || AUXILIARY_POINT_PAINT_BASE["circle-radius"],
-      "circle-color":
-        options.layersPaint?.auxiliaryPoint?.["circle-color"] || AUXILIARY_POINT_PAINT_BASE["circle-color"],
+      "circle-radius": paint?.auxiliaryPoint?.["circle-radius"] || AUXILIARY_POINT_PAINT_BASE["circle-radius"],
+      "circle-color": paint?.auxiliaryPoint?.["circle-color"] || AUXILIARY_POINT_PAINT_BASE["circle-color"],
       "circle-stroke-color":
-        options.layersPaint?.auxiliaryPoint?.["circle-stroke-color"] ||
-        AUXILIARY_POINT_PAINT_BASE["circle-stroke-color"],
+        paint?.auxiliaryPoint?.["circle-stroke-color"] || AUXILIARY_POINT_PAINT_BASE["circle-stroke-color"],
       "circle-stroke-width":
-        options.layersPaint?.auxiliaryPoint?.["circle-stroke-width"] ||
-        AUXILIARY_POINT_PAINT_BASE["circle-stroke-width"],
-      ...options.layersPaint?.auxiliaryPoint,
+        paint?.auxiliaryPoint?.["circle-stroke-width"] || AUXILIARY_POINT_PAINT_BASE["circle-stroke-width"],
+      ...paint?.auxiliaryPoint,
     },
     line,
     dynamicLine: {
       ...line,
       "line-dasharray": DYNAMIC_LINE_PAINT_BASE["line-dasharray"],
-      ...options.layersPaint?.dynamicLine,
+      ...paint?.dynamicLine,
     },
     polygon: {
-      "fill-color": options.layersPaint?.polygon?.["fill-color"] || POLYGON_PAINT_BASE["fill-color"],
-      "fill-opacity": options.layersPaint?.polygon?.["fill-opacity"] || POLYGON_PAINT_BASE["fill-opacity"],
-      ...options.layersPaint?.polygon,
+      "fill-color": paint?.polygon?.["fill-color"] || POLYGON_PAINT_BASE["fill-color"],
+      "fill-opacity": paint?.polygon?.["fill-opacity"] || POLYGON_PAINT_BASE["fill-opacity"],
+      ...paint?.polygon,
     },
     breakLine: {
-      "line-width": options.layersPaint?.breakLine?.["line-width"] || BREAK_PAINT_BASE["line-width"],
-      "line-color": options.layersPaint?.breakLine?.["line-color"] || BREAK_PAINT_BASE["line-color"],
-      "line-dasharray": options.layersPaint?.breakLine?.["line-dasharray"] || BREAK_PAINT_BASE["line-dasharray"],
-      ...options.layersPaint?.breakLine,
+      "line-width": paint?.breakLine?.["line-width"] || BREAK_PAINT_BASE["line-width"],
+      "line-color": paint?.breakLine?.["line-color"] || BREAK_PAINT_BASE["line-color"],
+      "line-dasharray": paint?.breakLine?.["line-dasharray"] || BREAK_PAINT_BASE["line-dasharray"],
+      ...paint?.breakLine,
     },
   };
 }

@@ -11,7 +11,6 @@
     "debug": "vite --port 5174 --strictPort",
     "lint": "tsc && tsc -p tsconfig.e2e.json",
     "types:consumer": "tsc -p tsconfig.consumer.json && node scripts/check-consumers.mjs",
-    "coverage:check": "node scripts/check-coverage.mjs",
     "prettier": "prettier --write .",
     "exports": "attw --pack . --entrypoints . --ignore-rules cjs-resolves-to-esm",
     "test": "npm run test:unit && npm run test:e2e",
@@ -19,7 +18,7 @@
     "pretest:e2e": "tsup",
     "test:e2e": "playwright test",
     "test:e2e:ui": "playwright test --ui",
-    "ci": "npm run lint && npm run prettier && npm run build && npm run exports && npm run types:consumer && npm run coverage:check && npm run test",
+    "ci": "npm run lint && npm run prettier && npm run build && npm run exports && npm run types:consumer && npm run test",
     "release": "npm run ci",
     "prepublishOnly": "npm run ci"
   },

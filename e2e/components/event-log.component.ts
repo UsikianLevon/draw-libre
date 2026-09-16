@@ -1,6 +1,6 @@
 import { expect, type Locator, type Page } from "@playwright/test";
 
-import type { DrawEventName, RecordedPayload } from "../support/events";
+import type { DrawEventName, EventChannel, RecordedPayload } from "../support/events";
 
 export class EventLog {
   private readonly root: Locator;
@@ -13,7 +13,7 @@ export class EventLog {
   }
 
   of(name: DrawEventName): Locator {
-    return this.root.locator(`li[data-event="${name}"]`);
+    return this.root.locator(`li[data-channel="draw"][data-event="${name}"]`);
   }
 
   count(name: DrawEventName): Promise<number> {
@@ -67,5 +67,24 @@ export class EventLog {
         return total === 0 ? null : this.payloadOf(name, total - 1);
       })
       .toMatchObject(partial);
+  }
+
+  async expectChannelsMatch() {
+    const entries = await this.root.locator("li[data-channel]").evaluateAll((items) =>
+      items.map((item) => ({
+        channel: item.getAttribute("data-channel"),
+        line: [
+          item.getAttribute("data-event"),
+          item.getAttribute("data-target-is-map"),
+          item.getAttribute("data-payload"),
+        ].join(" "),
+      })),
+    );
+    const lines = (channel: EventChannel) =>
+      entries.filter((entry) => entry.channel === channel).map((entry) => entry.line);
+
+    expect(lines("draw"), "events heard on the draw instance differ from events heard on the map").toEqual(
+      lines("map"),
+    );
   }
 }

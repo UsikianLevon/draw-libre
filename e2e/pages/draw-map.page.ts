@@ -40,6 +40,8 @@ export class DrawMapPage {
   readonly tooltip: TooltipComponent;
   readonly layout: Layout;
 
+  private readonly consoleWarnings: string[] = [];
+
   readonly api = {
     // опции передаются строкой json, DrawOptions вкладывает выражения maplibre так глубоко, что Playwright не выводит тип аргумента
     mount: (options?: DrawOptions) =>
@@ -125,6 +127,17 @@ export class DrawMapPage {
         },
         options === undefined ? null : JSON.stringify(options),
       ),
+    probe: {
+      on: (name: DrawEventName) => this.page.evaluate((event) => window.probeDraw.on(event), name),
+      once: (name: DrawEventName) => this.page.evaluate((event) => window.probeDraw.once(event), name),
+      off: (id: string) => this.page.evaluate((key) => window.probeDraw.off(key), id),
+      unsubscribe: (id: string) => this.page.evaluate((key) => window.probeDraw.unsubscribe(key), id),
+      count: (id: string) => this.page.evaluate((key) => window.probeDraw.count(key), id),
+    },
+    reentrancy: {
+      removeControlOnSave: () => this.page.evaluate(() => window.reentrancy.removeControlOnSave()),
+      clearOnSave: () => this.page.evaluate(() => window.reentrancy.clearOnSave()),
+    },
   };
 
   constructor(private readonly page: Page) {
@@ -137,6 +150,10 @@ export class DrawMapPage {
     this.events = new EventLog(page, () => this.canvas.settle());
     this.tooltip = new TooltipComponent(page, () => this.canvas.settle());
     this.layout = Layout.forPage(page);
+
+    page.on("console", (message) => {
+      if (message.type() === "warning") this.consoleWarnings.push(message.text());
+    });
   }
 
   async open(open: OpenOptions = {}) {
@@ -278,6 +295,11 @@ export class DrawMapPage {
 
   mapErrors(): Promise<string[]> {
     return this.page.evaluate(() => window.mapErrors);
+  }
+
+  async expectNoDeprecatedFilterWarnings() {
+    await this.canvas.settle();
+    expect(this.consoleWarnings.filter((text) => text.includes("deprecated filter syntax"))).toEqual([]);
   }
 
   async drawPoint(at: Pixel) {

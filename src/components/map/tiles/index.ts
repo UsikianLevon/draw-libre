@@ -1,6 +1,6 @@
 import type { Store } from "#app/store";
 import type { RequiredDrawOptions } from "#app/types";
-import type { UnifiedMap } from "#app/types/map";
+import type { EngineMap } from "#app/types/engine";
 import { Panel } from "#components/panel";
 import { Control } from "#components/side-control";
 import { DrawingMode } from "../mode";
@@ -9,9 +9,11 @@ import { Events } from "./events";
 import { Layers } from "./layers";
 import { Sources } from "./sources";
 import type { GeometryProjection } from "../line/projection";
+import type { Emitter } from "#app/events/emitter";
+import type { DrawLibreEventType } from "../types";
 
 export type TilesContext = {
-  map: UnifiedMap;
+  map: EngineMap;
   panel: Panel;
   store: Store;
   control: Control;
@@ -19,6 +21,7 @@ export type TilesContext = {
   mouseEvents: MouseEvents;
   mode: DrawingMode;
   projection: GeometryProjection;
+  events: Emitter<DrawLibreEventType>;
 };
 
 export class Tiles {

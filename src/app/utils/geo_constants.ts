@@ -31,8 +31,13 @@ export const ELAYERS = {
 } as const;
 
 export const POINTS_FILTER = {
-  points: ["all", ["==", "$type", "Point"], ["==", "isFirst", false], ["==", "isAuxiliary", false]],
-  pointsWhenClosed: ["all", ["==", "$type", "Point"], ["==", "isAuxiliary", false]],
+  points: [
+    "all",
+    ["==", ["geometry-type"], "Point"],
+    ["==", ["get", "isFirst"], false],
+    ["==", ["get", "isAuxiliary"], false],
+  ],
+  pointsWhenClosed: ["all", ["==", ["geometry-type"], "Point"], ["==", ["get", "isAuxiliary"], false]],
   firstPoint: ["==", ["get", "isFirst"], true],
   auxiliaryPoint: ["==", ["get", "isAuxiliary"], true],
 } satisfies Record<string, FilterSpecification>;
@@ -136,7 +141,7 @@ export const generateLayers = (options: RequiredDrawOptions) => {
       layout: {
         visibility: "none",
       },
-      filter: ["==", "$type", "Polygon"],
+      filter: ["==", ["geometry-type"], "Polygon"],
     },
     {
       id: ELAYERS.LineDynamicLayer,
@@ -155,7 +160,7 @@ export const generateLayers = (options: RequiredDrawOptions) => {
       layout: {
         visibility: "visible",
       },
-      filter: ["==", "$type", "LineString"],
+      filter: ["==", ["geometry-type"], "LineString"],
     },
     {
       id: ELAYERS.LineLayerTransparent,
@@ -165,7 +170,7 @@ export const generateLayers = (options: RequiredDrawOptions) => {
         "line-width": options.interaction.lineHitRadius * 2,
         "line-color": "transparent",
       },
-      filter: ["==", "$type", "LineString"],
+      filter: ["==", ["geometry-type"], "LineString"],
     },
     {
       id: ELAYERS.LineLayerBreak,

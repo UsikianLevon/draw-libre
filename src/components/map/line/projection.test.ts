@@ -3,7 +3,7 @@ import { expect, test } from "vitest";
 import { ListNode } from "#app/store/index";
 import type { Store } from "#app/store/index";
 import type { RequiredDrawOptions, Step } from "#app/types/index";
-import type { UnifiedMap } from "#app/types/map";
+import type { EngineMap } from "#app/types/engine";
 
 import { GeometryPixels, GeometryProjection, nearestSegmentPx, nearestVertexPx, orderedNodes } from "./projection";
 
@@ -33,7 +33,7 @@ const projectionOver = (nodes: ListNode[]) => {
     unproject: ([x, y]: [number, number]) => ({ lng: x, lat: y }),
     on: () => {},
     off: () => {},
-  } as unknown as UnifiedMap;
+  } as unknown as EngineMap;
   const store = {
     head: nodes[0] ?? null,
     circular: { isCircular: () => false },

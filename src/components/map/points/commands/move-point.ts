@@ -1,7 +1,7 @@
 import { ListNode, Store } from "#app/store";
 import type { StoreChangeEventKeys } from "#app/store/types";
 import type { LatLng } from "#app/types";
-import { UnifiedMap } from "#app/types/map";
+import type { EngineMap } from "#app/types/engine";
 import { FireEvents } from "#components/map/fire-events";
 import type { Command } from "#app/history/command";
 import { PointHelpers } from "../helpers";
@@ -13,7 +13,7 @@ export class MovePointCommand implements Command {
     private readonly store: Store,
     private readonly selectedNode: ListNode,
     private readonly start: LatLng,
-    private readonly map: UnifiedMap,
+    private readonly map: EngineMap,
   ) {
     this.end = { lat: selectedNode.val!.lat, lng: selectedNode.val!.lng };
   }

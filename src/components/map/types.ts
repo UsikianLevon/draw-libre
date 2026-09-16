@@ -1,5 +1,5 @@
 import type { LatLng, Step, StepId } from "#app/types/index";
-import type { UnifiedMap } from "#app/types/map";
+import type { MapLike } from "#app/types/map";
 import type { Mode } from "./mode/types";
 
 interface ModeEvent {
@@ -12,7 +12,7 @@ interface StepEvent {
   coordinates: LatLng;
   total: number;
   timestamp: number;
-  target: UnifiedMap;
+  target: MapLike;
 }
 
 interface HistoryEvent {
@@ -21,7 +21,7 @@ interface HistoryEvent {
   coordinates?: LatLng;
   total: number;
   timestamp: number;
-  target: UnifiedMap;
+  target: MapLike;
 }
 
 export interface UndoEvent extends HistoryEvent {
@@ -35,7 +35,7 @@ export interface RedoEvent extends HistoryEvent {
 export interface RemoveAllEvent {
   originalEvent?: Event;
   type: "mdl:removeall";
-  target: UnifiedMap;
+  target: MapLike;
 }
 
 export interface SaveEvent {
@@ -43,7 +43,7 @@ export interface SaveEvent {
   timestamp: number;
   steps: Step[];
   mode: ModeEvent;
-  target: UnifiedMap;
+  target: MapLike;
   type: "mdl:save";
 }
 
@@ -62,7 +62,7 @@ export interface PointMoveEvent {
   id: StepId;
   total: number;
   timestamp: number;
-  target: UnifiedMap;
+  target: MapLike;
   type: "mdl:moveend";
 }
 
@@ -76,23 +76,39 @@ export interface PointLeaveEvent extends StepEvent {
 
 export interface ModeChangeEvent {
   mode: Mode | "break";
-  target: UnifiedMap;
+  target: MapLike;
   type: "mdl:modechanged";
 }
 
 export interface UndoStackChangeEvent {
   length: number;
-  target: UnifiedMap;
+  target: MapLike;
   type: "mdl:undostackchanged";
 }
 
 export interface RedoStackChangeEvent {
   length: number;
-  target: UnifiedMap;
+  target: MapLike;
   type: "mdl:redostackchanged";
 }
 
 export interface BreakEvent {
-  target: UnifiedMap;
+  target: MapLike;
   type: "mdl:break";
 }
+
+export type DrawLibreEventType = {
+  "mdl:add": PointAddEvent;
+  "mdl:pointremove": PointRemoveEvent;
+  "mdl:pointenter": PointEnterEvent;
+  "mdl:pointleave": PointLeaveEvent;
+  "mdl:moveend": PointMoveEvent;
+  "mdl:undo": UndoEvent;
+  "mdl:redo": RedoEvent;
+  "mdl:removeall": RemoveAllEvent;
+  "mdl:save": SaveEvent;
+  "mdl:break": BreakEvent;
+  "mdl:modechanged": ModeChangeEvent;
+  "mdl:undostackchanged": UndoStackChangeEvent;
+  "mdl:redostackchanged": RedoStackChangeEvent;
+};

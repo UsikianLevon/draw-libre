@@ -3,7 +3,7 @@ import { defineConfig } from "tsup";
 export default defineConfig({
   entry: ["src/index.ts"],
   format: ["esm"],
-  dts: true,
+  dts: { resolve: ["@maplibre/maplibre-gl-style-spec"], banner: '/// <reference types="geojson" />' },
   clean: true,
   minify: true,
   sourcemap: true,

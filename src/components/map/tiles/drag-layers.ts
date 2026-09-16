@@ -1,5 +1,5 @@
 import type { Point } from "#app/types/index";
-import type { UnifiedMap } from "#app/types/map";
+import type { EngineMap } from "#app/types/engine";
 import { ELAYERS } from "#app/utils/geo_constants";
 
 // maplibre still fires a click when release lands within 3px of press, a wobble that small should not cost two tile reparses
@@ -18,7 +18,7 @@ export class DragLayers {
   private pressPoint: Point | null = null;
   private saved: Map<string, Visibility> | null = null;
 
-  constructor(private readonly map: UnifiedMap) {}
+  constructor(private readonly map: EngineMap) {}
 
   press = (point: Point) => {
     this.pressPoint = { x: point.x, y: point.y };

@@ -1,11 +1,11 @@
-import type { UnifiedMap } from "#app/types/map";
+import type { EngineMap } from "#app/types/engine";
 import { EVENTS } from "#app/utils/constants";
 import { FireEvents } from "#components/map/fire-events";
 import { timeline } from ".";
 import type { TimelineChangeEvent } from "./types";
 
 export class MapTimelineAdapter {
-  constructor(private map: UnifiedMap) {
+  constructor(private map: EngineMap) {
     this.init();
   }
 

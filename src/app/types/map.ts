@@ -1,5 +1,11 @@
-import type maplibregl from "maplibre-gl";
-import type mapboxgl from "mapbox-gl";
+export interface MapLike {
+  getContainer(): HTMLElement;
+  getCanvasContainer(): HTMLElement;
+}
 
-export type UnifiedMap = maplibregl.Map & mapboxgl.Map;
-export type IControl = maplibregl.IControl & mapboxgl.IControl;
+export interface DrawLibreControl {
+  onAdd(map: MapLike): HTMLElement;
+  onRemove(map: MapLike): void;
+}
+
+export type UnifiedMap = MapLike;

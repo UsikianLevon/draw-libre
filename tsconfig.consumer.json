@@ -3,9 +3,11 @@
   "compilerOptions": {
     "noEmit": true,
     "rootDir": ".",
+    "skipLibCheck": false,
+    "types": ["geojson"],
     "paths": {
       "draw-libre": ["dist/index.d.ts"]
     }
   },
-  "include": ["e2e/consumer"]
+  "include": ["e2e/consumer/consumer.ts", "e2e/consumer/maplibre.ts"]
 }

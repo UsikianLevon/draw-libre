@@ -1,11 +1,11 @@
 import type { GeoJSONSource, MapLayerMouseEvent, PointLike } from "maplibre-gl";
 
 import { DOM } from "#app/dom";
+import type { DrawLibreSubscription } from "#app/events/emitter";
 import type { LatLng } from "#app/types/index";
 import { ELAYERS, ESOURCES, LINE_BASE } from "#app/utils/geo_constants";
 import type { StoreChangeEvent } from "#app/store/types";
 import { coalesceToFrame, debounce, type Debounced } from "#app/utils/helpers";
-import { EVENTS } from "#app/utils/constants";
 
 import type { MouseEventsChangeEvent, MapMouseEvent } from "../mouse-events/types";
 import { getLine } from "../renderer/geojson-builder";
@@ -20,6 +20,7 @@ export class DynamicLineEvents {
   private secondPoint: LatLng | null = null;
   private pointer: LatLng | null = null;
   private lineFeature: any;
+  private subscriptions: DrawLibreSubscription[] = [];
   private onStoreEventsDebounced: Debounced<(event: StoreChangeEvent) => void>;
   private renderFreeEnd = coalesceToFrame((event: MapLayerMouseEvent) => {
     this.renderLineOnMouseMove(event.lngLat);
@@ -121,13 +122,15 @@ export class DynamicLineEvents {
   };
 
   private initDynamicEvents = () => {
-    const { map } = this.ctx;
+    const { map, events } = this.ctx;
     map.on("click", this.onMapClick);
     map.on("mousemove", this.renderFreeEnd);
-    map.on(EVENTS.REMOVE_ALL, this.hide);
-    map.on(EVENTS.UNDO, this.onUndoRedoClick);
-    map.on(EVENTS.REDO, this.onUndoRedoClick);
-    map.on(EVENTS.POINT_REMOVE, this.onPointRemove);
+    this.subscriptions = [
+      events.on("mdl:removeall", this.hide),
+      events.on("mdl:undo", this.onUndoRedoClick),
+      events.on("mdl:redo", this.onUndoRedoClick),
+      events.on("mdl:pointremove", this.onPointRemove),
+    ];
     DOM.addEventListener(map.getContainer(), "pointermove", this.onPointerMove);
   };
 
@@ -137,10 +140,8 @@ export class DynamicLineEvents {
     map.off("click", this.onMapClick);
     map.off("mousemove", this.renderFreeEnd);
     this.renderFreeEnd.cancel();
-    map.off(EVENTS.REMOVE_ALL, this.hide);
-    map.off(EVENTS.UNDO, this.onUndoRedoClick);
-    map.off(EVENTS.REDO, this.onUndoRedoClick);
-    map.off(EVENTS.POINT_REMOVE, this.onPointRemove);
+    for (const subscription of this.subscriptions) subscription.unsubscribe();
+    this.subscriptions = [];
     DOM.removeEventListener(map.getContainer(), "pointermove", this.onPointerMove);
   };
 

@@ -1,6 +1,6 @@
-import { ListNode } from "#app/store/index";
-import { LatLng, Step } from "#app/types/index";
-import { MapLayerMouseEvent } from "maplibre-gl";
+import type { ListNode } from "#app/store/index";
+import type { LatLng, Step } from "#app/types/index";
+import type { MapLayerMouseEvent } from "maplibre-gl";
 
 export class PointState {
   private selectedNode: ListNode | null = null;

@@ -1,6 +1,8 @@
-import type { CircleLayerSpecification, FillLayerSpecification, LineLayerSpecification } from "maplibre-gl";
-
-import type { UnifiedMap } from "#app/types/map";
+import type {
+  CircleLayerSpecification,
+  FillLayerSpecification,
+  LineLayerSpecification,
+} from "@maplibre/maplibre-gl-style-spec";
 
 import type { Control } from "#components/side-control";
 import type { Panel } from "#components/panel";
@@ -61,7 +63,22 @@ export type Initial = InitialSteps & {
   closeGeometry: boolean;
 };
 
+// mapbox paint has properties and expressions the maplibre style spec does not know
+// any instead of unknown lets paint objects typed with interfaces pass
+type Paint<T extends { paint?: unknown }> = NonNullable<T["paint"]> | Record<string, any>;
+
 export interface LayersPaint {
+  onLinePoint?: Paint<CircleLayerSpecification>;
+  firstPoint?: Paint<CircleLayerSpecification>;
+  points?: Paint<CircleLayerSpecification>;
+  auxiliaryPoint?: Paint<CircleLayerSpecification>;
+  line?: Paint<LineLayerSpecification>;
+  dynamicLine?: Paint<LineLayerSpecification>;
+  polygon?: Paint<FillLayerSpecification>;
+  breakLine?: Paint<LineLayerSpecification>;
+}
+
+export interface StrictLayersPaint {
   onLinePoint?: CircleLayerSpecification["paint"];
   firstPoint?: CircleLayerSpecification["paint"];
   points?: CircleLayerSpecification["paint"];
@@ -111,7 +128,7 @@ export interface DrawOptions {
 }
 
 export type RequiredDrawOptions = DeepRequired<Omit<DrawOptions, "layersPaint">> & {
-  layersPaint: LayersPaint;
+  layersPaint: StrictLayersPaint;
   interaction: {
     lineHitRadius: number;
     pointHitRadius: number;

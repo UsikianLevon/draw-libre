@@ -4,7 +4,7 @@ import type { Step } from "#app/types/index";
 import { ELAYERS, POINTS_FILTER } from "#app/utils/geo_constants";
 import { uuidv4 } from "#app/utils/helpers";
 
-import type { UnifiedMap } from "#app/types/map";
+import type { EngineMap } from "#app/types/engine";
 
 export const PointHelpers = {
   getMidpoint(p1: { lat: number; lng: number }, p2: { lat: number; lng: number }) {
@@ -38,13 +38,13 @@ const cancelSinglePointHiding = () => {
 export const PointVisibility = {
   cancelSinglePointHiding,
 
-  setFirstPointVisible(map: UnifiedMap) {
+  setFirstPointVisible(map: EngineMap) {
     for (const layer of FIRST_POINT_LAYERS) {
       map.setLayoutProperty(layer, "visibility", "visible");
     }
   },
 
-  setFirstPointHidden(map: UnifiedMap) {
+  setFirstPointHidden(map: EngineMap) {
     for (const layer of FIRST_POINT_LAYERS) {
       map.setLayoutProperty(layer, "visibility", "none");
     }
@@ -66,12 +66,12 @@ export const PointVisibility = {
 };
 
 export const PointsFilter = {
-  default(map: UnifiedMap) {
+  default(map: EngineMap) {
     for (const layer of POINT_LAYERS) {
       map.setFilter(layer, POINTS_FILTER.points);
     }
   },
-  closedGeometry(map: UnifiedMap) {
+  closedGeometry(map: EngineMap) {
     for (const layer of POINT_LAYERS) {
       map.setFilter(layer, POINTS_FILTER.pointsWhenClosed);
     }

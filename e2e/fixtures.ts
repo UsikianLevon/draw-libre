@@ -4,7 +4,9 @@ import { DrawMapPage } from "./pages/draw-map.page";
 
 export const test = base.extend<{ drawMap: DrawMapPage }>({
   drawMap: async ({ page }, use) => {
-    await use(new DrawMapPage(page));
+    const drawMap = new DrawMapPage(page);
+    await use(drawMap);
+    await drawMap.events.expectChannelsMatch();
   },
 });
 

@@ -1,4 +1,4 @@
-import { GeoJSONSource, MapLayerMouseEvent } from "maplibre-gl";
+import type { GeoJSONSource, MapLayerMouseEvent } from "maplibre-gl";
 
 import type { ListNode } from "#app/store/index";
 import { ELAYERS, ESOURCES } from "#app/utils/geo_constants";

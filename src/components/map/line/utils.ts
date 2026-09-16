@@ -1,6 +1,6 @@
 import type { GeoJSONSource, MapLayerMouseEvent } from "maplibre-gl";
 import type { Step } from "#app/types/index";
-import type { UnifiedMap } from "#app/types/map";
+import type { EngineMap } from "#app/types/engine";
 
 import { ELAYERS, ESOURCES, LINE_BASE } from "#app/utils/geo_constants";
 import { uuidv4 } from "#app/utils/helpers";
@@ -40,7 +40,7 @@ export const checkIfPointClicked = (event: MapLayerMouseEvent) => {
   return isFeatureTriggered(event, POINT_HIT_LAYERS);
 };
 
-export const hideDynamicLine = (map: UnifiedMap) => {
+export const hideDynamicLine = (map: EngineMap) => {
   const lineSource = map.getSource(ESOURCES.LineDynamicSource) as GeoJSONSource;
   if (lineSource) {
     lineSource.setData(LINE_BASE as GeoJSON.FeatureCollection);

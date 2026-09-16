@@ -1,6 +1,6 @@
 import { expect, test } from "vitest";
 import type { MapGeoJSONFeature, MapMouseEvent } from "maplibre-gl";
-import type { UnifiedMap } from "#app/types/map";
+import type { EngineMap } from "#app/types/engine";
 
 import { queryPoint } from "./utils";
 
@@ -30,7 +30,7 @@ const mapReturning = (features: MapGeoJSONFeature[]) =>
       const { x, y } = Array.isArray(point) ? { x: point[0], y: point[1] } : point;
       return { lng: x / PX_PER_DEGREE, lat: -y / PX_PER_DEGREE };
     },
-  }) as unknown as UnifiedMap;
+  }) as unknown as EngineMap;
 
 test("the nearer of two overlapping points wins whatever order they are rendered in", () => {
   const farther = pointFeature("farther", 0);

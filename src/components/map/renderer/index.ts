@@ -1,14 +1,14 @@
 import type { GeoJSONSource } from "maplibre-gl";
 
 import type { LatLng, RequiredDrawOptions } from "#app/types/index";
-import type { UnifiedMap } from "#app/types/map";
+import type { EngineMap } from "#app/types/engine";
 import type { Store } from "#app/store/index";
 import type { DrawingMode } from "#components/map/mode";
 import { ESOURCES } from "#app/utils/geo_constants";
 import { getUnifiedFeatures } from "./geojson-builder";
 
 interface Context {
-  map: UnifiedMap;
+  map: EngineMap;
   store: Store;
   options: RequiredDrawOptions;
   mode: DrawingMode;

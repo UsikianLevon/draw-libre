@@ -1,6 +1,6 @@
 import type { ListNode, Store } from "#app/store/index";
 import type { LatLng, Point, RequiredDrawOptions, Step } from "#app/types/index";
-import type { UnifiedMap } from "#app/types/map";
+import type { EngineMap } from "#app/types/engine";
 
 type GeometrySource = () => { head: ListNode | null; isCircular: boolean };
 
@@ -113,7 +113,7 @@ export type SegmentHit = {
 };
 
 type ProjectionContext = {
-  map: UnifiedMap;
+  map: EngineMap;
   store: Store;
   options: RequiredDrawOptions;
 };

@@ -1,6 +1,6 @@
 import { DOM } from "#app/dom";
 import type { RequiredDrawOptions, Step, StepId } from "#app/types/index";
-import type { UnifiedMap } from "#app/types/map";
+import type { EngineMap } from "#app/types/engine";
 
 import { RemoveButtonView } from "./view";
 import "./remove-button.css";
@@ -8,7 +8,7 @@ import "./remove-button.css";
 const OFFSET_X = 12;
 
 export interface RemoveButtonContext {
-  map: UnifiedMap;
+  map: EngineMap;
   options: RequiredDrawOptions;
   onRemove: (id: StepId) => void;
 }

@@ -2,10 +2,10 @@ import type { LatLng, Step, StepId } from "#app/types/index";
 import type { MapLayerMouseEvent, MapTouchEvent } from "maplibre-gl";
 
 import { coalesceToFrame } from "#app/utils/helpers";
-import { EVENTS } from "#app/utils/constants";
 import { ELAYERS, ESOURCES } from "#app/utils/geo_constants";
 import { timeline } from "#app/history";
 import type { StoreChangeEvent } from "#app/store/types";
+import type { DrawLibreSubscription } from "#app/events/emitter";
 
 import { FireEvents } from "../fire-events";
 import { PointVisibility } from "./helpers";
@@ -42,6 +42,7 @@ export class PointEvents {
   private pressActive = false;
   private suppressedStepId: StepId | null = null;
   private highlightedStepId: StepId | null = null;
+  private pointAdded: DrawLibreSubscription | null = null;
 
   constructor(private readonly ctx: TilesContext) {
     this.pointState = new PointState();
@@ -80,7 +81,7 @@ export class PointEvents {
     map.on("dblclick", this.onMapDblClick);
     map.on("mousemove", this.onPointerHover);
     DOM.addEventListener(map.getContainer(), "mouseleave", this.onPointerLeaveMap);
-    map.on(EVENTS.ADD, this.onPointAdded);
+    this.pointAdded = this.ctx.events.on("mdl:add", this.onPointAdded);
 
     map.on("mouseenter", ELAYERS.PointsHitLayer, this.onPointMouseEnter);
     map.on("mouseleave", ELAYERS.PointsHitLayer, this.onPointMouseLeave);
@@ -106,7 +107,8 @@ export class PointEvents {
     this.renderDraggedPoint.cancel();
     this.onPointerHover.cancel();
     this.dragLayers.release();
-    map.off(EVENTS.ADD, this.onPointAdded);
+    this.pointAdded?.unsubscribe();
+    this.pointAdded = null;
 
     map.off("mouseenter", ELAYERS.PointsHitLayer, this.onPointMouseEnter);
     map.off("mouseleave", ELAYERS.PointsHitLayer, this.onPointMouseLeave);

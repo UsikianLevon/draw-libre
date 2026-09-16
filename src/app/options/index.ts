@@ -24,6 +24,12 @@ function checkIfMissingIds(steps: Initial["steps"], generateId: Initial["generat
   }
 }
 
+function checkIfStepsAreEmpty(steps: Initial["steps"]) {
+  if (!steps.length) {
+    throw new Error(ERRORS["EMPTY_INITIAL_STATE"]);
+  }
+}
+
 function checkIfEnoughPointsToClose(steps: Initial["steps"], closeGeometry: Initial["closeGeometry"]) {
   const minPointsToCloseGeometry = 3;
   const differentPoints = new Set(steps.map((step) => `${step.lng},${step.lat}`)).size;
@@ -48,6 +54,7 @@ function checkIfPolygonIsClosed(options: Initial) {
 
 export function checkInitialStepsOptionOnErrors(options: Initial): void {
   const { closeGeometry, generateId, steps } = options;
+  checkIfStepsAreEmpty(steps);
   // checks ids exist when id generation is off
   checkIfMissingIds(steps, generateId);
   // closing the geometry needs at least three points

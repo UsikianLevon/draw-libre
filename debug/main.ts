@@ -199,9 +199,8 @@ let draw: DrawLibre | null = null;
 function mount() {
   if (draw) {
     map.removeControl(draw);
-    DrawLibre.instance = null;
   }
-  draw = DrawLibre.getInstance(readOptions());
+  draw = new DrawLibre(readOptions());
   for (const name of RECORDED_EVENTS) {
     draw.on(name, (event) => record(name, { ...event }));
   }

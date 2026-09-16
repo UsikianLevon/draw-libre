@@ -8,7 +8,7 @@ import { Actions } from "./actions";
 
 export class Events {
   private tooltip: Tooltip;
-  private actions: Actions | null = null;
+  private actions: Actions;
 
   constructor(private readonly ctx: Context & { view: View }) {
     this.tooltip = new Tooltip();
@@ -78,22 +78,22 @@ export class Events {
   };
 
   private onUndoClick = (e: Event): void => {
-    this.actions?.undo(e);
+    this.actions.undo(e);
     this.tooltip.remove();
   };
 
   private onRedoClick = (e: Event): void => {
-    this.actions?.redo(e);
+    this.actions.redo(e);
     this.tooltip.remove();
   };
 
   private onClearClick = (e: Event): void => {
-    this.actions?.clear(e);
+    this.actions.clear(e);
     this.tooltip.remove();
   };
 
   private onSaveClick = (e: Event): void => {
-    this.actions?.save(e);
+    this.actions.save(e);
     this.tooltip.remove();
   };
 

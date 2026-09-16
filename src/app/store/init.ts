@@ -13,6 +13,12 @@ export const ERRORS = {
     "At least three points are required to close a polygon or a line. Please add more points or set 'closeGeometry' to false.",
   FIRST_LAST_POINT_NOT_EQUAL:
     "The first and last points of a polygon or a closed linestring must be the same. Please ensure the first and last points are equal or set 'closeGeometry' to false.",
+  NOT_ADDED_TO_MAP: "DrawLibre is not added to a map. Call map.addControl(draw) before using this method.",
+  ALREADY_ADDED_TO_MAP: "DrawLibre is already added to a map. Call map.removeControl(draw) before adding it again.",
+  REENTRANT_LIFECYCLE:
+    "DrawLibre is in the middle of being added or removed. Do not call map.addControl or map.removeControl from a listener that runs during addControl or removeControl.",
+  INVALID_STEPS_ARGUMENT: "Invalid argument. Expected an array of steps.",
+  INVALID_STEPS_TYPE: "Invalid type specified. Use 'array' or 'linkedlist'.",
 };
 
 function buildStepSequence(

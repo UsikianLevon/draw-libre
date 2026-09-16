@@ -8,7 +8,7 @@ const map = new mapboxgl.Map({ container: "map" });
 map.addControl(draw, "top-left");
 map.removeControl(draw);
 
-DrawLibre.getInstance({
+new DrawLibre({
   layersPaint: {
     points: { "circle-emissive-strength": 1 },
     line: { "line-color": ["config", "lineColor"] },

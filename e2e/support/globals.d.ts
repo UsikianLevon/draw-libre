@@ -9,10 +9,11 @@ declare global {
     map: maplibregl.Map;
     draw: DrawLibre | null;
     mapErrors: string[];
+    createDraw: (options?: DrawOptions) => DrawLibre;
+    remountDraw: () => void;
     mountDraw: (options?: DrawOptions) => void;
     unmountDraw: () => void;
     disposeDraw: () => void;
-    getInstanceReturnsTheMountedControl: () => boolean;
     probeDraw: {
       on: (name: DrawEventName) => string;
       once: (name: DrawEventName) => string;
@@ -23,6 +24,16 @@ declare global {
     reentrancy: {
       removeControlOnSave: () => { map: number; draw: number };
       clearOnSave: () => { map: DrawEventName[]; draw: DrawEventName[] };
+    };
+    lifecycleProbe: {
+      secondControlOnSameMap: () => string | null;
+      secondControlOnOtherMap: () => string | null;
+      sameControlTwice: () => string | null;
+      addFromModeChanged: () => string | null;
+      removeFromModeChanged: () => string | null;
+      throwFromModeChanged: () => string | null;
+      removeForeignControl: () => void;
+      callBeforeMount: (method: string) => string | null;
     };
   }
 }

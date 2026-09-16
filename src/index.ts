@@ -27,17 +27,21 @@ import { MouseEvents } from "#components/map/mouse-events/index";
 import { DOM } from "#app/dom";
 import { Store } from "#app/store/index";
 import { renderer, Renderer } from "#components/map/renderer";
-import { appendOpenSteps, linkedListToArray } from "#app/store/init";
+import { appendOpenSteps, ERRORS, linkedListToArray } from "#app/store/init";
 import { checkInitialStepsOptionOnErrors, initOptions } from "#app/options";
 
-import "./draw.css";
 import { Tiles } from "#components/map/tiles";
 import { timeline } from "#app/history";
 import { MapTimelineAdapter } from "#app/history/map-adapter";
 import { Emitter, type DrawLibreSubscription } from "#app/events/emitter";
 import { FireEvents } from "#components/map/fire-events";
 
+import "./draw.css";
+
 export default class DrawLibre implements DrawLibreControl {
+  static #mounted: DrawLibre | null = null;
+  static #busy = false;
+
   private container: HTMLElement | undefined;
   private store: Store | undefined;
   private mode: DrawingMode | undefined;
@@ -52,9 +56,8 @@ export default class DrawLibre implements DrawLibreControl {
   private readonly events = new Emitter<DrawLibreEventType>();
 
   private renderer: Renderer | null = null;
-  static instance: DrawLibre | null = null;
 
-  private constructor(options?: DrawOptions) {
+  constructor(options?: DrawOptions) {
     this.defaultOptions = initOptions(options);
 
     if (this.defaultOptions.initial) {
@@ -62,19 +65,12 @@ export default class DrawLibre implements DrawLibreControl {
     }
   }
 
-  static getInstance(options?: DrawOptions): DrawLibre {
-    if (!DrawLibre.instance) {
-      DrawLibre.instance = new DrawLibre(options);
-    }
-    return DrawLibre.instance;
-  }
-
   /**
    * DO NOT USE IMPLICITLY. PASS TO map.addControl().
    *
    * @example ```ts
    * const map = new Map();
-   * const draw = DrawLibre.getInstance();
+   * const draw = new DrawLibre();
    * map.addControl(draw)
    * ```
    *
@@ -87,64 +83,65 @@ export default class DrawLibre implements DrawLibreControl {
    * as necessary.
    */
   onAdd = (map: MapLike) => {
-    // maplibre and mapbox maps both provide every method the drawing calls
-    const engine = map as EngineMap;
-    FireEvents.bind(this.events);
-    this.store = new Store(this.defaultOptions);
-    this.mode = new DrawingMode(this.defaultOptions);
-    this.renderer = renderer.initialize({
-      map: engine,
-      store: this.store,
-      options: this.defaultOptions,
-      mode: this.mode,
-    });
-    this.projection = new GeometryProjection({ map: engine, store: this.store, options: this.defaultOptions });
-    this.mouseEvents = new MouseEvents();
-    this.panel = new Panel({ map: engine, mode: this.mode, options: this.defaultOptions, store: this.store });
-    this.control = new Control({ options: this.defaultOptions, map: engine, mode: this.mode });
-    this.tiles = new Tiles({
-      map: engine,
-      store: this.store,
-      mode: this.mode,
-      options: this.defaultOptions,
-      control: this.control,
-      panel: this.panel,
-      mouseEvents: this.mouseEvents,
-      projection: this.projection,
-      events: this.events,
-    });
-    // map sources exist only from here, rendering earlier inside initialize had nowhere to draw
-    this.renderer?.execute();
-    this.cursor = new Cursor({
-      map: engine,
-      mode: this.mode,
-      mouseEvents: this.mouseEvents,
-      store: this.store,
-      options: this.defaultOptions,
-    });
+    if (DrawLibre.#busy) throw new Error(ERRORS["REENTRANT_LIFECYCLE"]);
+    if (DrawLibre.#mounted) throw new Error(ERRORS["ALREADY_ADDED_TO_MAP"]);
 
-    this.timelineAdapter = new MapTimelineAdapter(engine);
-    this.mode.pingConsumers();
-    this.store.pingConsumers();
-    this.container = this.control.getContainer();
+    DrawLibre.#busy = true;
+    DrawLibre.#mounted = this;
 
-    return this.container;
+    try {
+      // maplibre and mapbox maps both provide every method the drawing calls
+      const engine = map as EngineMap;
+      FireEvents.bind(this.events);
+      this.store = new Store(this.defaultOptions);
+      this.mode = new DrawingMode(this.defaultOptions);
+      this.renderer = renderer.initialize({
+        map: engine,
+        store: this.store,
+        options: this.defaultOptions,
+        mode: this.mode,
+      });
+      this.projection = new GeometryProjection({ map: engine, store: this.store, options: this.defaultOptions });
+      this.mouseEvents = new MouseEvents();
+      this.panel = new Panel({ map: engine, mode: this.mode, options: this.defaultOptions, store: this.store });
+      this.control = new Control({ options: this.defaultOptions, map: engine, mode: this.mode });
+      this.tiles = new Tiles({
+        map: engine,
+        store: this.store,
+        mode: this.mode,
+        options: this.defaultOptions,
+        control: this.control,
+        panel: this.panel,
+        mouseEvents: this.mouseEvents,
+        projection: this.projection,
+        events: this.events,
+      });
+      // map sources exist only from here, rendering earlier inside initialize had nowhere to draw
+      this.renderer?.execute();
+      this.cursor = new Cursor({
+        map: engine,
+        mode: this.mode,
+        mouseEvents: this.mouseEvents,
+        store: this.store,
+        options: this.defaultOptions,
+      });
+
+      this.timelineAdapter = new MapTimelineAdapter(engine);
+      this.mode.pingConsumers();
+      this.store.pingConsumers();
+      this.container = this.control.getContainer();
+
+      return this.container;
+    } catch (error) {
+      DrawLibre.#mounted = null;
+      this.#teardown();
+      throw error;
+    } finally {
+      DrawLibre.#busy = false;
+    }
   };
 
-  /**
-   * DO NOT USE IMPLICITLY. PASS TO map.removeControl().
-   *
-   * @example ```ts
-   * const map = new Map();
-   * const draw = DrawLibre.getInstance();
-   * map.removeControl(draw)
-   * ```
-   *
-   * Unregister a control on the map and give it a chance to detach event listeners.
-   *
-   * @param map - the Map this control will be removed from
-   */
-  onRemove = () => {
+  #teardown = () => {
     this.projection?.remove();
     this.cursor?.remove();
     this.tiles?.remove();
@@ -154,11 +151,55 @@ export default class DrawLibre implements DrawLibreControl {
     this.control?.destroy();
     this.timelineAdapter?.destroy();
     timeline.resetStacks();
-
-    if (this.container) {
-      DOM.remove(this.container);
-    }
+    if (this.container) DOM.remove(this.container);
     FireEvents.unbind(this.events);
+
+    this.container = undefined;
+    this.store = undefined;
+    this.mode = undefined;
+    this.tiles = undefined;
+    this.panel = undefined;
+    this.control = undefined;
+    this.cursor = undefined;
+    this.mouseEvents = undefined;
+    this.timelineAdapter = undefined;
+    this.projection = undefined;
+    this.renderer = null;
+  };
+
+  #getMountedState = () => {
+    const { store, mode, panel } = this;
+    if (DrawLibre.#mounted !== this || !store || !mode || !panel) {
+      throw new Error(ERRORS["NOT_ADDED_TO_MAP"]);
+    }
+    return { store, mode, panel };
+  };
+
+  /**
+   * DO NOT USE IMPLICITLY. PASS TO map.removeControl().
+   *
+   * @example ```ts
+   * const map = new Map();
+   * const draw = new DrawLibre();
+   * map.removeControl(draw)
+   * ```
+   *
+   * Unregister a control on the map and give it a chance to detach event listeners.
+   *
+   * @param map - the Map this control will be removed from
+   */
+  onRemove = () => {
+    if (DrawLibre.#busy) throw new Error(ERRORS["REENTRANT_LIFECYCLE"]);
+    // tearing down touches the shared timeline, a foreign instance must not do it
+    if (DrawLibre.#mounted !== this) return;
+
+    DrawLibre.#busy = true;
+    try {
+      this.#teardown();
+    } finally {
+      DrawLibre.#mounted = null;
+      DrawLibre.#busy = false;
+    }
   };
 
   /**
@@ -168,16 +209,16 @@ export default class DrawLibre implements DrawLibreControl {
    */
   public setSteps = (value: Step[] | LatLng[]) => {
     if (!Array.isArray(value)) {
-      throw new Error("Invalid argument. Expected an array of steps.");
+      throw new Error(ERRORS["INVALID_STEPS_ARGUMENT"]);
     }
-    if (!this.store || !this.mode) return;
+    const { store, mode, panel } = this.#getMountedState();
 
-    this.store.reset();
-    this.panel?.hide();
-    this.mode.reset();
+    store.reset();
+    panel.hide();
+    mode.reset();
     timeline.resetStacks();
     this.renderer?.resetGeometries();
-    appendOpenSteps(this.store, value, this.defaultOptions.pointGeneration);
+    appendOpenSteps(store, value, this.defaultOptions.pointGeneration);
     this.renderer?.execute();
   };
 
@@ -188,7 +229,7 @@ export default class DrawLibre implements DrawLibreControl {
    * @returns The step with the specified ID, or null if not found.
    */
   public findStepById = (id: StepId) => {
-    return this.store?.findStepById(id);
+    return this.#getMountedState().store.findStepById(id);
   };
 
   /**
@@ -198,7 +239,7 @@ export default class DrawLibre implements DrawLibreControl {
    * @returns The node with the specified ID, or null if not found.
    */
   public findNodeById = (id: StepId) => {
-    return this.store?.findNodeById(id);
+    return this.#getMountedState().store.findNodeById(id);
   };
 
   /**
@@ -208,37 +249,39 @@ export default class DrawLibre implements DrawLibreControl {
    * @returns An array of all steps or the linked list of steps.
    */
   public getAllSteps = (type: "array" | "linkedlist" = "array") => {
-    if (type === "array" && this.store) {
-      return linkedListToArray(this.store.head);
+    const { store } = this.#getMountedState();
+
+    if (type === "array") {
+      return linkedListToArray(store.head);
     }
     if (type === "linkedlist") {
       return {
-        head: this.store?.head,
-        tail: this.store?.tail,
-        size: this.store?.size,
+        head: store.head,
+        tail: store.tail,
+        size: store.size,
       };
     }
-    throw new Error("Invalid type specified. Use 'array' or 'linkedlist'.");
+    throw new Error(ERRORS["INVALID_STEPS_TYPE"]);
   };
 
-  public undo = (e: Event): void => {
-    this.panel?.api()?.undo(e);
+  public undo = (e?: Event): void => {
+    this.#getMountedState().panel.api().undo(e);
   };
 
-  public redo = (e: Event): void => {
-    this.panel?.api()?.redo(e);
+  public redo = (e?: Event): void => {
+    this.#getMountedState().panel.api().redo(e);
   };
 
-  public clear = (): void => {
-    this.panel?.api()?.clear();
+  public clear = (e?: Event): void => {
+    this.#getMountedState().panel.api().clear(e);
   };
 
-  public save = (): void => {
-    this.panel?.api()?.save();
+  public save = (e?: Event): void => {
+    this.#getMountedState().panel.api().save(e);
   };
 
-  public removeAllSteps = (): void => {
-    this.clear();
+  public removeAllSteps = (e?: Event): void => {
+    this.clear(e);
   };
 
   public on = <T extends keyof DrawLibreEventType>(

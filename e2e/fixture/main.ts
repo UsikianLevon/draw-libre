@@ -104,17 +104,22 @@ map.on("load", async () => {
     }
   };
 
+  window.createDraw = (options?: DrawOptions) => {
+    const draw = new DrawLibre(options);
+    logDrawChannel(draw);
+    window.draw = draw;
+    return draw;
+  };
+
   window.mountDraw = (options?: DrawOptions) => {
-    try {
-      const draw = DrawLibre.getInstance(options);
-      logDrawChannel(draw);
-      map.addControl(draw, position);
-      window.draw = draw;
-    } catch (error) {
-      DrawLibre.instance = null;
-      window.draw = null;
-      throw error;
-    }
+    const draw = window.createDraw(options);
+    map.addControl(draw, position);
+  };
+
+  // the probe subscribes before the first mount, so remount must keep that same instance
+  window.remountDraw = () => {
+    if (!window.draw) throw new Error("the draw control was never created");
+    map.addControl(window.draw, position);
   };
 
   window.unmountDraw = () => {
@@ -123,15 +128,78 @@ map.on("load", async () => {
 
   window.disposeDraw = () => {
     window.unmountDraw();
-    DrawLibre.instance = null;
     window.draw = null;
   };
 
-  window.getInstanceReturnsTheMountedControl = () => {
-    if (!window.draw) throw new Error("the draw control is not mounted");
-    const first = DrawLibre.getInstance();
-    const second = DrawLibre.getInstance();
-    return first === second && first === window.draw;
+  const messageOf = (error: unknown) => (error instanceof Error ? error.message : String(error));
+
+  const attempt = (action: () => void): string | null => {
+    try {
+      action();
+      return null;
+    } catch (error) {
+      return messageOf(error);
+    }
+  };
+
+  // the guard must refuse before anything is drawn
+  const secondMap = () => {
+    const holder = document.createElement("div");
+    holder.style.width = "200px";
+    holder.style.height = "200px";
+    document.body.appendChild(holder);
+    return new maplibregl.Map({
+      container: holder,
+      style: { version: 8, sources: {}, layers: [] },
+      attributionControl: false,
+    });
+  };
+
+  window.lifecycleProbe = {
+    secondControlOnSameMap: () => attempt(() => map.addControl(new DrawLibre(), position)),
+    secondControlOnOtherMap: () => attempt(() => secondMap().addControl(new DrawLibre())),
+    sameControlTwice: () => attempt(() => map.addControl(window.draw as DrawLibreInstance, position)),
+    addFromModeChanged: () => {
+      const draw = new DrawLibre({ modes: { initial: "line" } });
+      // the fixture compares the map channel with the draw channel on teardown, so this instance must be logged too
+      logDrawChannel(draw);
+      let seen: string | null = null;
+      draw.on("mdl:modechanged", () => {
+        seen = attempt(() => map.addControl(new DrawLibre(), position));
+      });
+      const outer = attempt(() => map.addControl(draw, position));
+      return seen ?? outer;
+    },
+    removeFromModeChanged: () => {
+      const draw = new DrawLibre({ modes: { initial: "line" } });
+      logDrawChannel(draw);
+      let seen: string | null = null;
+      draw.on("mdl:modechanged", () => {
+        seen = attempt(() => map.removeControl(draw));
+      });
+      const outer = attempt(() => map.addControl(draw, position));
+      return seen ?? outer;
+    },
+    throwFromModeChanged: () => {
+      const draw = new DrawLibre({ modes: { initial: "line" } });
+      logDrawChannel(draw);
+      draw.on("mdl:modechanged", () => {
+        throw new Error("listener failure");
+      });
+      return attempt(() => map.addControl(draw, position));
+    },
+    removeForeignControl: () => {
+      const foreign = new DrawLibre();
+      foreign.onRemove();
+    },
+    callBeforeMount: (method: string) => {
+      const draw = new DrawLibre() as unknown as Record<string, (...args: unknown[]) => unknown>;
+      const argument =
+        method === "setSteps" ? [[]] : method === "findStepById" || method === "findNodeById" ? ["x"] : [];
+      return attempt(() => {
+        draw[method]?.(...argument);
+      });
+    },
   };
 
   const probes = new Map<string, Probe>();
@@ -143,7 +211,7 @@ map.on("load", async () => {
   };
 
   const addProbe = (name: DrawEventName, once: boolean) => {
-    const draw = window.draw ?? DrawLibre.getInstance(initialOptions);
+    const draw = window.draw ?? window.createDraw(initialOptions);
     const probe: Probe = {
       draw,
       name,

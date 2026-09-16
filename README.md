@@ -15,7 +15,7 @@ Works with maplibre-gl v2–v6, mapbox-gl v1–v3, and all projections.
 - Manual or automatic midpoint generation
 - Initialize from existing GeoJSON
 - Customizable controls, labels, and layer styles
-- Event-driven — subscribe to point add/remove/move, mode changes, save, etc.
+- Event-driven: subscribe to point add/remove/move, mode changes, save, etc.
 
 ### Point generation modes
 

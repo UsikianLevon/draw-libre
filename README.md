@@ -231,23 +231,6 @@ Once a control is mounted, the guard is released only by `removeControl`. `map.r
 every control, so destroying a map frees it, but dropping a map reference without calling `map.remove()` leaves
 the guard held and no new `DrawLibre` can be mounted on that page.
 
-## Styling
-
-Every class the control adds starts with `mdl-`, so the stylesheet does not touch the rest of the page and page styles do not reach the control by accident. Override these to restyle it:
-
-| Class                                                                     | Element                                  |
-| ------------------------------------------------------------------------- | ---------------------------------------- |
-| `mdl-control-button`, `mdl-control-button-active`                         | mode buttons, the pressed one            |
-| `mdl-dashboard-container`, `mdl-dashboard`                                | the panel and its button row             |
-| `mdl-panel-button`, `mdl-panel-button-{small,medium,large}`               | panel buttons                            |
-| `mdl-icon`, `mdl-icon-{small,medium,large}`                               | the icon inside a button                 |
-| `mdl-icon-{line,polygon,break,undo,redo,delete,save}`                     | the image of each icon                   |
-| `mdl-tooltip`, `mdl-tooltip-text`, `mdl-tooltip-text-{bottom,left,right}` | the tooltip, appended to `document.body` |
-| `mdl-point-remove`                                                        | the remove button next to a point        |
-| `mdl-hidden`                                                              | a hidden panel or remove button          |
-
-**Changed in 1.0.1.** Before it the stylesheet used bare names: `line`, `polygon`, `break`, `undo`, `redo`, `delete`, `save`, `icon`, `icon-*`, `control-button`, `control-button-active`, `popup-container`, `popup-text*`, `hidden`. They collided with page styles, so they are renamed as above. If you styled the control through the old names, switch to the new ones. The stylesheet also no longer hides the tip and padding of maplibre and mapbox popups.
-
 ## TypeScript
 
 The type declarations do not import maplibre-gl or mapbox-gl, `map.addControl(draw)` type-checks with both. With mapbox-gl v3 and `skipLibCheck: false`, install `@types/geojson`, the mapbox-gl typings need it.

@@ -2,9 +2,11 @@ import { HTMLEvent } from "#app/types/helpers";
 import { DOM } from "#app/dom";
 import "./tooltip.css";
 
+export type Placement = "left" | "right" | "bottom";
+
 interface CreateOptions {
   label: string;
-  placement: "left" | "bottom";
+  placement: Placement;
 }
 
 const BASE_Y_OFFSET_FROM_ELEMENT = 8;
@@ -24,8 +26,8 @@ export class Tooltip {
   }
 
   create = (options: CreateOptions) => {
-    const container = DOM.create("div", "popup-container", document.body);
-    const span = DOM.create("span", `popup-text popup-text-${options.placement}`, container);
+    const container = DOM.create("div", "mdl-tooltip", document.body);
+    const span = DOM.create("span", `mdl-tooltip-text mdl-tooltip-text-${options.placement}`, container);
     span.textContent = options.label;
     this.container = container;
     this.label = span;
@@ -33,10 +35,7 @@ export class Tooltip {
   };
 
   private activateAnimation = () => {
-    const notActive = !this.label?.classList.value.includes("popup-text-active");
-    if (notActive) {
-      this.label?.classList.add("popup-text-active");
-    }
+    this.label?.classList.add("mdl-tooltip-text-active");
   };
 
   private getLabelDimensions = () => {
@@ -48,17 +47,16 @@ export class Tooltip {
     };
   };
 
-  private getLeftPosition = (event: HTMLEvent<HTMLElement>): Position => {
+  private getSidePosition = (event: HTMLEvent<HTMLElement>, side: "left" | "right"): Position => {
     const { bottom, left, right } = event.target.getBoundingClientRect();
     const { width: labelWidth, height: labelHeight } = this.getLabelDimensions();
-    const x = left - BASE_X_OFFSET_FROM_ELEMENT - labelWidth;
     const y = bottom - labelHeight - 2;
 
-    if (x < 0) {
+    if (side === "right") {
       return { x: right + BASE_X_OFFSET_FROM_ELEMENT, y };
     }
 
-    return { x, y };
+    return { x: left - BASE_X_OFFSET_FROM_ELEMENT - labelWidth, y };
   };
 
   private getBottomPosition = (event: HTMLEvent<HTMLElement>): Position => {
@@ -72,9 +70,10 @@ export class Tooltip {
     };
   };
 
-  getPosition = (event: HTMLEvent<HTMLElement>, position: "left" | "bottom"): Position => {
-    if (position === "left") {
-      return this.getLeftPosition(event);
+  // window coordinates, the container has fixed position
+  getPosition = (event: HTMLEvent<HTMLElement>, position: Placement): Position => {
+    if (position !== "bottom") {
+      return this.getSidePosition(event, position);
     }
 
     return this.getBottomPosition(event);

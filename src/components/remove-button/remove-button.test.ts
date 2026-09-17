@@ -141,7 +141,7 @@ test("moving the cursor off the button hides it at once", async () => {
   await userEvent.hover(locator());
   await userEvent.unhover(locator());
 
-  expect(element().classList.contains("hidden")).toBe(true);
+  expect(element().classList.contains("mdl-hidden")).toBe(true);
 });
 
 test("a real click removes the anchored point and hides the button", async () => {

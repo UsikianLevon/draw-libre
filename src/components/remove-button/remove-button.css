@@ -43,7 +43,7 @@
   right: -5px;
 }
 
-.mdl-point-remove.hidden {
+.mdl-point-remove.mdl-hidden {
   opacity: 0;
   pointer-events: none;
   visibility: hidden;

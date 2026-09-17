@@ -60,7 +60,7 @@ export class DOM {
 
   static setPressed(button: HTMLElement | null | undefined, pressed: boolean) {
     if (!button) return;
-    button.classList.toggle("control-button-active", pressed);
+    button.classList.toggle("mdl-control-button-active", pressed);
     button.setAttribute("aria-pressed", String(pressed));
   }
 

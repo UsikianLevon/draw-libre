@@ -1,8 +1,12 @@
 # DrawLibre
 
+### [LIVE DEMO](https://www.drawlibre.dev/)
+
 A drawing tool for [MapLibre GL](https://maplibre.org/) and [Mapbox GL](https://docs.mapbox.com/mapbox-gl-js/) maps. Draw linestrings (open and closed) and polygons with undo/redo, geometry breaking, and full style customization.
 
 Works with maplibre-gl v2–v6, mapbox-gl v1–v3, and all projections.
+
+In the [playground](https://www.drawlibre.dev/) you can flip every option on a live map, watch the events fire, and copy the generated code.
 
 **React users:** check out [draw-libre-react](https://github.com/UsikianLevon/draw-libre-react).
 
@@ -12,20 +16,10 @@ Works with maplibre-gl v2–v6, mapbox-gl v1–v3, and all projections.
 - Close open linestrings, break closed geometries
 - Undo/redo
 - Remove a point with the cross button that appears when you hover or tap it
-- Manual or automatic midpoint generation
+- Midpoints: manual (click on a segment to insert a point) or auto (generated between every two points)
 - Initialize from existing GeoJSON
 - Customizable controls, labels, and layer styles
 - Event-driven: subscribe to point add/remove/move, mode changes, save, etc.
-
-### Point generation modes
-
-**Manual** — click on a line segment to insert a point:
-
-<img src="https://i.giphy.com/media/v1.Y2lkPTc5MGI3NjExaDZscnowMHNndmtiZzcwb3Bvc2Y2b29qbHdndndndGE3Mzk5Z2Q0cSZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/m6lig0ZCfL45FZQo7b/giphy.gif" width="800" alt="Manual point generation">
-
-**Auto** — midpoints are generated between every two primary points:
-
-<img src="https://media2.giphy.com/media/v1.Y2lkPTc5MGI3NjExY2VieG1rd3ZkaWt5azVhYWpqaWEwZnVybGdjYW90d2xwNWwzeWtzayZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/6ohjkf9L1NWUESTaQA/giphy.gif" width="800" alt="Automatic point generation">
 
 ## Installation
 
@@ -54,7 +48,7 @@ map.on("load", (e) => {
 
 ## Configuration
 
-All options are optional.
+All options are optional. You can click a config together in the [playground](https://www.drawlibre.dev/) and copy the result from the Code tab.
 
 ```javascript
 const draw = new DrawLibre({
@@ -205,6 +199,31 @@ draw.save(); // trigger save
 ```
 
 Check `mdl:undostackchanged` / `mdl:redostackchanged` to know when undo/redo are available.
+
+## One control at a time
+
+Only one `DrawLibre` control can be mounted per loaded copy of the library, including across different maps.
+Remove the current control before adding another.
+
+Adding or removing a control from a listener running during `addControl` or `removeControl` throws.
+Removing it from a later event, such as `mdl:save`, is supported.
+
+Every state method — `setSteps`, `getAllSteps`, `findStepById`, `findNodeById`, `undo`, `redo`, `clear`,
+`save`, `removeAllSteps` — throws before the control is added to a map and after it is removed. `on`, `once`
+and `off` work before `addControl` and keep working across a remove and add cycle.
+
+### Recovery after a failed mount
+
+Add the control after the map style has loaded. `addSource` throws while the style is still loading, and that
+is a normal reason for a mount to fail.
+
+When a mount fails, the control removes what it created, releases the guard and rethrows the error, so a new
+`addControl` is allowed. If a part of the control did not finish setting itself up, some of its map handlers or
+DOM nodes may survive. Reload the page when you need to be sure nothing is left over.
+
+Once a control is mounted, the guard is released only by `removeControl`. `map.remove()` calls `onRemove` on
+every control, so destroying a map frees it, but dropping a map reference without calling `map.remove()` leaves
+the guard held and no new `DrawLibre` can be mounted on that page.
 
 ## TypeScript
 

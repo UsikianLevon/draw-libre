@@ -62,7 +62,6 @@
     "@vitest/browser-playwright": "^5.0.0",
     "maplibre-gl": "^6.9.1",
     "playwright": "^1.63.0",
-    "css:scope": "node scripts/check-css.mjs",
     "prettier": "3.2.5",
     "tsup": "8.2.2",
     "typescript": "5.9.3",

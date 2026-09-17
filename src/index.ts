@@ -36,8 +36,6 @@ import { MapTimelineAdapter } from "#app/history/map-adapter";
 import { Emitter, type DrawLibreSubscription } from "#app/events/emitter";
 import { FireEvents } from "#components/map/fire-events";
 
-import "./draw.css";
-
 export default class DrawLibre implements DrawLibreControl {
   static #mounted: DrawLibre | null = null;
   static #busy = false;

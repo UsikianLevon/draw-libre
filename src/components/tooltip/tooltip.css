@@ -1,13 +1,13 @@
-.popup-container {
+.mdl-tooltip {
   display: block;
-  position: absolute;
+  position: fixed;
   z-index: 1000;
   pointer-events: none;
   top: 0;
   left: 0;
 }
 
-.popup-text {
+.mdl-tooltip-text {
   display: inline-block;
   padding: 4px 16px;
   background-color: #4d4d4d;
@@ -16,20 +16,26 @@
   font-size: 14px;
 }
 
-.popup-text-bottom {
+.mdl-tooltip-text-bottom {
   opacity: 0;
   transform: translateY(16px);
   transition: all 0.2s ease-out;
   transition-delay: 0.25s;
 }
 
-.popup-text-left {
+.mdl-tooltip-text-left {
   opacity: 0;
   transform: translateX(16px);
   transition: all 0.3s ease-out;
 }
 
-.popup-text-active {
+.mdl-tooltip-text-right {
+  opacity: 0;
+  transform: translateX(-16px);
+  transition: all 0.3s ease-out;
+}
+
+.mdl-tooltip-text-active {
   transform: translate(0px);
   opacity: 1;
 }

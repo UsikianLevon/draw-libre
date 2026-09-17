@@ -1,6 +1,6 @@
 import type { ControlType } from "#app/types/index";
 import type { HTMLEvent } from "#app/types/helpers";
-import { Tooltip } from "#components/tooltip";
+import { Tooltip, type Placement } from "#components/tooltip";
 import { CURSORS } from "#components/cursor/constants";
 import { DOM } from "#app/dom";
 
@@ -61,6 +61,15 @@ export class Events {
     this.tooltip.remove();
   }
 
+  private getPlacement = (button: HTMLElement): Placement => {
+    const map = this.ctx.map.getContainer().getBoundingClientRect();
+    const rect = button.getBoundingClientRect();
+    const buttonCenter = rect.left + rect.width / 2;
+    const mapCenter = map.left + map.width / 2;
+
+    return buttonCenter < mapCenter ? "right" : "left";
+  };
+
   onButtonEnter = (event: HTMLEvent<HTMLButtonElement>) => {
     const { options } = this.ctx;
 
@@ -68,7 +77,7 @@ export class Events {
 
     if (type) {
       const label = getButtonLabel(type, options);
-      const placement = "left";
+      const placement = this.getPlacement(event.target);
       this.tooltip
         .create({
           label,
@@ -104,7 +113,6 @@ export class Events {
     this.removeActiveClass();
     DOM.setPressed(lineButton, true);
     mode.setMode("line");
-    console.log(mode.getMode());
   };
 
   onPolygonClick = () => {

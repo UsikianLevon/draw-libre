@@ -1,7 +1,7 @@
 import { DOM } from "#app/dom";
 
 const BUTTON_CLASS = "mdl-point-remove";
-const HIDDEN_CLASS = "hidden";
+const HIDDEN_CLASS = "mdl-hidden";
 
 export type Side = "left" | "right";
 

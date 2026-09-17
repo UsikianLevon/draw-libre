@@ -18,8 +18,7 @@ export class View {
     active: boolean,
     disabled?: boolean,
   ): HTMLButtonElement => {
-    const size = this.ctx.options.panel.size;
-    const button = DOM.create("button", `control-button control-button-${size}`, this.root);
+    const button = DOM.create("button", "mdl-control-button", this.root);
     button.setAttribute("aria-label", title);
     button.setAttribute("data-type", type);
 
@@ -27,7 +26,7 @@ export class View {
     if (disabled) {
       DOM.disableButton(button);
     }
-    DOM.create("span", `icon ${type} icon-medium`, button);
+    DOM.create("span", `mdl-icon mdl-icon-${type} mdl-icon-medium`, button);
     return button;
   };
 

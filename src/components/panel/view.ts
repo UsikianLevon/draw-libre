@@ -20,7 +20,7 @@ export class View {
     const button = DOM.create("button", `mdl-panel-button mdl-panel-button-${size}`, container);
     button.setAttribute("data-type", type);
     button.setAttribute("aria-label", title);
-    DOM.create("span", `icon ${type} icon-${size}`, button);
+    DOM.create("span", `mdl-icon mdl-icon-${type} mdl-icon-${size}`, button);
     return button as HTMLButtonElement;
   }
 
@@ -53,12 +53,12 @@ export class View {
   };
 
   public show = () => {
-    this.root.classList.remove("hidden");
+    this.root.classList.remove("mdl-hidden");
     this.root.removeAttribute("aria-hidden");
   };
 
   public hide = () => {
-    this.root.classList.add("hidden");
+    this.root.classList.add("mdl-hidden");
     this.root.setAttribute("aria-hidden", "true");
   };
 

@@ -8,6 +8,7 @@ import type { EngineMap } from "#app/types/engine";
 import { RemoveButton } from "./index";
 
 const LABEL = "Remove point";
+const HIT_RADIUS = 14;
 const CONTAINER_WIDTH = 600;
 const CONTAINER_HEIGHT = 400;
 
@@ -62,8 +63,11 @@ function createMapStub(): MapStub {
   };
 }
 
-function createOptions(): RequiredDrawOptions {
-  return { locale: { removePoint: LABEL } } as unknown as RequiredDrawOptions;
+function createOptions(pointHitRadius = HIT_RADIUS): RequiredDrawOptions {
+  return {
+    locale: { removePoint: LABEL },
+    interaction: { pointHitRadius },
+  } as unknown as RequiredDrawOptions;
 }
 
 function createStep(overrides: Partial<Step> = {}): Step {
@@ -123,16 +127,30 @@ test("show flips the button to the other side when it would overflow the contain
   expect(box().right - anchor.left).toBeLessThanOrEqual(step.lng);
 });
 
-test("the button reaches back toward its point so the gap is never bare", () => {
+test("the button reaches back into the outer edge of the hit circle but never onto the point itself", () => {
   const step = createStep();
   button.show(step);
 
   const anchor = stub.container.getBoundingClientRect();
   const y = anchor.top + step.lat;
 
-  for (const x of [step.lng + 8, step.lng + 10]) {
-    expect(document.elementFromPoint(anchor.left + x, y)).toBe(element());
+  for (const x of [step.lng + 9, step.lng + 11]) {
+    expect(document.elementFromPoint(anchor.left + x, y)).not.toBe(element());
   }
+  expect(document.elementFromPoint(anchor.left + step.lng + HIT_RADIUS - 1, y)).toBe(element());
+});
+
+test("a larger hit radius pushes the button further out", async () => {
+  button.destroy();
+  button = new RemoveButton({ map: stub.map, options: createOptions(20), onRemove });
+
+  const step = createStep();
+  button.show(step);
+
+  await expect.element(locator()).toBeVisible();
+
+  const anchor = stub.container.getBoundingClientRect();
+  expect(box().left - anchor.left).toBeGreaterThan(step.lng + 20);
 });
 
 test("moving the cursor off the button hides it at once", async () => {

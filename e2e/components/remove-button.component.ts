@@ -5,7 +5,8 @@ import { type Box, stableBox } from "../support/stable-box";
 
 const CENTRING_TOLERANCE_PX = 3;
 
-const OFFSET_X = 12;
+// desktop pointHitRadius 14 plus the 3px gap from the remove button component
+const OFFSET_X = 17;
 const OFFSET_TOLERANCE_PX = 2;
 
 export class RemoveButtonComponent {

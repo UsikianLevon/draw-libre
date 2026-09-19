@@ -67,10 +67,17 @@ export type Initial = InitialSteps & {
 // any instead of unknown lets paint objects typed with interfaces pass
 type Paint<T extends { paint?: unknown }> = NonNullable<T["paint"]> | Record<string, any>;
 
+export interface PointHaloPaint {
+  "circle-color"?: NonNullable<CircleLayerSpecification["paint"]>["circle-color"];
+  "circle-radius"?: number;
+  "circle-opacity"?: number;
+}
+
 export interface LayersPaint {
   onLinePoint?: Paint<CircleLayerSpecification>;
   firstPoint?: Paint<CircleLayerSpecification>;
   firstPointClosable?: Paint<CircleLayerSpecification>;
+  pointHalo?: Omit<PointHaloPaint, "circle-color"> & { "circle-color"?: any };
   points?: Paint<CircleLayerSpecification>;
   auxiliaryPoint?: Paint<CircleLayerSpecification>;
   line?: Paint<LineLayerSpecification>;
@@ -83,6 +90,7 @@ export interface StrictLayersPaint {
   onLinePoint?: CircleLayerSpecification["paint"];
   firstPoint?: CircleLayerSpecification["paint"];
   firstPointClosable?: CircleLayerSpecification["paint"];
+  pointHalo?: PointHaloPaint;
   points?: CircleLayerSpecification["paint"];
   auxiliaryPoint?: CircleLayerSpecification["paint"];
   line?: LineLayerSpecification["paint"];

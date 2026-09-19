@@ -99,6 +99,7 @@ const draw = new DrawLibre({
     onLinePoint: {}, // CircleLayerSpecification["paint"]
     firstPoint: {}, // CircleLayerSpecification["paint"]
     firstPointClosable: {}, // CircleLayerSpecification["paint"] drawn over firstPoint while a click on it would close the geometry.
+    pointHalo: {}, // The halo around a hovered point: "circle-color", "circle-radius" and "circle-opacity" only.
     points: {}, // CircleLayerSpecification["paint"]
     auxiliaryPoint: {}, // CircleLayerSpecification["paint"]
     line: {}, // LineLayerSpecification["paint"]
@@ -107,7 +108,7 @@ const draw = new DrawLibre({
     breakLine: {}, // LineLayerSpecification["paint"]
   },
 
-  // Override layer layout properties, same keys as layersPaint except firstPointClosable.
+  // Override layer layout properties, same keys as layersPaint except firstPointClosable and pointHalo.
   // visibility is not accepted, the library toggles it. Hit areas for clicks are not affected.
   layersLayout: {
     onLinePoint: {}, // CircleLayerSpecification["layout"] without visibility
@@ -161,6 +162,20 @@ new DrawLibre({
     firstPointClosable: {
       "circle-stroke-color": "#2563EB",
       "circle-radius": 8,
+    },
+  },
+});
+```
+
+A bigger blue halo around a hovered point:
+
+```javascript
+new DrawLibre({
+  layersPaint: {
+    pointHalo: {
+      "circle-color": "#2563EB",
+      "circle-radius": 18,
+      "circle-opacity": 0.3,
     },
   },
 });

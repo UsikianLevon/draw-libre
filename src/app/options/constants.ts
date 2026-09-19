@@ -9,6 +9,7 @@ import {
   POLYGON_PAINT_BASE,
   BREAK_PAINT_BASE,
   AUXILIARY_POINT_PAINT_BASE,
+  POINT_HALO_PAINT_BASE,
 } from "#app/utils/geo_constants";
 
 export const interactionDefaults = (isCoarsePointer: boolean) =>
@@ -48,6 +49,7 @@ export const DEFAULT_OPTIONS: RequiredDrawOptions = {
     dynamicLine: DYNAMIC_LINE_PAINT_BASE,
     polygon: POLYGON_PAINT_BASE,
     breakLine: BREAK_PAINT_BASE,
+    pointHalo: POINT_HALO_PAINT_BASE,
   },
   layersLayout: {
     auxiliaryPoint: {},

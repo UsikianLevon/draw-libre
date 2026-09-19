@@ -11,7 +11,7 @@ const paintOf = (options: Parameters<typeof generateLayers>[0], id: string) =>
   generateLayers(options).find((layer) => layer.id === id)?.paint as Record<string, unknown>;
 
 const haloOpacity = (options: Parameters<typeof generateLayers>[0], hovered: boolean) => {
-  const opacity = paintOf(options, ELAYERS.PointsHitLayer)["circle-opacity"];
+  const opacity = paintOf(options, ELAYERS.PointsHaloLayer)["circle-opacity"];
   const expression = normalizePropertyExpression(
     opacity as never,
     "circle-opacity",
@@ -134,6 +134,7 @@ test("auxiliary points get a hit halo smaller than regular points, since they ar
   expect(auxiliary["circle-radius"]).toBe(11.5);
   expect(auxiliary["circle-radius"]).toBeLessThan(regular["circle-radius"] as number);
   expect(auxiliary["circle-opacity"]).toEqual(regular["circle-opacity"]);
+  expect(paintOf(DEFAULT_OPTIONS, ELAYERS.AuxiliaryPointHaloLayer)["circle-radius"]).toBe(11.5);
 });
 
 test("a user paint override cannot shrink the point hit area", () => {
@@ -197,6 +198,9 @@ test("without layout options every layer keeps the layout it had before", () => 
     [ELAYERS.PointsHitLayer]: undefined,
     [ELAYERS.FirstPointHitLayer]: { visibility: "none" },
     [ELAYERS.AuxiliaryPointHitLayer]: undefined,
+    [ELAYERS.PointsHaloLayer]: undefined,
+    [ELAYERS.FirstPointHaloLayer]: { visibility: "none" },
+    [ELAYERS.AuxiliaryPointHaloLayer]: undefined,
   });
   expect(generateLayers(initOptions())).toEqual(generateLayers(initOptions({})));
 });
@@ -270,4 +274,48 @@ test("configured closable keys win over the defaults", () => {
     "circle-stroke-color": "#0000FF",
     "circle-color": "#00FF00",
   });
+});
+
+test("without halo options the halo looks as before and matches the hit area of every point kind", () => {
+  for (const options of [DEFAULT_OPTIONS, initOptions({})]) {
+    for (const [halo, hit] of [
+      [ELAYERS.PointsHaloLayer, ELAYERS.PointsHitLayer],
+      [ELAYERS.FirstPointHaloLayer, ELAYERS.FirstPointHitLayer],
+      [ELAYERS.AuxiliaryPointHaloLayer, ELAYERS.AuxiliaryPointHitLayer],
+    ] as const) {
+      const paint = paintOf(options, halo);
+      expect(paint["circle-color"]).toBe("#666666");
+      expect(paint["circle-radius"]).toBe(paintOf(options, hit)["circle-radius"]);
+      expect(paint["circle-pitch-scale"]).toBe("viewport");
+    }
+  }
+  expect(haloOpacity(DEFAULT_OPTIONS, true)).toBe(0.18);
+});
+
+test("hit layers stay invisible whether or not the point is hovered", () => {
+  for (const id of [ELAYERS.PointsHitLayer, ELAYERS.FirstPointHitLayer, ELAYERS.AuxiliaryPointHitLayer]) {
+    expect(paintOf(DEFAULT_OPTIONS, id)["circle-opacity"]).toBe(0);
+  }
+});
+
+test("a configured halo changes color, radius and hover opacity but not the hit area", () => {
+  const options = initOptions({
+    layersPaint: { pointHalo: { "circle-color": "#2563EB", "circle-radius": 18, "circle-opacity": 0.3 } },
+  });
+
+  expect(paintOf(options, ELAYERS.PointsHaloLayer)["circle-color"]).toBe("#2563EB");
+  expect(paintOf(options, ELAYERS.PointsHaloLayer)["circle-radius"]).toBe(18);
+  expect(paintOf(options, ELAYERS.FirstPointHaloLayer)["circle-radius"]).toBe(18);
+  expect(paintOf(options, ELAYERS.AuxiliaryPointHaloLayer)["circle-radius"]).toBe(15.5);
+  expect(haloOpacity(options, true)).toBe(0.3);
+  expect(haloOpacity(options, false)).toBe(0);
+
+  expect(paintOf(options, ELAYERS.PointsHitLayer)["circle-radius"]).toBe(14);
+  expect(paintOf(options, ELAYERS.AuxiliaryPointHitLayer)["circle-radius"]).toBe(11.5);
+});
+
+test("a tiny halo radius never makes the auxiliary halo negative", () => {
+  const options = initOptions({ layersPaint: { pointHalo: { "circle-radius": 1 } } });
+
+  expect(paintOf(options, ELAYERS.AuxiliaryPointHaloLayer)["circle-radius"]).toBe(0);
 });

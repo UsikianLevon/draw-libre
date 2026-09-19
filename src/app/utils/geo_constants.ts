@@ -28,6 +28,9 @@ export const ELAYERS = {
   PointsHitLayer: "mdl-points-hit-layer",
   FirstPointHitLayer: "mdl-first-point-hit-layer",
   AuxiliaryPointHitLayer: "mdl-auxiliary-point-hit-layer",
+  PointsHaloLayer: "mdl-points-halo-layer",
+  FirstPointHaloLayer: "mdl-first-point-halo-layer",
+  AuxiliaryPointHaloLayer: "mdl-auxiliary-point-halo-layer",
 } as const;
 
 export const POINTS_FILTER = {
@@ -114,7 +117,10 @@ export const BREAK_PAINT_BASE = {
   "line-dasharray": [3, 3],
 };
 
-const HIT_HIGHLIGHT_OPACITY = 0.18;
+export const POINT_HALO_PAINT_BASE = {
+  "circle-color": "#666666",
+  "circle-opacity": 0.18,
+};
 
 // auxiliary circles are drawn 2.5px smaller than regular ones, radius plus stroke
 const AUXILIARY_HIT_RADIUS_OFFSET = 2.5;
@@ -122,21 +128,34 @@ const AUXILIARY_HIT_RADIUS_OFFSET = 2.5;
 export const pointHitRadiusOf = (options: RequiredDrawOptions, isAuxiliary: boolean) =>
   isAuxiliary ? options.interaction.pointHitRadius - AUXILIARY_HIT_RADIUS_OFFSET : options.interaction.pointHitRadius;
 
-const POINT_HIT_PAINT = {
-  "circle-color": "#666666",
-  "circle-opacity": ["case", ["boolean", ["feature-state", "hover"], false], HIT_HIGHLIGHT_OPACITY, 0],
-} satisfies CircleLayerSpecification["paint"];
+const haloRadiusOf = (options: RequiredDrawOptions, isAuxiliary: boolean) => {
+  const radius = options.layersPaint.pointHalo?.["circle-radius"];
+  if (typeof radius !== "number") return pointHitRadiusOf(options, isAuxiliary);
+  return isAuxiliary ? Math.max(0, radius - AUXILIARY_HIT_RADIUS_OFFSET) : radius;
+};
 
 export const generateLayers = (options: RequiredDrawOptions) => {
   const layout = options.layersLayout;
   const hitPaint = {
-    ...POINT_HIT_PAINT,
+    "circle-color": "#000000",
+    "circle-opacity": 0,
     "circle-radius": pointHitRadiusOf(options, false),
     "circle-pitch-scale": "viewport" as const,
   };
   const auxiliaryHitPaint = {
     ...hitPaint,
     "circle-radius": pointHitRadiusOf(options, true),
+  };
+  const halo = { ...POINT_HALO_PAINT_BASE, ...options.layersPaint.pointHalo };
+  const haloPaint = {
+    "circle-color": halo["circle-color"],
+    "circle-opacity": ["case", ["boolean", ["feature-state", "hover"], false], halo["circle-opacity"], 0],
+    "circle-radius": haloRadiusOf(options, false),
+    "circle-pitch-scale": "viewport",
+  } satisfies CircleLayerSpecification["paint"];
+  const auxiliaryHaloPaint = {
+    ...haloPaint,
+    "circle-radius": haloRadiusOf(options, true),
   };
 
   return [
@@ -233,6 +252,30 @@ export const generateLayers = (options: RequiredDrawOptions) => {
       source: ESOURCES.UnifiedSource,
       type: "circle",
       paint: auxiliaryHitPaint,
+      filter: POINTS_FILTER.auxiliaryPoint,
+    },
+    {
+      id: ELAYERS.PointsHaloLayer,
+      source: ESOURCES.UnifiedSource,
+      type: "circle",
+      paint: { ...haloPaint },
+      filter: POINTS_FILTER.points,
+    },
+    {
+      id: ELAYERS.FirstPointHaloLayer,
+      source: ESOURCES.UnifiedSource,
+      type: "circle",
+      paint: { ...haloPaint },
+      filter: POINTS_FILTER.firstPoint,
+      layout: {
+        visibility: "none",
+      },
+    },
+    {
+      id: ELAYERS.AuxiliaryPointHaloLayer,
+      source: ESOURCES.UnifiedSource,
+      type: "circle",
+      paint: auxiliaryHaloPaint,
       filter: POINTS_FILTER.auxiliaryPoint,
     },
   ] satisfies AddLayerObject[];

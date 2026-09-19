@@ -1,3 +1,4 @@
+import type { DrawOptions } from "../src/index";
 import { test, expect } from "./fixtures";
 
 test("hovering a point lights up its grab area", async ({ drawMap }) => {
@@ -81,4 +82,41 @@ test("the halo is really painted on the canvas, not just recorded in state", asy
   const hovered = await drawMap.drawing.pixelAt(insideGrabArea);
 
   expect(hovered[0]).toBeLessThan(idle[0] - 10);
+});
+
+const HALO: [number, number, number] = [0, 0, 255];
+
+const haloOptions = (radius?: number): DrawOptions => ({
+  layersPaint: { pointHalo: { "circle-color": "rgb(0, 0, 255)", "circle-opacity": 1, "circle-radius": radius } },
+});
+
+test("a configured halo color shows around a hovered point and nowhere else", async ({ drawMap }) => {
+  const line = await drawMap.openWithLine({ options: haloOptions() });
+  await drawMap.parkPointer();
+  const inside = drawMap.layout.offsetFrom(line.middle, 0, -11);
+
+  await drawMap.drawing.expectPixelNotNear(inside, HALO);
+
+  await drawMap.hoverPoint(line.middle);
+  await expect.poll(() => drawMap.drawing.hoveredPointIds()).toHaveLength(1);
+
+  await drawMap.drawing.expectPixelNear(inside, HALO);
+  await drawMap.drawing.expectPixelNotNear(drawMap.layout.offsetFrom(line.middle, 0, -17), HALO);
+});
+
+test("a configured halo radius grows the halo but not the area that reacts to the pointer", async ({ drawMap }) => {
+  const line = await drawMap.openWithLine({ options: haloOptions(20) });
+  await drawMap.parkPointer();
+
+  await drawMap.hoverPoint(line.middle);
+  await expect.poll(() => drawMap.drawing.hoveredPointIds()).toHaveLength(1);
+
+  await drawMap.drawing.expectPixelNear(drawMap.layout.offsetFrom(line.middle, 0, -18), HALO);
+  await drawMap.drawing.expectPixelNotNear(drawMap.layout.offsetFrom(line.middle, 0, -23), HALO);
+
+  await drawMap.parkPointer();
+  await drawMap.hoverPoint(drawMap.layout.offsetFrom(line.middle, 0, -18));
+  await drawMap.canvas.settle();
+
+  expect(await drawMap.drawing.hoveredPointIds()).toHaveLength(0);
 });

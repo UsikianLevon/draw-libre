@@ -127,6 +127,15 @@ test("points get a hit layer wider than the circle the user sees", () => {
   expect(drawn["circle-radius"]).toBe(5.5);
 });
 
+test("auxiliary points get a hit halo smaller than regular points, since they are drawn smaller", () => {
+  const auxiliary = paintOf(DEFAULT_OPTIONS, ELAYERS.AuxiliaryPointHitLayer);
+  const regular = paintOf(DEFAULT_OPTIONS, ELAYERS.PointsHitLayer);
+
+  expect(auxiliary["circle-radius"]).toBe(11.5);
+  expect(auxiliary["circle-radius"]).toBeLessThan(regular["circle-radius"] as number);
+  expect(auxiliary["circle-opacity"]).toEqual(regular["circle-opacity"]);
+});
+
 test("a user paint override cannot shrink the point hit area", () => {
   const options = initOptions({ layersPaint: { points: { "circle-radius": 1, "circle-stroke-width": 0 } } });
 

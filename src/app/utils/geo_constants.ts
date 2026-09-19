@@ -111,6 +111,12 @@ export const BREAK_PAINT_BASE = {
 
 const HIT_HIGHLIGHT_OPACITY = 0.18;
 
+// auxiliary circles are drawn 2.5px smaller than regular ones, radius plus stroke
+const AUXILIARY_HIT_RADIUS_OFFSET = 2.5;
+
+export const pointHitRadiusOf = (options: RequiredDrawOptions, isAuxiliary: boolean) =>
+  isAuxiliary ? options.interaction.pointHitRadius - AUXILIARY_HIT_RADIUS_OFFSET : options.interaction.pointHitRadius;
+
 const POINT_HIT_PAINT = {
   "circle-color": "#666666",
   "circle-opacity": ["case", ["boolean", ["feature-state", "hover"], false], HIT_HIGHLIGHT_OPACITY, 0],
@@ -119,8 +125,12 @@ const POINT_HIT_PAINT = {
 export const generateLayers = (options: RequiredDrawOptions) => {
   const hitPaint = {
     ...POINT_HIT_PAINT,
-    "circle-radius": options.interaction.pointHitRadius,
+    "circle-radius": pointHitRadiusOf(options, false),
     "circle-pitch-scale": "viewport" as const,
+  };
+  const auxiliaryHitPaint = {
+    ...hitPaint,
+    "circle-radius": pointHitRadiusOf(options, true),
   };
 
   return [
@@ -226,7 +236,7 @@ export const generateLayers = (options: RequiredDrawOptions) => {
       id: ELAYERS.AuxiliaryPointHitLayer,
       source: ESOURCES.UnifiedSource,
       type: "circle",
-      paint: { ...hitPaint },
+      paint: auxiliaryHitPaint,
       filter: POINTS_FILTER.auxiliaryPoint,
     },
   ] satisfies AddLayerObject[];

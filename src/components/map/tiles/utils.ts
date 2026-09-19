@@ -1,42 +1,19 @@
-import type { CircleLayerSpecification } from "maplibre-gl";
-
 import type { EngineMap } from "#app/types/engine";
+import type { RequiredDrawOptions } from "#app/types/index";
 
-import { ELAYERS, FIRST_POINT_COLOR, FIRST_POINT_RADIUS } from "#app/utils/geo_constants";
+import { ELAYERS } from "#app/utils/geo_constants";
 
-type FirstPointPaint = CircleLayerSpecification["paint"];
+export type FirstPointState = "closable" | "default";
 
-const firstPointCircleRadius = (map: EngineMap, paint: FirstPointPaint) => {
-  const radius = paint?.["circle-radius"];
-  map.setPaintProperty(
-    ELAYERS.FirstPointLayer,
-    "circle-radius",
-    typeof radius === "number" ? radius + 1 : radius ?? FIRST_POINT_RADIUS.large,
-  );
-  map.setPaintProperty(ELAYERS.FirstPointLayer, "circle-stroke-color", FIRST_POINT_COLOR.large);
-};
-
-const defaultPointCircleRadius = (map: EngineMap, paint: FirstPointPaint) => {
-  map.setPaintProperty(
-    ELAYERS.FirstPointLayer,
-    "circle-radius",
-    paint?.["circle-radius"] ?? FIRST_POINT_RADIUS.default,
-  );
-  map.setPaintProperty(
-    ELAYERS.FirstPointLayer,
-    "circle-stroke-color",
-    paint?.["circle-stroke-color"] ?? FIRST_POINT_COLOR.default,
-  );
-};
-
-export const togglePointCircleRadius = (
+export const setFirstPointState = (
   map: EngineMap,
-  type: keyof typeof FIRST_POINT_RADIUS,
-  paint: FirstPointPaint,
+  state: FirstPointState,
+  paint: RequiredDrawOptions["layersPaint"],
 ) => {
-  if (type === "large") {
-    firstPointCircleRadius(map, paint);
-  } else {
-    defaultPointCircleRadius(map, paint);
+  const closable: Record<string, any> = paint.firstPointClosable ?? {};
+  const base: Record<string, any> = paint.firstPoint ?? {};
+
+  for (const key of Object.keys(closable) as Parameters<EngineMap["setPaintProperty"]>[1][]) {
+    map.setPaintProperty(ELAYERS.FirstPointLayer, key, state === "closable" ? closable[key] : base[key]);
   }
 };

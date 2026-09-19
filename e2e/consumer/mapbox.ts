@@ -13,4 +13,7 @@ new DrawLibre({
     points: { "circle-emissive-strength": 1 },
     line: { "line-color": ["config", "lineColor"] },
   },
+  layersLayout: {
+    line: { "line-z-offset": 1 },
+  },
 });

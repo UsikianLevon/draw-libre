@@ -177,3 +177,97 @@ test("initial options with steps pass the empty check", () => {
     }),
   ).not.toThrow();
 });
+
+const layoutOf = (options: Parameters<typeof generateLayers>[0], id: string) =>
+  generateLayers(options).find((layer) => layer.id === id)?.layout as Record<string, unknown> | undefined;
+
+test("without layout options every layer keeps the layout it had before", () => {
+  const layouts = Object.fromEntries(generateLayers(initOptions({})).map((layer) => [layer.id, layer.layout]));
+
+  expect(layouts).toEqual({
+    [ELAYERS.SinglePointLayer]: { visibility: "none" },
+    [ELAYERS.PolygonLayer]: { visibility: "none" },
+    [ELAYERS.LineDynamicLayer]: { visibility: "none" },
+    [ELAYERS.LineLayer]: { visibility: "visible" },
+    [ELAYERS.LineLayerTransparent]: undefined,
+    [ELAYERS.LineLayerBreak]: { visibility: "none" },
+    [ELAYERS.PointsLayer]: {},
+    [ELAYERS.FirstPointLayer]: { visibility: "none" },
+    [ELAYERS.AuxiliaryPointLayer]: {},
+    [ELAYERS.PointsHitLayer]: undefined,
+    [ELAYERS.FirstPointHitLayer]: { visibility: "none" },
+    [ELAYERS.AuxiliaryPointHitLayer]: undefined,
+  });
+  expect(generateLayers(initOptions())).toEqual(generateLayers(initOptions({})));
+});
+
+test("a line layout reaches the line and the dynamic line but not the hit layer", () => {
+  const options = initOptions({ layersLayout: { line: { "line-join": "round", "line-cap": "round" } } });
+
+  expect(layoutOf(options, ELAYERS.LineLayer)).toEqual({
+    "line-join": "round",
+    "line-cap": "round",
+    visibility: "visible",
+  });
+  expect(layoutOf(options, ELAYERS.LineDynamicLayer)).toEqual({
+    "line-join": "round",
+    "line-cap": "round",
+    visibility: "none",
+  });
+  expect(layoutOf(options, ELAYERS.LineLayerTransparent)).toBeUndefined();
+  expect(layoutOf(options, ELAYERS.LineLayerBreak)).toEqual({ visibility: "none" });
+});
+
+test("an explicit dynamicLine layout wins over the inherited one", () => {
+  const options = initOptions({
+    layersLayout: { line: { "line-join": "round" }, dynamicLine: { "line-join": "bevel" } },
+  });
+
+  expect(layoutOf(options, ELAYERS.LineDynamicLayer)?.["line-join"]).toBe("bevel");
+});
+
+test("a visibility passed without types is dropped and the library one stays", () => {
+  const options = initOptions({
+    layersLayout: {
+      line: { visibility: "none", "line-join": "round" },
+      polygon: { visibility: "visible" },
+      points: { visibility: "none" },
+    },
+  } as never);
+
+  expect(options.layersLayout.line).toEqual({ "line-join": "round" });
+  expect(layoutOf(options, ELAYERS.LineLayer)?.visibility).toBe("visible");
+  expect(layoutOf(options, ELAYERS.PolygonLayer)?.visibility).toBe("none");
+  expect(layoutOf(options, ELAYERS.PointsLayer)).toEqual({});
+});
+
+test("the closable first point is one pixel bigger with a red ring unless configured", () => {
+  expect(DEFAULT_OPTIONS.layersPaint.firstPointClosable).toEqual({
+    "circle-radius": 6.5,
+    "circle-stroke-color": "#FF6464",
+  });
+  expect(initOptions({}).layersPaint.firstPointClosable).toEqual(DEFAULT_OPTIONS.layersPaint.firstPointClosable);
+  expect(initOptions({ layersPaint: { firstPoint: { "circle-radius": 10 } } }).layersPaint.firstPointClosable).toEqual({
+    "circle-radius": 11,
+    "circle-stroke-color": "#FF6464",
+  });
+});
+
+test("a first point radius given as an expression is kept as is by the closable state", () => {
+  const radius = ["+", 5, 5];
+  const options = initOptions({ layersPaint: { firstPoint: { "circle-radius": radius } } });
+
+  expect(options.layersPaint.firstPointClosable?.["circle-radius"]).toEqual(radius);
+});
+
+test("configured closable keys win over the defaults", () => {
+  const options = initOptions({
+    layersPaint: { firstPointClosable: { "circle-stroke-color": "#0000FF", "circle-color": "#00FF00" } },
+  });
+
+  expect(options.layersPaint.firstPointClosable).toEqual({
+    "circle-radius": 6.5,
+    "circle-stroke-color": "#0000FF",
+    "circle-color": "#00FF00",
+  });
+});

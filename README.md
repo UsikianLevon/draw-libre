@@ -98,12 +98,26 @@ const draw = new DrawLibre({
   layersPaint: {
     onLinePoint: {}, // CircleLayerSpecification["paint"]
     firstPoint: {}, // CircleLayerSpecification["paint"]
+    firstPointClosable: {}, // CircleLayerSpecification["paint"] drawn over firstPoint while a click on it would close the geometry.
     points: {}, // CircleLayerSpecification["paint"]
     auxiliaryPoint: {}, // CircleLayerSpecification["paint"]
     line: {}, // LineLayerSpecification["paint"]
     dynamicLine: {}, // LineLayerSpecification["paint"]; defaults to `line` + a dash pattern
     polygon: {}, // FillLayerSpecification["paint"]
     breakLine: {}, // LineLayerSpecification["paint"]
+  },
+
+  // Override layer layout properties, same keys as layersPaint except firstPointClosable.
+  // visibility is not accepted, the library toggles it. Hit areas for clicks are not affected.
+  layersLayout: {
+    onLinePoint: {}, // CircleLayerSpecification["layout"] without visibility
+    firstPoint: {}, // CircleLayerSpecification["layout"] without visibility
+    points: {}, // CircleLayerSpecification["layout"] without visibility
+    auxiliaryPoint: {}, // CircleLayerSpecification["layout"] without visibility
+    line: {}, // LineLayerSpecification["layout"] without visibility
+    dynamicLine: {}, // LineLayerSpecification["layout"] without visibility; defaults to `line`
+    polygon: {}, // FillLayerSpecification["layout"] without visibility
+    breakLine: {}, // LineLayerSpecification["layout"] without visibility
   },
 
   // Show a dynamic line following the cursor after placing the first point.
@@ -123,6 +137,31 @@ const draw = new DrawLibre({
       { lat: 31, lng: 21 },
       { lat: 35, lng: 25 },
     ],
+  },
+});
+```
+
+### Layer styling examples
+
+Round line joins and caps, the dynamic line follows `line` unless it gets its own layout:
+
+```javascript
+new DrawLibre({
+  layersLayout: {
+    line: { "line-join": "round", "line-cap": "round" },
+  },
+});
+```
+
+A blue highlight instead of the red ring on the first point while the geometry can be closed:
+
+```javascript
+new DrawLibre({
+  layersPaint: {
+    firstPointClosable: {
+      "circle-stroke-color": "#2563EB",
+      "circle-radius": 8,
+    },
   },
 });
 ```

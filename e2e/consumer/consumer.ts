@@ -60,6 +60,11 @@ const options = {
     line: { "line-color": "#ff0000" },
     polygon: { "fill-color": "#00ff00" },
     points: { "circle-radius": ["case", ["boolean", ["feature-state", "hover"], false], 7, 5] },
+    firstPointClosable: { "circle-stroke-color": "#0000ff" },
+  },
+  layersLayout: {
+    line: { "line-join": "round", "line-cap": "round" },
+    points: { "circle-sort-key": 1 },
   },
   dynamicLine: false,
   initial: {
@@ -190,3 +195,6 @@ interface MapboxOnlyCirclePaint {
 }
 declare const mapboxOnlyCirclePaint: MapboxOnlyCirclePaint;
 new DrawLibre({ layersPaint: { points: mapboxOnlyCirclePaint } });
+
+// @ts-expect-error
+new DrawLibre({ layersLayout: { line: { visibility: "none" } } });

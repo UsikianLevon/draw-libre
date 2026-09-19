@@ -1,8 +1,15 @@
 import { ERRORS } from "#app/store/init";
-import type { Initial, DrawOptions, RequiredDrawOptions, StrictLayersPaint } from "#app/types/index";
+import type {
+  Initial,
+  DrawOptions,
+  RequiredDrawOptions,
+  StrictLayersLayout,
+  StrictLayersPaint,
+} from "#app/types/index";
 import {
   ON_LINE_POINT_PAINT_BASE,
   FIRST_POINT_PAINT_BASE,
+  FIRST_POINT_CLOSABLE_PAINT_BASE,
   POINTS_PAINT_BASE,
   LINE_PAINT_BASE,
   DYNAMIC_LINE_PAINT_BASE,
@@ -76,6 +83,7 @@ export function initOptions(options?: DrawOptions): RequiredDrawOptions {
     panel: generatePanelOptions(options),
     modes: generateModeOptions(options),
     layersPaint: generateLayersOptions(options),
+    layersLayout: generateLayoutOptions(options),
     interaction,
     initial: options.initial || DEFAULT_OPTIONS["initial"],
     locale: generateLocaleOptions(options),
@@ -136,6 +144,14 @@ function generateLayersOptions(options: DrawOptions): RequiredDrawOptions["layer
     "line-opacity": paint?.line?.["line-opacity"] || LINE_PAINT_BASE["line-opacity"],
     ...paint?.line,
   };
+  const firstPoint = {
+    "circle-radius": paint?.firstPoint?.["circle-radius"] || FIRST_POINT_PAINT_BASE["circle-radius"],
+    "circle-color": paint?.firstPoint?.["circle-color"] || FIRST_POINT_PAINT_BASE["circle-color"],
+    "circle-stroke-color": paint?.firstPoint?.["circle-stroke-color"] || FIRST_POINT_PAINT_BASE["circle-stroke-color"],
+    "circle-stroke-width": paint?.firstPoint?.["circle-stroke-width"] || FIRST_POINT_PAINT_BASE["circle-stroke-width"],
+    ...paint?.firstPoint,
+  };
+  const firstRadius = firstPoint["circle-radius"];
 
   return {
     onLinePoint: {
@@ -147,14 +163,14 @@ function generateLayersOptions(options: DrawOptions): RequiredDrawOptions["layer
         paint?.onLinePoint?.["circle-stroke-width"] || ON_LINE_POINT_PAINT_BASE["circle-stroke-width"],
       ...paint?.onLinePoint,
     },
-    firstPoint: {
-      "circle-radius": paint?.firstPoint?.["circle-radius"] || FIRST_POINT_PAINT_BASE["circle-radius"],
-      "circle-color": paint?.firstPoint?.["circle-color"] || FIRST_POINT_PAINT_BASE["circle-color"],
-      "circle-stroke-color":
-        paint?.firstPoint?.["circle-stroke-color"] || FIRST_POINT_PAINT_BASE["circle-stroke-color"],
-      "circle-stroke-width":
-        paint?.firstPoint?.["circle-stroke-width"] || FIRST_POINT_PAINT_BASE["circle-stroke-width"],
-      ...paint?.firstPoint,
+    firstPoint,
+    firstPointClosable: {
+      ...FIRST_POINT_CLOSABLE_PAINT_BASE,
+      "circle-radius":
+        typeof firstRadius === "number"
+          ? firstRadius + 1
+          : firstRadius ?? FIRST_POINT_CLOSABLE_PAINT_BASE["circle-radius"],
+      ...paint?.firstPointClosable,
     },
     points: {
       "circle-radius": paint?.points?.["circle-radius"] || POINTS_PAINT_BASE["circle-radius"],
@@ -189,6 +205,27 @@ function generateLayersOptions(options: DrawOptions): RequiredDrawOptions["layer
       "line-dasharray": paint?.breakLine?.["line-dasharray"] || BREAK_PAINT_BASE["line-dasharray"],
       ...paint?.breakLine,
     },
+  };
+}
+
+const withoutVisibility = <T extends object>(layout: T | undefined): T => {
+  const { visibility: _, ...rest } = { ...layout } as T & { visibility?: unknown };
+  return rest as T;
+};
+
+function generateLayoutOptions(options: DrawOptions): RequiredDrawOptions["layersLayout"] {
+  const layout = options.layersLayout as StrictLayersLayout | undefined;
+  const line = withoutVisibility(layout?.line);
+
+  return {
+    onLinePoint: withoutVisibility(layout?.onLinePoint),
+    firstPoint: withoutVisibility(layout?.firstPoint),
+    points: withoutVisibility(layout?.points),
+    auxiliaryPoint: withoutVisibility(layout?.auxiliaryPoint),
+    line,
+    dynamicLine: { ...line, ...withoutVisibility(layout?.dynamicLine) },
+    polygon: withoutVisibility(layout?.polygon),
+    breakLine: withoutVisibility(layout?.breakLine),
   };
 }
 

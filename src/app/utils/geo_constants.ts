@@ -66,6 +66,11 @@ export const FIRST_POINT_PAINT_BASE = {
   "circle-stroke-width": 3,
 };
 
+export const FIRST_POINT_CLOSABLE_PAINT_BASE = {
+  "circle-radius": FIRST_POINT_RADIUS.large,
+  "circle-stroke-color": FIRST_POINT_COLOR.large,
+};
+
 export const AUXILIARY_POINT_PAINT_BASE = {
   "circle-radius": FIRST_POINT_RADIUS.default - 1.5,
   "circle-color": "#FEFFFE",
@@ -123,6 +128,7 @@ const POINT_HIT_PAINT = {
 } satisfies CircleLayerSpecification["paint"];
 
 export const generateLayers = (options: RequiredDrawOptions) => {
+  const layout = options.layersLayout;
   const hitPaint = {
     ...POINT_HIT_PAINT,
     "circle-radius": pointHitRadiusOf(options, false),
@@ -139,18 +145,14 @@ export const generateLayers = (options: RequiredDrawOptions) => {
       source: ESOURCES.SinglePointSource,
       type: "circle",
       paint: options.layersPaint.onLinePoint,
-      layout: {
-        visibility: "none",
-      },
+      layout: { ...layout.onLinePoint, visibility: "none" },
     },
     {
       id: ELAYERS.PolygonLayer,
       source: ESOURCES.UnifiedSource,
       type: "fill",
       paint: options.layersPaint.polygon,
-      layout: {
-        visibility: "none",
-      },
+      layout: { ...layout.polygon, visibility: "none" },
       filter: ["==", ["geometry-type"], "Polygon"],
     },
     {
@@ -158,18 +160,14 @@ export const generateLayers = (options: RequiredDrawOptions) => {
       source: ESOURCES.LineDynamicSource,
       type: "line",
       paint: options.layersPaint.dynamicLine,
-      layout: {
-        visibility: "none",
-      },
+      layout: { ...layout.dynamicLine, visibility: "none" },
     },
     {
       id: ELAYERS.LineLayer,
       source: ESOURCES.UnifiedSource,
       type: "line",
       paint: options.layersPaint.line,
-      layout: {
-        visibility: "visible",
-      },
+      layout: { ...layout.line, visibility: "visible" },
       filter: ["==", ["geometry-type"], "LineString"],
     },
     {
@@ -187,9 +185,7 @@ export const generateLayers = (options: RequiredDrawOptions) => {
       source: ESOURCES.LineSourceBreak,
       type: "line",
       paint: options.layersPaint.breakLine,
-      layout: {
-        visibility: "none",
-      },
+      layout: { ...layout.breakLine, visibility: "none" },
     },
     {
       id: ELAYERS.PointsLayer,
@@ -197,6 +193,7 @@ export const generateLayers = (options: RequiredDrawOptions) => {
       type: "circle",
       paint: options.layersPaint.points,
       filter: POINTS_FILTER.points,
+      layout: layout.points,
     },
     {
       id: ELAYERS.FirstPointLayer,
@@ -204,9 +201,7 @@ export const generateLayers = (options: RequiredDrawOptions) => {
       type: "circle",
       paint: options.layersPaint.firstPoint,
       filter: POINTS_FILTER.firstPoint,
-      layout: {
-        visibility: "none",
-      },
+      layout: { ...layout.firstPoint, visibility: "none" },
     },
     {
       id: ELAYERS.AuxiliaryPointLayer,
@@ -214,6 +209,7 @@ export const generateLayers = (options: RequiredDrawOptions) => {
       type: "circle",
       paint: options.layersPaint.auxiliaryPoint,
       filter: POINTS_FILTER.auxiliaryPoint,
+      layout: layout.auxiliaryPoint,
     },
     {
       id: ELAYERS.PointsHitLayer,

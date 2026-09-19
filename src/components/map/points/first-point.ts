@@ -2,7 +2,7 @@ import type { MapLayerMouseEvent } from "maplibre-gl";
 
 import { ELAYERS } from "#app/utils/geo_constants";
 import { Tooltip } from "#components/tooltip";
-import { togglePointCircleRadius } from "#components/map/tiles/utils";
+import { setFirstPointState, type FirstPointState } from "#components/map/tiles/utils";
 import type { StoreChangeEvent, StoreChangeEventKeys } from "#app/store/types";
 import { timeline } from "#app/history";
 
@@ -17,6 +17,7 @@ export class FirstPoint {
   private mouseDown: boolean;
   private tooltip: Tooltip;
   private eventsInited = false;
+  private paintState: FirstPointState | null = null;
 
   constructor(
     private readonly ctx: TilesContext,
@@ -137,11 +138,10 @@ export class FirstPoint {
       "STORE_CLEARED",
     ] as StoreChangeEventKeys[];
     if (events.includes(type)) {
-      const paint = this.ctx.options.layersPaint.firstPoint;
-      if (store.circular.canClose()) {
-        togglePointCircleRadius(map, "large", paint);
-      } else {
-        togglePointCircleRadius(map, "default", paint);
+      const state = store.circular.canClose() ? "closable" : "default";
+      if (state !== this.paintState) {
+        this.paintState = state;
+        setFirstPointState(map, state, this.ctx.options.layersPaint);
       }
     }
   };

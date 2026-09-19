@@ -168,3 +168,54 @@ test("without paint options the first point shows a grey ring while the line can
 
   await drawMap.drawing.expectPixelNear(drawMap.layout.offsetFrom(line.first, 7, 0), CLOSING_RING);
 });
+
+const CLOSABLE_FILL: Rgb = [0, 0, 255];
+
+test("a configured closable paint shows while the line can close and the first point paint comes back after", async ({
+  drawMap,
+}) => {
+  const line = await drawMap.openWithLine({
+    options: {
+      panel: { buttons: { undo: { visible: true } } },
+      layersPaint: {
+        firstPoint: { "circle-color": css(FIRST_POINT) },
+        firstPointClosable: { "circle-color": css(CLOSABLE_FILL), "circle-stroke-color": css(RING) },
+      },
+    },
+  });
+  await drawMap.parkPointer();
+
+  await drawMap.drawing.expectPixelNear(line.first, CLOSABLE_FILL);
+  await drawMap.drawing.expectPixelNear(drawMap.layout.offsetFrom(line.first, 7, 0), RING);
+
+  await drawMap.undo();
+  await drawMap.parkPointer();
+
+  await drawMap.drawing.expectPixelNear(line.first, FIRST_POINT);
+  await drawMap.drawing.expectPixelNear(drawMap.layout.offsetFrom(line.first, 6, 0), STOCK_RING);
+});
+
+const WIDE_LINE = { "line-color": css(LINE), "line-opacity": 1, "line-width": 30 };
+
+test("a round line cap from layersLayout draws past the end of the line", async ({ drawMap }) => {
+  await drawMap.open({
+    options: { layersPaint: { line: WIDE_LINE }, layersLayout: { line: { "line-cap": "round" } } },
+  });
+  const { first, middle } = drawMap.layout.line;
+  await drawMap.drawPoint(first);
+  await drawMap.drawPoint(middle);
+  await drawMap.parkPointer();
+
+  await drawMap.drawing.expectPixelNear(drawMap.layout.offsetFrom(first, -12, 0), LINE);
+});
+
+test("without layersLayout the line keeps its butt cap and stops at its end", async ({ drawMap }) => {
+  await drawMap.open({ options: { layersPaint: { line: WIDE_LINE } } });
+  const { first, middle } = drawMap.layout.line;
+  await drawMap.drawPoint(first);
+  await drawMap.drawPoint(middle);
+  await drawMap.parkPointer();
+
+  await drawMap.drawing.expectPixelNear(drawMap.layout.offsetFrom(first, 12, 0), LINE);
+  await drawMap.drawing.expectPixelNotNear(drawMap.layout.offsetFrom(first, -12, 0), LINE);
+});

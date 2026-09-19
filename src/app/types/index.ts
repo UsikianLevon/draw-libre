@@ -70,6 +70,7 @@ type Paint<T extends { paint?: unknown }> = NonNullable<T["paint"]> | Record<str
 export interface LayersPaint {
   onLinePoint?: Paint<CircleLayerSpecification>;
   firstPoint?: Paint<CircleLayerSpecification>;
+  firstPointClosable?: Paint<CircleLayerSpecification>;
   points?: Paint<CircleLayerSpecification>;
   auxiliaryPoint?: Paint<CircleLayerSpecification>;
   line?: Paint<LineLayerSpecification>;
@@ -81,12 +82,41 @@ export interface LayersPaint {
 export interface StrictLayersPaint {
   onLinePoint?: CircleLayerSpecification["paint"];
   firstPoint?: CircleLayerSpecification["paint"];
+  firstPointClosable?: CircleLayerSpecification["paint"];
   points?: CircleLayerSpecification["paint"];
   auxiliaryPoint?: CircleLayerSpecification["paint"];
   line?: LineLayerSpecification["paint"];
   dynamicLine?: LineLayerSpecification["paint"];
   polygon?: FillLayerSpecification["paint"];
   breakLine?: LineLayerSpecification["paint"];
+}
+
+type Layout<T extends { layout?: unknown }> = (Omit<NonNullable<T["layout"]>, "visibility"> | Record<string, any>) & {
+  visibility?: never;
+};
+
+type StrictLayout<T extends { layout?: unknown }> = Omit<NonNullable<T["layout"]>, "visibility">;
+
+export interface LayersLayout {
+  onLinePoint?: Layout<CircleLayerSpecification>;
+  firstPoint?: Layout<CircleLayerSpecification>;
+  points?: Layout<CircleLayerSpecification>;
+  auxiliaryPoint?: Layout<CircleLayerSpecification>;
+  line?: Layout<LineLayerSpecification>;
+  dynamicLine?: Layout<LineLayerSpecification>;
+  polygon?: Layout<FillLayerSpecification>;
+  breakLine?: Layout<LineLayerSpecification>;
+}
+
+export interface StrictLayersLayout {
+  onLinePoint?: StrictLayout<CircleLayerSpecification>;
+  firstPoint?: StrictLayout<CircleLayerSpecification>;
+  points?: StrictLayout<CircleLayerSpecification>;
+  auxiliaryPoint?: StrictLayout<CircleLayerSpecification>;
+  line?: StrictLayout<LineLayerSpecification>;
+  dynamicLine?: StrictLayout<LineLayerSpecification>;
+  polygon?: StrictLayout<FillLayerSpecification>;
+  breakLine?: StrictLayout<LineLayerSpecification>;
 }
 
 interface Locale {
@@ -122,13 +152,15 @@ export interface DrawOptions {
     };
   };
   layersPaint?: LayersPaint;
+  layersLayout?: LayersLayout;
   initial?: Initial | null;
   locale?: Locale;
   dynamicLine?: boolean;
 }
 
-export type RequiredDrawOptions = DeepRequired<Omit<DrawOptions, "layersPaint">> & {
+export type RequiredDrawOptions = DeepRequired<Omit<DrawOptions, "layersPaint" | "layersLayout">> & {
   layersPaint: StrictLayersPaint;
+  layersLayout: StrictLayersLayout;
   interaction: {
     lineHitRadius: number;
     pointHitRadius: number;

@@ -1,6 +1,7 @@
 import type { ListNode, Store } from "#app/store/index";
 import type { LatLng, Point, RequiredDrawOptions, Step } from "#app/types/index";
 import type { EngineMap } from "#app/types/engine";
+import { pointHitRadiusOf } from "#app/utils/geo_constants";
 
 type GeometrySource = () => { head: ListNode | null; isCircular: boolean };
 
@@ -110,6 +111,7 @@ export type SegmentHit = {
   projected: LatLng;
   distance: number;
   vertexDistance: number;
+  vertexHitRadius: number;
 };
 
 type ProjectionContext = {
@@ -168,8 +170,12 @@ export class GeometryProjection {
       projected: { lat: projected.lat, lng: projected.lng },
       distance: segment.distance,
       vertexDistance: vertex ? vertex.distance : Infinity,
+      vertexHitRadius: this.#vertexHitRadius(nodes, vertex),
     };
   };
+
+  #vertexHitRadius = (nodes: ListNode[], vertex: NearestVertex | null): number =>
+    pointHitRadiusOf(this.ctx.options, Boolean(vertex && nodes[vertex.index]?.val?.isAuxiliary));
 
   public isNearGeometry = (cursor: Point): boolean => {
     const { nodes, pixels } = this.#pixels.read();
@@ -178,7 +184,7 @@ export class GeometryProjection {
 
     const localCursor = this.#toGeometryCopy(cursor, reference);
     const vertex = nearestVertexPx(pixels, localCursor);
-    if (vertex && vertex.distance <= this.ctx.options.interaction.pointHitRadius) return true;
+    if (vertex && vertex.distance <= this.#vertexHitRadius(nodes, vertex)) return true;
 
     const segment = nearestSegmentPx(pixels, localCursor);
     return segment !== null && segment.distance <= this.ctx.options.interaction.lineHitRadius;

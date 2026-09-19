@@ -14,12 +14,12 @@ import { TilesContext } from "../tiles";
 
 export const insertStepIfOnLine = (
   event: MapLayerMouseEvent,
-  context: Pick<TilesContext, "store" | "options" | "projection">,
+  context: Pick<TilesContext, "store" | "projection">,
 ): Step | null => {
-  const { store, options, projection } = context;
+  const { store, projection } = context;
   const hit = projection.hit(event.point);
 
-  if (!hit || hit.vertexDistance < options.interaction.pointHitRadius) {
+  if (!hit || hit.vertexDistance < hit.vertexHitRadius) {
     return null;
   }
 

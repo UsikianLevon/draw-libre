@@ -194,6 +194,17 @@ test("a cursor within the point hit radius of a vertex is near the geometry", ()
   expect(projection.isNearGeometry({ x: 108, y: 9 })).toBe(true);
 });
 
+test("an auxiliary vertex blocks line hits within its own smaller hit radius", () => {
+  const nodes = chainAt([0, 0], [100, 0], [200, 0]);
+  nodes[1]!.val!.isAuxiliary = true;
+  const projection = projectionOver(nodes);
+
+  expect(projection.hit({ x: 100, y: 11 })).toMatchObject({ vertexDistance: 11, vertexHitRadius: 11.5 });
+  expect(projection.hit({ x: 0, y: 11 })).toMatchObject({ vertexDistance: 11, vertexHitRadius: 14 });
+  expect(projection.isNearGeometry({ x: 100, y: 13 })).toBe(false);
+  expect(projection.isNearGeometry({ x: 0, y: 13 })).toBe(true);
+});
+
 test("a cursor within the line hit radius of a segment is near the geometry", () => {
   const projection = projectionOver(chainAt([0, 0], [100, 0]));
 

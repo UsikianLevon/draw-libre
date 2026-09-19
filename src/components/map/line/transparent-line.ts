@@ -68,7 +68,7 @@ export class TransparentLineEvents {
 
   private hitClearOfVertices = (event: MapLayerMouseEvent) => {
     const hit = this.ctx.projection.hit(event.point);
-    if (!hit || hit.vertexDistance < this.ctx.options.interaction.pointHitRadius) return null;
+    if (!hit || hit.vertexDistance < hit.vertexHitRadius) return null;
 
     return hit;
   };

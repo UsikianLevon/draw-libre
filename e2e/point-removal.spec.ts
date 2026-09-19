@@ -95,6 +95,17 @@ test("the button follows the pointer straight from one point to the next", async
   await drawMap.removeButton.expectRightOf(line.last);
 });
 
+test("clicking the edge of the first point never lands on the remove button", async ({ drawMap }) => {
+  const line = await drawMap.openWithLine();
+  await drawMap.hoverPoint(line.first);
+  await drawMap.removeButton.expectVisible();
+
+  await drawMap.canvas.click(drawMap.layout.offsetFrom(line.first, 9, 0));
+
+  await drawMap.events.expectNever("mdl:pointremove");
+  await drawMap.drawing.expectPointCount(3);
+});
+
 test("the pointer can travel from the point onto the button", async ({ drawMap }) => {
   const line = await drawMap.openWithLine();
   await drawMap.hoverPoint(line.middle);

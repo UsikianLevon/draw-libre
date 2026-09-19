@@ -5,7 +5,9 @@ import type { EngineMap } from "#app/types/engine";
 import { RemoveButtonView } from "./view";
 import "./remove-button.css";
 
-const OFFSET_X = 12;
+const MIN_OFFSET_X = 12;
+// the 5px css bridge before the button must still overlap the point hit circle, otherwise hover drops on the way to the button
+const HIT_EDGE_GAP = 3;
 
 export interface RemoveButtonContext {
   map: EngineMap;
@@ -15,12 +17,14 @@ export interface RemoveButtonContext {
 
 export class RemoveButton {
   private readonly view: RemoveButtonView;
+  private readonly offsetX: number;
   private anchor: Step | null = null;
   private rafId = 0;
   private listenersActive = false;
 
   constructor(private readonly ctx: RemoveButtonContext) {
     this.view = new RemoveButtonView(ctx.map.getContainer(), ctx.options.locale.removePoint);
+    this.offsetX = Math.max(MIN_OFFSET_X, ctx.options.interaction.pointHitRadius + HIT_EDGE_GAP);
 
     const element = this.view.getElement();
     DOM.addEventListener(element, "mouseleave", this.onButtonMouseLeave);
@@ -91,12 +95,12 @@ export class RemoveButton {
 
     const point = map.project({ lng: this.anchor.lng, lat: this.anchor.lat });
     const containerWidth = map.getContainer().clientWidth;
-    const overflowsRight = point.x + OFFSET_X + this.view.getWidth() > containerWidth;
+    const overflowsRight = point.x + this.offsetX + this.view.getWidth() > containerWidth;
 
     if (overflowsRight) {
-      this.view.setPosition(point.x - OFFSET_X, point.y, "left");
+      this.view.setPosition(point.x - this.offsetX, point.y, "left");
     } else {
-      this.view.setPosition(point.x + OFFSET_X, point.y, "right");
+      this.view.setPosition(point.x + this.offsetX, point.y, "right");
     }
   };
 

@@ -21,8 +21,8 @@ export const PointHelpers = {
   },
 };
 
-const FIRST_POINT_LAYERS = [ELAYERS.FirstPointLayer, ELAYERS.FirstPointHitLayer];
-const POINT_LAYERS = [ELAYERS.PointsLayer, ELAYERS.PointsHitLayer];
+const FIRST_POINT_LAYERS = [ELAYERS.FirstPointLayer, ELAYERS.FirstPointHitLayer, ELAYERS.FirstPointHaloLayer];
+const POINT_LAYERS = [ELAYERS.PointsLayer, ELAYERS.PointsHitLayer, ELAYERS.PointsHaloLayer];
 
 const SINGLE_POINT_HIDE_DELAY = 33;
 

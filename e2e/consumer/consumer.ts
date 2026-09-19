@@ -61,6 +61,7 @@ const options = {
     polygon: { "fill-color": "#00ff00" },
     points: { "circle-radius": ["case", ["boolean", ["feature-state", "hover"], false], 7, 5] },
     firstPointClosable: { "circle-stroke-color": "#0000ff" },
+    pointHalo: { "circle-color": "#2563EB", "circle-radius": 18, "circle-opacity": 0.3 },
   },
   layersLayout: {
     line: { "line-join": "round", "line-cap": "round" },
@@ -198,3 +199,9 @@ new DrawLibre({ layersPaint: { points: mapboxOnlyCirclePaint } });
 
 // @ts-expect-error
 new DrawLibre({ layersLayout: { line: { visibility: "none" } } });
+
+// @ts-expect-error
+new DrawLibre({ layersPaint: { pointHalo: { "circle-radius": ["zoom"] } } });
+
+// @ts-expect-error
+new DrawLibre({ layersPaint: { pointHalo: { "circle-stroke-width": 2 } } });

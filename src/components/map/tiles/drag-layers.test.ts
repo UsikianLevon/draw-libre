@@ -12,6 +12,9 @@ const DRAG_LAYERS = [
   ELAYERS.PointsHitLayer,
   ELAYERS.FirstPointHitLayer,
   ELAYERS.AuxiliaryPointHitLayer,
+  ELAYERS.PointsHaloLayer,
+  ELAYERS.FirstPointHaloLayer,
+  ELAYERS.AuxiliaryPointHaloLayer,
 ];
 
 function createMapStub(initial: Partial<Record<string, Visibility>>) {
@@ -58,7 +61,7 @@ test("a move of exactly the click tolerance still counts as a click", () => {
   expect(stub.writes).toEqual([]);
 });
 
-test("moving past the click tolerance hides the hit layers and the transparent line", () => {
+test("moving past the click tolerance hides the hit layers, the halos and the transparent line", () => {
   const stub = createMapStub(allLayers());
   const layers = new DragLayers(stub.map);
 

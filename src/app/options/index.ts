@@ -16,6 +16,7 @@ import {
   POLYGON_PAINT_BASE,
   BREAK_PAINT_BASE,
   AUXILIARY_POINT_PAINT_BASE,
+  POINT_HALO_PAINT_BASE,
 } from "../utils/geo_constants";
 import { DEFAULT_OPTIONS, interactionDefaults } from "./constants";
 
@@ -188,6 +189,7 @@ function generateLayersOptions(options: DrawOptions): RequiredDrawOptions["layer
         paint?.auxiliaryPoint?.["circle-stroke-width"] || AUXILIARY_POINT_PAINT_BASE["circle-stroke-width"],
       ...paint?.auxiliaryPoint,
     },
+    pointHalo: { ...POINT_HALO_PAINT_BASE, ...paint?.pointHalo },
     line,
     dynamicLine: {
       ...line,

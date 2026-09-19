@@ -16,6 +16,9 @@ export class Layers {
     this.swap(ELAYERS.PointsHitLayer, ELAYERS.PointsLayer);
     this.swap(ELAYERS.FirstPointHitLayer, ELAYERS.FirstPointLayer);
     this.swap(ELAYERS.AuxiliaryPointHitLayer, ELAYERS.AuxiliaryPointLayer);
+    this.swap(ELAYERS.PointsHaloLayer, ELAYERS.PointsLayer);
+    this.swap(ELAYERS.FirstPointHaloLayer, ELAYERS.FirstPointLayer);
+    this.swap(ELAYERS.AuxiliaryPointHaloLayer, ELAYERS.AuxiliaryPointLayer);
 
     this.initConsumers();
   }

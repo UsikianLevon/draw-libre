@@ -10,6 +10,9 @@ const LAYERS = [
   ELAYERS.PointsHitLayer,
   ELAYERS.FirstPointHitLayer,
   ELAYERS.AuxiliaryPointHitLayer,
+  ELAYERS.PointsHaloLayer,
+  ELAYERS.FirstPointHaloLayer,
+  ELAYERS.AuxiliaryPointHaloLayer,
 ];
 
 type Visibility = "visible" | "none";
